@@ -14,4 +14,6 @@ const FormGrid = React.forwardRef(({ children }, ref) => (
   <WrapperStyled ref={ref}>{children}</WrapperStyled>
 ));
 
+FormGrid.displayName = "FormGrid";
+
 export default FormGrid;

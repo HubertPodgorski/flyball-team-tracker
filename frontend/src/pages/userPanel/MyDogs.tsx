@@ -50,7 +50,7 @@ const MyDogs = () => {
   const onDeleteCrossPass = async (crossPassId: string) => {
     try {
       await confirm();
-    } catch (error) {
+    } catch {
       return;
     }
 

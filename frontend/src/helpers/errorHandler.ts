@@ -5,7 +5,7 @@ export enum Errors {
 const receivedIsOneOfErrors = (received: string): boolean => !!Errors[received];
 
 export const handleError =
-  (onErrorHandler: (error: string) => void, onSuccessHandler?: Function) =>
+  (onErrorHandler: (error: string) => void, onSuccessHandler?: () => void) =>
   (received) => {
     if (received && receivedIsOneOfErrors(received)) {
       onErrorHandler(Errors[received]);

@@ -1,7 +1,7 @@
 import React from "react";
 import { Box, styled } from "@mui/material";
 
-const WrapperStyled = styled(Box)(({ theme }) => ({
+const WrapperStyled = styled(Box)(() => ({
   display: "flex",
   gridGap: 16,
   flexWrap: "wrap",

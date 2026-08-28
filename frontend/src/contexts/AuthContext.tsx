@@ -1,4 +1,4 @@
-import React, { createContext, useEffect, useState } from "react";
+import React, { createContext, useState } from "react";
 import { Dog, User } from "../helpers/types";
 import { AuthContextType } from "./types";
 
@@ -6,9 +6,31 @@ export const AuthContext = createContext<AuthContextType | undefined>(
   undefined
 );
 
+const getInitialUser = (): User | null => {
+  const userLocalstorage = localStorage.getItem("user");
+
+  if (!userLocalstorage) return null;
+
+  const { user, token } = JSON.parse(userLocalstorage);
+
+  if (!token) {
+    localStorage.removeItem("user");
+    return null;
+  }
+
+  const parsedToken = JSON.parse(atob(token.split(".")[1]));
+
+  if (parsedToken.exp * 1000 < new Date().getTime()) {
+    localStorage.removeItem("user");
+    return null;
+  }
+
+  return user;
+};
+
 // TODO: start using reducers and actions
 export const AuthContextProvider = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(getInitialUser);
 
   const clearUserData = () => {
     setUser(null);
@@ -26,26 +48,6 @@ export const AuthContextProvider = ({ children }) => {
   const setUserDogs = (dogs: Dog[]) => {
     setUser((prevUser) => (prevUser ? { ...prevUser, dogs } : prevUser));
   };
-
-  useEffect(() => {
-    const userLocalstorage = localStorage.getItem("user");
-
-    if (userLocalstorage) {
-      const { user, token } = JSON.parse(userLocalstorage);
-
-      if (!token) {
-        clearUserData();
-      }
-
-      const parsedToken = JSON.parse(atob(token.split(".")[1]));
-
-      if (parsedToken.exp * 1000 < new Date().getTime()) {
-        clearUserData();
-      } else {
-        setUser(user);
-      }
-    }
-  }, []);
 
   return (
     <AuthContext.Provider
