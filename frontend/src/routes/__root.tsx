@@ -3,6 +3,7 @@ import { createRootRoute, Outlet, useLocation, useNavigate } from "@tanstack/rea
 import { Box } from "@mui/material";
 import theme from "../helpers/theme";
 import BottomNavBar from "../components/BottomNavBar";
+import AppBackground from "../components/AppBackground";
 
 const NotFound = () => {
   const navigate = useNavigate();
@@ -23,19 +24,21 @@ const RootComponent = () => {
   }, []);
 
   return (
-    <Box
-      sx={{
-        padding: theme.spacing(2, 2, 9, 2),
-        [theme.breakpoints.down("md")]: {
-          gridGap: theme.spacing(1),
-          padding: theme.spacing(1, 1, 9, 1),
-        },
-      }}
-    >
-      <Outlet />
+    <AppBackground>
+      <Box
+        sx={{
+          padding: theme.spacing(2, 2, 9, 2),
+          [theme.breakpoints.down("md")]: {
+            gridGap: theme.spacing(1),
+            padding: theme.spacing(1, 1, 9, 1),
+          },
+        }}
+      >
+        <Outlet />
 
-      <BottomNavBar />
-    </Box>
+        <BottomNavBar />
+      </Box>
+    </AppBackground>
   );
 };
 

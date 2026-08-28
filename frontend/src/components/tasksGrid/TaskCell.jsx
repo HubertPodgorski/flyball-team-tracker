@@ -1,6 +1,11 @@
 import React from "react";
-import { Box, Card, styled } from "@mui/material";
+import { alpha, Box, Card, styled } from "@mui/material";
 import { Draggable } from "@hello-pangea/dnd";
+
+const CardStyled = styled(Card)(({ theme }) => ({
+  backgroundColor: alpha(theme.palette.background.paper, 0.75),
+  backdropFilter: "blur(6px)",
+}));
 
 const CardContentStyled = styled(Box)(({ theme }) => ({
   display: "grid",
@@ -18,15 +23,15 @@ const CardContentStyled = styled(Box)(({ theme }) => ({
 const TaskCell = ({ children, adminPanel, id, index, onClick }) => {
   if (!adminPanel)
     return (
-      <Card>
+      <CardStyled>
         <CardContentStyled>{children}</CardContentStyled>
-      </Card>
+      </CardStyled>
     );
 
   return (
     <Draggable draggableId={id} index={index}>
       {({ draggableProps, dragHandleProps, innerRef }) => (
-        <Card
+        <CardStyled
           {...draggableProps}
           {...dragHandleProps}
           ref={innerRef}
@@ -35,7 +40,7 @@ const TaskCell = ({ children, adminPanel, id, index, onClick }) => {
           }}
         >
           <CardContentStyled>{children}</CardContentStyled>
-        </Card>
+        </CardStyled>
       )}
     </Draggable>
   );

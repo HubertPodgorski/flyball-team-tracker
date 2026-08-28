@@ -1,6 +1,7 @@
 const UserModel = require("../models/userModel");
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
+const { TEAMS } = require("../helpers/teams");
 
 const createToken = (_id, team) => {
   return jwt.sign({ _id, team }, process.env.SECRET, { expiresIn: "3d" });
@@ -10,7 +11,12 @@ const createToken = (_id, team) => {
 const getAllUsers = async (callback, userToken) => {
   const { team } = jwt.decode(userToken);
 
-  const users = await UserModel.find({ team }).sort({ createdAt: -1 });
+  // super-admins are not real members of any team - keep them out of every
+  // team's user list, including their own home team's.
+  const users = await UserModel.find({
+    team,
+    roles: { $nin: ["SUPER_ADMIN"] },
+  }).sort({ createdAt: -1 });
 
   callback(users);
 };
@@ -100,14 +106,12 @@ const updateUserById = async (received, callback, io, userToken) => {
 };
 
 const login = async (req, res) => {
-  const { email, password, team } = req.body;
+  const { email, password } = req.body;
 
   try {
     const user = await UserModel.login(email, password);
 
-    let teamToSet = email === "SUPERADMIN" && team ? team : user.team;
-
-    const token = createToken(user._id, teamToSet);
+    const token = createToken(user._id, user.team);
 
     res.status(200).json({ user, token });
   } catch (e) {
@@ -116,6 +120,36 @@ const login = async (req, res) => {
 };
 
 const logout = async (req, res) => {};
+
+// super-admin only: mint a new token scoped to a different team, without
+// changing the super-admin's own `team` field in the DB. The frontend swaps
+// the token and reconnects the socket - every existing team-scoped screen
+// then just works as if logged in as that team.
+const switchTeam = async (req, res) => {
+  const { token, team } = req.body;
+
+  let decoded;
+
+  try {
+    decoded = jwt.verify(token, process.env.SECRET);
+  } catch (e) {
+    return res.status(401).json({ error: "INVALID_TOKEN" });
+  }
+
+  if (!TEAMS.includes(team)) {
+    return res.status(400).json({ error: "INVALID_TEAM" });
+  }
+
+  const user = await UserModel.findById(decoded._id);
+
+  if (!user || !user.roles?.includes("SUPER_ADMIN")) {
+    return res.status(403).json({ error: "FORBIDDEN" });
+  }
+
+  const newToken = createToken(user._id, team);
+
+  res.status(200).json({ user, token: newToken });
+};
 
 const signup = async (req, res) => {
   const { email, password, name, teamCode } = req.body;
@@ -140,4 +174,5 @@ module.exports = {
   login,
   logout,
   signup,
+  switchTeam,
 };

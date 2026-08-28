@@ -24,7 +24,9 @@ import { adminRoutes, userRoutes } from "../helpers/routesAndPaths";
 import LoginLogoutListButton from "./LoginLogoutListButton";
 import FormatListNumberedIcon from "@mui/icons-material/FormatListNumbered";
 import { useIsAdmin } from "../hooks/useIsAdmin";
+import { useIsSuperAdmin } from "../hooks/useIsSuperAdmin";
 import SaveIcon from "@mui/icons-material/Save";
+import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 
 const drawerWidth = 240;
 
@@ -41,6 +43,7 @@ const BottomNavBar = () => {
   };
 
   const isAdmin = useIsAdmin();
+  const isSuperAdmin = useIsSuperAdmin();
 
   const drawer = (
     <Box onClick={onDrawerToggle} sx={{ textAlign: "center" }}>
@@ -135,6 +138,22 @@ const BottomNavBar = () => {
             >
               <PersonIcon />
               <ListItemText primary="Users" />
+            </MenuListItemStyled>
+          </>
+        )}
+
+        {isSuperAdmin && (
+          <>
+            <Divider />
+
+            <MenuListItemStyled>Super Admin</MenuListItemStyled>
+
+            <MenuListItemStyled
+              onClick={() => {
+                navigate({ to: "/team-switch" });
+              }}
+            >
+              <SwapHorizIcon /> <ListItemText primary="Team switch" />
             </MenuListItemStyled>
           </>
         )}

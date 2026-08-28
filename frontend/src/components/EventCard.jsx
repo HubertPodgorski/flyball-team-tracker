@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, Typography, useTheme } from "@mui/material";
+import { alpha, Card, Typography, useTheme } from "@mui/material";
 import { useIsMobile } from "../hooks/useIsMobile";
 import EventDetails from "./EventDetails";
 import {
@@ -20,7 +20,8 @@ const EventCard = ({ event: { _id, name, date, dogs, users, type } }) => {
         display: "grid",
         gridAutoFlow: "rows",
         gridGap: theme.spacing(2),
-        backgroundColor: getBackgroundColorBasedOnType(type),
+        backgroundColor: alpha(getBackgroundColorBasedOnType(type), 0.75),
+        backdropFilter: "blur(6px)",
         [theme.breakpoints.down("md")]: {
           padding: theme.spacing(1),
           gridGap: theme.spacing(1),

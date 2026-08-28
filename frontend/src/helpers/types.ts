@@ -1,5 +1,6 @@
 export enum Roles {
   ADMIN = "ADMIN",
+  SUPER_ADMIN = "SUPER_ADMIN",
 }
 
 export interface User {
@@ -9,6 +10,7 @@ export interface User {
   name: string;
   email: string;
   password: string;
+  team: string;
   // TODO: add enums
   roles: Roles[];
 }

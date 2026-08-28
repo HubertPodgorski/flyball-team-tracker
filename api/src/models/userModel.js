@@ -4,24 +4,17 @@ const DogModel = require("./dogModel");
 
 const Schema = mongoose.Schema;
 
-const getTeamFromTeamCode = (teamCode) => {
-  switch (teamCode) {
-    case "DZIKIEGZIKI":
-      return "DZIKIE_GZIKI";
-
-    case "FLYVENGERS":
-      return "FLYVENGERS";
-
-    case "DZIKIE_GZIKI_NABOR":
-      return "DZIKIE_GZIKI_NABOR";
-
-    case "WEST_SIDE_DOGZ":
-      return "WEST_SIDE_DOGZ";
-
-    case "TEST":
-      return "TEST_TEAM";
-  }
+// signup code -> team. Not 1:1 with TEAMS in helpers/teams.js since a code
+// can read differently than the team value it maps to (e.g. "DZIKIEGZIKI" -> "DZIKIE_GZIKI").
+const teamCodeMap = {
+  DZIKIEGZIKI: "DZIKIE_GZIKI",
+  FLYVENGERS: "FLYVENGERS",
+  DZIKIE_GZIKI_NABOR: "DZIKIE_GZIKI_NABOR",
+  WEST_SIDE_DOGZ: "WEST_SIDE_DOGZ",
+  TEST: "TEST_TEAM",
 };
+
+const getTeamFromTeamCode = (teamCode) => teamCodeMap[teamCode];
 
 const userSchema = new Schema(
   {

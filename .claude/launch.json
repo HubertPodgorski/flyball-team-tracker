@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "frontend",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": ["/d", "/s", "/c", "cd frontend && corepack yarn start"],
+      "port": 3000,
+      "autoPort": true
+    }
+  ]
+}

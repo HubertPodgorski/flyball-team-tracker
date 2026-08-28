@@ -3,6 +3,7 @@ import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
+  alpha,
   Button,
   Chip,
   Typography,
@@ -100,7 +101,8 @@ const EventDetails = ({ users, dogs, id }) => {
       onChange={onDetailsOpenChange}
       disableGutters
       sx={{
-        background: "#333",
+        background: alpha("#333", 0.75),
+        backdropFilter: "blur(6px)",
         padding: theme.spacing(1),
         boxShadow: "none",
         ".MuiAccordionDetails-root": {

@@ -24,3 +24,18 @@ export const promoteToAdmin = async (email: string): Promise<void> => {
     await client.close();
   }
 };
+
+export const promoteToSuperAdmin = async (email: string): Promise<void> => {
+  const client = new MongoClient(getMongoUrl());
+
+  try {
+    await client.connect();
+
+    await client
+      .db()
+      .collection("users")
+      .updateOne({ email }, { $set: { roles: ["SUPER_ADMIN"] } });
+  } finally {
+    await client.close();
+  }
+};
