@@ -21,9 +21,16 @@ const app = express();
 
 const server = http.createServer(app);
 
+// CORS_ORIGIN accepts one origin or a comma-separated list, e.g.
+// "https://app.example.com,https://preview-123.vercel.app"
+const corsOrigins = (process.env.CORS_ORIGIN || "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
 const io = new Server(server, {
   cors: {
-    origin: process.env.CORS_ORIGIN,
+    origin: corsOrigins,
     methods: ["GET", "POST", "PATCH", "DELETE"],
   },
 });
