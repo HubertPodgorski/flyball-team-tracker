@@ -18,7 +18,7 @@ const FormTextSelect = ({ options, name, label }: Props) => {
       name={name}
       render={({ field: { onChange, value } }) => (
         <Autocomplete
-          onChange={(e, value: string) => onChange(value)}
+          onChange={(event, value: string) => onChange(value)}
           value={value}
           freeSolo
           options={options.map(({ value }) => value)}

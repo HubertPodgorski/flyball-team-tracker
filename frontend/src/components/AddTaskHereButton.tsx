@@ -14,7 +14,7 @@ const AddTaskHereButton = ({ columnIndex, rowIndex, positionIndex }: Props) => {
     editingId: taskEditingId,
     formOpen: taskFormOpen,
     setFormOpen: setTaskFormOpen,
-    handleFormClose: handleTaskFormClose,
+    onFormClose: onTaskFormClose,
     formInitialData: taskFormInitialData,
   } = useFormHelpers({
     description: "",
@@ -39,7 +39,7 @@ const AddTaskHereButton = ({ columnIndex, rowIndex, positionIndex }: Props) => {
 
       <TaskForm
         open={taskFormOpen}
-        onClose={handleTaskFormClose}
+        onClose={onTaskFormClose}
         initialData={taskFormInitialData}
         editingId={taskEditingId}
       />

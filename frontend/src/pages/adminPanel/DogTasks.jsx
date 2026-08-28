@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React from "react";
 import {
   Button,
   IconButton,
@@ -9,14 +9,14 @@ import {
 import CenteredContent from "../../components/CenteredContent";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useFormHelpers } from "../../hooks/useFormHelpers";
-import { AppContext } from "../../contexts/AppContext";
+import { useAppContext } from "../../hooks/useAppContext";
 import { useConfirmModal } from "../../hooks/useConfirmModal";
 import DogTaskForm from "../forms/DogTaskForm";
 import { useSocketContext } from "../../hooks/useSocketContext";
 
 const DogTasks = () => {
   const { socket } = useSocketContext();
-  const { dogTasks } = useContext(AppContext);
+  const { dogTasks } = useAppContext();
   const confirm = useConfirmModal();
 
   const {
@@ -24,8 +24,8 @@ const DogTasks = () => {
     editingId,
     formOpen,
     setFormOpen,
-    handleEditClick,
-    handleFormClose,
+    onEditClick,
+    onFormClose,
   } = useFormHelpers({
     name: "",
   });
@@ -34,19 +34,6 @@ const DogTasks = () => {
     await confirm();
 
     socket.emit("delete_dog_task", { _id: id });
-  };
-
-  const onFormClose = () => {
-    handleFormClose();
-  };
-
-  const onEditClick = async ({ name }, id) => {
-    await handleEditClick(
-      {
-        name,
-      },
-      id
-    );
   };
 
   return (
@@ -63,8 +50,8 @@ const DogTasks = () => {
 
               <IconButton
                 color="error"
-                onClick={(e) => {
-                  e.stopPropagation();
+                onClick={(event) => {
+                  event.stopPropagation();
 
                   onDeleteClick(_id);
                 }}

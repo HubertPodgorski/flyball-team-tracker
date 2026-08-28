@@ -9,8 +9,6 @@ const MyDogs = () => {
   const { user } = useAuthContext();
   const [isNoteModalOpen, setIsNoteModalOpen] = useState<Dog | undefined>();
 
-  if (!user) return null;
-
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
       {user.dogs.map((dog) => (

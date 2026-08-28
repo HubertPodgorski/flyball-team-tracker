@@ -1,9 +1,9 @@
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { mapTasks, mapTasksForAdminPanel } from "../helpers/tasks";
-import { AppContext } from "../contexts/AppContext";
+import { useAppContext } from "./useAppContext";
 
 export const useGetMappedTasks = (adminPanel) => {
-  const { tasks } = useContext(AppContext);
+  const { tasks } = useAppContext();
 
   const [mappedTasks, setMappedTasks] = useState([]);
 

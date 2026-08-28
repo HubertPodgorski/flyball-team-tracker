@@ -15,7 +15,7 @@ import { getNewTaskPosition } from "./helpers";
 import { useSocketContext } from "../../hooks/useSocketContext";
 
 const TasksDragNDrop = ({
-  handleTaskEditClick,
+  onTaskEditClick,
   mappedTasks,
   setMappedTasks,
 }) => {
@@ -40,7 +40,7 @@ const TasksDragNDrop = ({
   };
 
   const onEditClick = async ({ position, description, dogs, _id }) => {
-    await handleTaskEditClick(
+    await onTaskEditClick(
       {
         position,
         description,
@@ -97,8 +97,8 @@ const TasksDragNDrop = ({
                       <IconButton
                         sx={{ position: "absolute", top: 2, right: 2 }}
                         color="error"
-                        onClick={(e) => {
-                          e.stopPropagation();
+                        onClick={(event) => {
+                          event.stopPropagation();
 
                           onDelete(item._id);
                         }}

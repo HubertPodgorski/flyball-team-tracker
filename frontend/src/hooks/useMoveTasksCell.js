@@ -1,11 +1,10 @@
 import { getMappedItemsToUpdate } from "../helpers/dragNDrop";
-import { useContext } from "react";
-import { AppContext } from "../contexts/AppContext";
+import { useAppContext } from "./useAppContext";
 import { useSocketContext } from "./useSocketContext";
 
 export const useMoveTasksCell = () => {
   const { socket } = useSocketContext();
-  const { tasks, setTasks } = useContext(AppContext);
+  const { tasks, setTasks } = useAppContext();
 
   return (result, mappedTasks) => {
     const { destination, source, draggableId } = result;

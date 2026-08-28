@@ -1,24 +1,24 @@
-import React, { useContext } from "react";
+import React from "react";
 import { IconButton, List, ListItem, ListItemButton } from "@mui/material";
 import CenteredContent from "../../components/CenteredContent";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useFormHelpers } from "../../hooks/useFormHelpers";
-import { AppContext } from "../../contexts/AppContext";
+import { useAppContext } from "../../hooks/useAppContext";
 import { useConfirmModal } from "../../hooks/useConfirmModal";
 import EventTemplateForm from "../forms/EventTemplateForm";
 import { useSocketContext } from "../../hooks/useSocketContext";
 
 const EventTemplates = () => {
   const { socket } = useSocketContext();
-  const { eventTemplates } = useContext(AppContext);
+  const { eventTemplates } = useAppContext();
   const confirm = useConfirmModal();
 
   const {
     formInitialData,
     editingId,
     formOpen,
-    handleEditClick,
-    handleFormClose,
+    onEditClick,
+    onFormClose,
   } = useFormHelpers({
     name: "",
   });
@@ -27,19 +27,6 @@ const EventTemplates = () => {
     await confirm();
 
     socket.emit("delete_event_template", { _id: id });
-  };
-
-  const onFormClose = () => {
-    handleFormClose();
-  };
-
-  const onEditClick = async ({ name }, id) => {
-    await handleEditClick(
-      {
-        name,
-      },
-      id
-    );
   };
 
   return (
@@ -57,8 +44,8 @@ const EventTemplates = () => {
 
               <IconButton
                 color="error"
-                onClick={(e) => {
-                  e.stopPropagation();
+                onClick={(event) => {
+                  event.stopPropagation();
 
                   onDeleteClick(_id);
                 }}

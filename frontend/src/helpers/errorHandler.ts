@@ -1,7 +1,3 @@
-export enum Messages {
-  EVENT_TEMPLATE_FORM_ERROR = "event_template_form_error",
-}
-
 export enum Errors {
   TEMPLATE_WITH_NAME_ALREADY_EXISTS = "Template with given name already exists",
 }

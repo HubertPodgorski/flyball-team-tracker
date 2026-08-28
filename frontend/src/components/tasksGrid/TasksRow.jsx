@@ -40,7 +40,7 @@ const TasksRow = ({ children, rowIndex, userPanel, adminPanel }) => {
             <Box {...dragHandleProps}>
               <Button
                 component={Box}
-                onClick={(e) => e.preventDefault()}
+                onClick={(event) => event.preventDefault()}
                 sx={{
                   position: "absolute",
                   top: 0,

@@ -7,7 +7,7 @@ const SaveEventAsTemplateButton = () => {
   const {
     formOpen: eventTemplateFormOpen,
     setFormOpen: setEventTemplateFormOpen,
-    handleFormClose: handleEventTemplateFormClose,
+    onFormClose: onEventTemplateFormClose,
     formInitialData: eventTemplateFormInitialData,
   } = useFormHelpers({
     name: "",
@@ -25,7 +25,7 @@ const SaveEventAsTemplateButton = () => {
 
       <EventTemplateForm
         open={eventTemplateFormOpen}
-        onClose={handleEventTemplateFormClose}
+        onClose={onEventTemplateFormClose}
         initialData={eventTemplateFormInitialData}
       />
     </>

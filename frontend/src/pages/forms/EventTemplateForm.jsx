@@ -1,9 +1,9 @@
-import React, { useContext, useEffect, useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import { Button, DialogActions } from "@mui/material";
 import { FormProvider, useForm } from "react-hook-form";
 import FormModal from "../../components/FormModal";
 import FormGrid from "../../components/FormGrid";
-import { AppContext } from "../../contexts/AppContext";
+import { useAppContext } from "../../hooks/useAppContext";
 import { getFormattedDate } from "../../helpers/calendar";
 import { handleError } from "../../helpers/errorHandler";
 import { useSnackbar } from "notistack";
@@ -11,7 +11,7 @@ import FormSingleAutocomplete from "../../components/inputs/FormSingleAutocomple
 import { useSocketContext } from "../../hooks/useSocketContext";
 
 const EventTemplateForm = ({ open, onClose, initialData, editingId }) => {
-  const { events, eventTemplates } = useContext(AppContext);
+  const { events, eventTemplates } = useAppContext();
   const { socket } = useSocketContext();
 
   const { enqueueSnackbar } = useSnackbar();

@@ -1,10 +1,10 @@
-import React, { useContext, useEffect, useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import { Button, DialogActions } from "@mui/material";
 import { FormProvider, useForm } from "react-hook-form";
 import FormModal from "../../components/FormModal";
 import FormGrid from "../../components/FormGrid";
 import FormSelect from "../../components/inputs/FormSelect";
-import { AppContext } from "../../contexts/AppContext";
+import { useAppContext } from "../../hooks/useAppContext";
 import { CreateEditTaskFormType, CreateEditTaskRequestType } from "./types";
 import { Position, Task } from "../../helpers/types";
 import FormTextSelect from "../../components/inputs/FormTextSelect";
@@ -35,7 +35,7 @@ const TaskForm = ({
   editingId,
   maxRowIndex,
 }: Props) => {
-  const { dogs, dogTasks } = useContext(AppContext);
+  const { dogs, dogTasks } = useAppContext();
   const { socket } = useSocketContext();
 
   const formMethods = useForm<CreateEditTaskFormType>({

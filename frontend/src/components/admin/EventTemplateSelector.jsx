@@ -1,7 +1,7 @@
-import React, { useContext, useMemo } from "react";
+import React, { useMemo } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import FormSelect from "../inputs/FormSelect";
-import { AppContext } from "../../contexts/AppContext";
+import { useAppContext } from "../../hooks/useAppContext";
 import { Box, Button, useTheme } from "@mui/material";
 import { useConfirm } from "material-ui-confirm";
 import { useSocketContext } from "../../hooks/useSocketContext";
@@ -10,7 +10,7 @@ const EventTemplateSelector = () => {
   const { socket } = useSocketContext();
 
   const theme = useTheme();
-  const { eventTemplates } = useContext(AppContext);
+  const { eventTemplates } = useAppContext();
 
   const confirm = useConfirm();
 

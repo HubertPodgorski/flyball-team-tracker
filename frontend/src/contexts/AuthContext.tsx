@@ -1,17 +1,14 @@
 import React, { createContext, useEffect, useState } from "react";
 import { Dog, User } from "../helpers/types";
 import { AuthContextType } from "./types";
-import { Socket } from "socket.io-client";
 
-export const AuthContext = createContext<Partial<AuthContextType>>({
-  user: null,
-  socket: null,
-});
+export const AuthContext = createContext<AuthContextType | undefined>(
+  undefined
+);
 
 // TODO: start using reducers and actions
 export const AuthContextProvider = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [socket, setSocket] = useState<Socket<any, any> | null>(null);
 
   const clearUserData = () => {
     setUser(null);
@@ -57,8 +54,6 @@ export const AuthContextProvider = ({ children }) => {
         login,
         logout,
         setUser,
-        setSocket,
-        socket,
         setUserDogs,
       }}
     >

@@ -4,7 +4,6 @@ export const notAuthenticatedRoutes = {
 };
 
 export const userRoutes = {
-  main: "/user-panel",
   tasks: "/user-panel/tasks",
   calendar: "/user-panel/calendar",
   myDogs: "/user-panel/my-dogs",
@@ -18,8 +17,6 @@ export const userPaths = {
 };
 
 export const adminRoutes = {
-  main: "/admin-panel",
-  pickData: "/admin-panel/pick-data",
   tasks: "/admin-panel/tasks",
   events: "/admin-panel/events",
   dogs: "/admin-panel/dogs",
@@ -30,7 +27,6 @@ export const adminRoutes = {
 
 export const adminPaths = {
   root: "/admin-panel",
-  pickData: "pick-data",
   tasks: "tasks",
   events: "events",
   dogs: "dogs",

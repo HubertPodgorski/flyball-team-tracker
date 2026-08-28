@@ -1,15 +1,15 @@
-import React, { useContext, useEffect, useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import { Button, DialogActions } from "@mui/material";
 import { FormProvider, useForm } from "react-hook-form";
 import FormTextField from "../../components/inputs/FormTextField";
 import FormModal from "../../components/FormModal";
 import FormGrid from "../../components/FormGrid";
 import FormSelect from "../../components/inputs/FormSelect";
-import { AppContext } from "../../contexts/AppContext";
+import { useAppContext } from "../../hooks/useAppContext";
 import { useSocketContext } from "../../hooks/useSocketContext";
 
 const UserForm = ({ open, onClose, initialData, editingId }) => {
-  const { dogs } = useContext(AppContext);
+  const { dogs } = useAppContext();
   const { socket } = useSocketContext();
 
   const formMethods = useForm({

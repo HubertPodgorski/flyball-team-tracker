@@ -1,5 +1,5 @@
-import { useContext, useEffect } from "react";
-import { AppContext } from "../contexts/AppContext";
+import { useEffect } from "react";
+import { useAppContext } from "../hooks/useAppContext";
 import { useSocketContext } from "../hooks/useSocketContext";
 import { useAuthContext } from "../hooks/useAuthContext";
 
@@ -14,7 +14,7 @@ const SocketHandler = () => {
     setDogTasks,
     setEventTemplates,
     setSubscriptionDetails,
-  } = useContext(AppContext);
+  } = useAppContext();
   const { user, setUserDogs } = useAuthContext();
 
   useEffect(() => {
@@ -30,7 +30,7 @@ const SocketHandler = () => {
       setDogs(received);
 
       // sync dog changes to user dogs
-      const userDogIds = user.dogs.flatMap(({ _id }) => _id);
+      const userDogIds = user.dogs.map(({ _id }) => _id);
       const userDogs = received.filter(({ _id }) => userDogIds.includes(_id));
       setUserDogs(userDogs);
     });

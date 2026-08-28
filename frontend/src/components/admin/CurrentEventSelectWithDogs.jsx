@@ -1,12 +1,12 @@
-import React, { useCallback, useContext, useMemo } from "react";
+import React, { useCallback, useMemo } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import FormSelect from "../inputs/FormSelect";
 import { getFormattedDate } from "../../helpers/calendar";
-import { AppContext } from "../../contexts/AppContext";
+import { useAppContext } from "../../hooks/useAppContext";
 import DogAttendanceChips from "../DogAttendanceChips";
 
 const CurrentEventSelectWithDogs = () => {
-  const { events, tasks, dogs } = useContext(AppContext);
+  const { events, tasks, dogs } = useAppContext();
 
   const formMethods = useForm({
     defaultValues: { event: [] },
