@@ -1,7 +1,7 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect } from "react";
 import { Button, DialogActions } from "@mui/material";
 import { useSocketContext } from "../../hooks/useSocketContext";
-import { FormProvider, useForm } from "react-hook-form";
+import { useForm, useStore } from "@tanstack/react-form";
 import FormModal from "../FormModal.jsx";
 import FormGrid from "../FormGrid.jsx";
 import { useAppContext } from "../../hooks/useAppContext";
@@ -19,7 +19,7 @@ interface FormData {
 
 interface Props {
   crossPass?: CrossPass;
-  dogId: string;
+  dogId: string | undefined;
   onClose: () => void;
   open: boolean;
 }
@@ -27,7 +27,7 @@ interface Props {
 const getSubmitData = (
   { runningOnLights, runningOnDogId, note, startingPosition }: FormData,
   dogs: Dog[],
-  dogId: string
+  dogId: string | undefined
 ) => {
   if (runningOnLights) {
     return {
@@ -55,7 +55,7 @@ const startingPositionOptions = new Array(20).fill("").map((value, index) => ({
   label: `${index + 1}m`,
 }));
 
-const initialData = {
+const initialData: FormData = {
   note: "",
   runningOnDogId: "",
   runningOnLights: false,
@@ -71,98 +71,98 @@ const CrossPassModal = ({
   const { dogs } = useAppContext();
   const { socket } = useSocketContext();
 
-  const formMethods = useForm<FormData>({
-    defaultValues: initialData,
-  });
+  const isEdit = !!crossPass?._id;
 
-  const { handleSubmit, reset } = useMemo(() => formMethods, [formMethods]);
+  const onClose = () => {
+    form.reset(initialData);
+
+    handleClose();
+  };
+
+  const form = useForm({
+    defaultValues: initialData,
+    onSubmit: ({ value: formData }) => {
+      if (isEdit) {
+        socket.emit(
+          "update_cross_pass",
+          {
+            _id: crossPass!._id,
+            ...getSubmitData(formData, dogs, dogId),
+          },
+          () => onClose()
+        );
+      } else {
+        socket.emit(
+          "create_cross_pass",
+          getSubmitData(formData, dogs, dogId),
+          () => onClose()
+        );
+      }
+    },
+  });
 
   useEffect(() => {
     if (!crossPass) return;
 
-    reset({
+    form.reset({
       note: crossPass?.note || "",
       runningOnDogId: crossPass?.runningOnDog?._id || "",
       runningOnLights: crossPass?.runningOnLights || false,
       startingPosition: crossPass?.startingPosition || "",
     });
-  }, [crossPass, reset, dogId]);
+  }, [crossPass, form, dogId]);
 
-  const isEdit = useMemo(() => !!crossPass?._id, [crossPass]);
-
-  const onClose = () => {
-    reset(initialData);
-
-    handleClose();
-  };
-
-  const onSubmit = (formData: FormData) => {
-    if (isEdit) {
-      socket.emit(
-        "update_cross_pass",
-        {
-          _id: crossPass._id,
-          ...getSubmitData(formData, dogs, dogId),
-        },
-        () => onClose()
-      );
-    } else {
-      socket.emit(
-        "create_cross_pass",
-        getSubmitData(formData, dogs, dogId),
-        () => onClose()
-      );
-    }
-  };
-
-  const runningOnLights = formMethods.watch("runningOnLights");
+  const runningOnLights = useStore(
+    form.store,
+    (state) => state.values.runningOnLights
+  );
 
   return (
-    <FormProvider {...formMethods}>
-      <FormModal
-        open={open}
-        onClose={onClose}
-        title={`${isEdit ? "Edit" : "Create"} cross pass`}
-      >
-        <FormGrid>
-          <FormSwitch name="runningOnLights" label="Running on lights" />
+    <FormModal
+      open={open}
+      onClose={onClose}
+      title={`${isEdit ? "Edit" : "Create"} cross pass`}
+    >
+      <FormGrid>
+        <FormSwitch form={form} name="runningOnLights" label="Running on lights" />
 
-          {!runningOnLights && (
-            <FormSelect
-              options={dogs.map(({ _id, name }) => ({
-                value: _id,
-                label: name,
-              }))}
-              multi={false}
-              name="runningOnDogId"
-              label="Running on dog"
-            />
-          )}
-
-          <FormTextSelect
-            name="startingPosition"
-            label="Starting position"
-            options={startingPositionOptions}
+        {!runningOnLights && (
+          <FormSelect
+            form={form}
+            options={dogs.map(({ _id, name }) => ({
+              value: _id,
+              label: name,
+            }))}
+            multi={false}
+            name="runningOnDogId"
+            label="Running on dog"
           />
+        )}
 
-          <FormTextSelect name="note" label="Note" options={[]} />
+        <FormTextSelect
+          form={form}
+          name="startingPosition"
+          label="Starting position"
+          options={startingPositionOptions}
+        />
 
-          <DialogActions sx={{ padding: 0 }}>
-            <Button size="medium" variant="outlined" onClick={onClose}>
-              Cancel
-            </Button>
+        <FormTextSelect form={form} name="note" label="Note" options={[]} />
 
-            <Button
-              size="medium"
-              variant="contained"
-              onClick={handleSubmit(onSubmit)}
-            >
-              Save
-            </Button>
-          </DialogActions>
-        </FormGrid>
-      </FormModal>
-    </FormProvider>
+        <DialogActions sx={{ padding: 0 }}>
+          <Button size="medium" variant="outlined" onClick={onClose}>
+            Cancel
+          </Button>
+
+          <Button
+            size="medium"
+            variant="contained"
+            onClick={() => form.handleSubmit()}
+          >
+            Save
+          </Button>
+        </DialogActions>
+      </FormGrid>
+    </FormModal>
   );
 };
 

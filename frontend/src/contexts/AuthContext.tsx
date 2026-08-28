@@ -24,7 +24,7 @@ export const AuthContextProvider = ({ children }) => {
   };
 
   const setUserDogs = (dogs: Dog[]) => {
-    setUser((prevUser) => ({ ...prevUser, dogs }));
+    setUser((prevUser) => (prevUser ? { ...prevUser, dogs } : prevUser));
   };
 
   useEffect(() => {

@@ -36,7 +36,7 @@ const DogsTaskCell = ({ item: { _id, dogs, description }, index }: Props) => {
                 <Chip
                   label={`${name}`}
                   key={_id}
-                  color={isMyDog(_id, user.dogs) ? "success" : "default"}
+                  color={isMyDog(_id, user!.dogs) ? "success" : "default"}
                   onClick={() => setIsNoteModalOpen(dog)}
                 />
               );

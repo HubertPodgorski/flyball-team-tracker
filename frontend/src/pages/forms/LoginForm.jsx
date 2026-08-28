@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect } from "react";
 import {
   Alert,
   Box,
@@ -8,16 +8,20 @@ import {
   Typography,
   useTheme,
 } from "@mui/material";
-import { FormProvider, useForm } from "react-hook-form";
+import { useForm } from "@tanstack/react-form";
 import FormTextField from "../../components/inputs/FormTextField";
 import FormGrid from "../../components/FormGrid";
 import { useAuthContext } from "../../hooks/useAuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@tanstack/react-router";
 import {
   notAuthenticatedRoutes,
-  userPaths,
+  userRoutes,
 } from "../../helpers/routesAndPaths";
 import { useLogin } from "../../hooks/useLogin";
+
+const isAuthPath = (pathname) =>
+  pathname === notAuthenticatedRoutes.login ||
+  pathname === notAuthenticatedRoutes.signup;
 
 const LoginForm = () => {
   const theme = useTheme();
@@ -30,64 +34,67 @@ const LoginForm = () => {
     const initialLocation = JSON.parse(
       localStorage.getItem("initial-location")
     );
+    const initialPathname = initialLocation?.pathname;
 
     if (user) {
-      navigate(initialLocation?.pathname || userPaths.tasks);
+      navigate({
+        to:
+          initialPathname && !isAuthPath(initialPathname)
+            ? initialPathname
+            : userRoutes.tasks,
+      });
+      localStorage.removeItem("initial-location");
     }
   }, [navigate, user]);
 
-  const formMethods = useForm({
+  const form = useForm({
     defaultValues: { password: "", email: "" },
+    onSubmit: async ({ value: { password, email } }) => {
+      await login(email, password);
+    },
   });
 
-  const { handleSubmit } = useMemo(() => formMethods, [formMethods]);
-
-  const onSubmit = async ({ password, email }) => {
-    await login(email, password);
-  };
-
   return (
-    <FormProvider {...formMethods}>
-      <Card sx={{ minWidth: 300, margin: "20px auto" }}>
-        <CardContent>
-          <FormGrid>
-            <Typography variant="h4">Login</Typography>
+    <Card sx={{ minWidth: 300, margin: "20px auto" }}>
+      <CardContent>
+        <FormGrid>
+          <Typography variant="h4">Login</Typography>
 
-            {error && <Alert severity="error">{error}</Alert>}
+          {error && <Alert severity="error">{error}</Alert>}
 
-            <FormTextField name="email" label="Email" required />
+          <FormTextField form={form} name="email" label="Email" required />
 
-            <FormTextField
-              name="password"
-              label="Password"
-              type="password"
-              required
-            />
+          <FormTextField
+            form={form}
+            name="password"
+            label="Password"
+            type="password"
+            required
+          />
 
-            <Box sx={{ display: "grid", gridGap: theme.spacing(2) }}>
-              <Button
-                disabled={loading}
-                size="medium"
-                variant="contained"
-                onClick={handleSubmit(onSubmit)}
-              >
-                Login
-              </Button>
+          <Box sx={{ display: "grid", gridGap: theme.spacing(2) }}>
+            <Button
+              disabled={loading}
+              size="medium"
+              variant="contained"
+              onClick={() => form.handleSubmit()}
+            >
+              Login
+            </Button>
 
-              <Button
-                size="small"
-                variant="text"
-                onClick={() => {
-                  navigate(notAuthenticatedRoutes.signup);
-                }}
-              >
-                Signup
-              </Button>
-            </Box>
-          </FormGrid>
-        </CardContent>
-      </Card>
-    </FormProvider>
+            <Button
+              size="small"
+              variant="text"
+              onClick={() => {
+                navigate({ to: notAuthenticatedRoutes.signup });
+              }}
+            >
+              Signup
+            </Button>
+          </Box>
+        </FormGrid>
+      </CardContent>
+    </Card>
   );
 };
 

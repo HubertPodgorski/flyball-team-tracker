@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect } from "react";
 import { Button, DialogActions } from "@mui/material";
-import { FormProvider, useForm } from "react-hook-form";
+import { useForm } from "@tanstack/react-form";
 import FormModal from "../../components/FormModal";
 import FormGrid from "../../components/FormGrid";
 import FormSelect from "../../components/inputs/FormSelect";
@@ -38,16 +38,6 @@ const TaskForm = ({
   const { dogs, dogTasks } = useAppContext();
   const { socket } = useSocketContext();
 
-  const formMethods = useForm<CreateEditTaskFormType>({
-    defaultValues: mapToFormType(initialData),
-  });
-
-  const { handleSubmit, reset } = useMemo(() => formMethods, [formMethods]);
-
-  useEffect(() => {
-    reset(mapToFormType(initialData));
-  }, [initialData, reset]);
-
   const getPosition = (values: CreateEditTaskFormType): Position => {
     if (editingId) {
       return {
@@ -66,75 +56,82 @@ const TaskForm = ({
     return values.position;
   };
 
-  const onSubmit = async (values: CreateEditTaskFormType) => {
-    // TODO: map selected dogs to dogs
-    // TODO: extract me to external method - used twice already
-    const selectedDogs = values.dogs
-      .map((dogId) => {
-        const dog = dogs.find(({ _id }) => _id === dogId);
+  const form = useForm({
+    defaultValues: mapToFormType(initialData),
+    onSubmit: async ({ value: values }) => {
+      // TODO: map selected dogs to dogs
+      // TODO: extract me to external method - used twice already
+      const selectedDogs = values.dogs
+        .map((dogId) => {
+          const dog = dogs.find(({ _id }) => _id === dogId);
 
-        if (!dog) return undefined;
+          if (!dog) return undefined;
 
-        return dog;
-      })
-      .filter((dog) => !!dog);
+          return dog;
+        })
+        .filter((dog) => !!dog);
 
-    const data: CreateEditTaskRequestType = {
-      description: values.description,
-      dogs: selectedDogs,
-      position: getPosition(values),
-    };
+      const data: CreateEditTaskRequestType = {
+        description: values.description,
+        dogs: selectedDogs,
+        position: getPosition(values),
+      };
 
-    if (editingId) {
-      socket.emit("update_task", { ...data, _id: editingId }, () => {
-        onClose();
-      });
-    } else {
-      socket.emit("add_task", data, () => {
-        onClose();
-      });
-    }
+      if (editingId) {
+        socket.emit("update_task", { ...data, _id: editingId }, () => {
+          onClose();
+        });
+      } else {
+        socket.emit("add_task", data, () => {
+          onClose();
+        });
+      }
 
-    // TODO: error handling eventually?
-  };
+      // TODO: error handling eventually?
+    },
+  });
 
-  const dogTaskOptions = useMemo(
-    () => dogTasks.map(({ name }) => ({ value: name, label: name })),
-    [dogTasks]
-  );
+  useEffect(() => {
+    form.reset(mapToFormType(initialData));
+  }, [initialData, form]);
+
+  const dogTaskOptions = dogTasks.map(({ name }) => ({
+    value: name,
+    label: name,
+  }));
 
   return (
-    <FormProvider {...formMethods}>
-      <FormModal onClose={onClose} open={open} title="Task">
-        <FormGrid>
-          <FormTextSelect
-            label="Type or select task description"
-            options={dogTaskOptions}
-            name="description"
-          />
+    <FormModal onClose={onClose} open={open} title="Task">
+      <FormGrid>
+        <FormTextSelect
+          form={form}
+          label="Type or select task description"
+          options={dogTaskOptions}
+          name="description"
+        />
 
-          <FormSelect
-            name="dogs"
-            label="Dogs"
-            options={dogs.map(({ name, _id }) => ({ value: _id, label: name }))}
-          />
+        <FormSelect
+          form={form}
+          name="dogs"
+          label="Dogs"
+          options={dogs.map(({ name, _id }) => ({ value: _id, label: name }))}
+        />
 
-          <DialogActions sx={{ padding: 0 }}>
-            <Button size="medium" variant="outlined" onClick={onClose}>
-              Cancel
-            </Button>
+        <DialogActions sx={{ padding: 0 }}>
+          <Button size="medium" variant="outlined" onClick={onClose}>
+            Cancel
+          </Button>
 
-            <Button
-              size="medium"
-              variant="contained"
-              onClick={handleSubmit(onSubmit)}
-            >
-              Submit
-            </Button>
-          </DialogActions>
-        </FormGrid>
-      </FormModal>
-    </FormProvider>
+          <Button
+            size="medium"
+            variant="contained"
+            onClick={() => form.handleSubmit()}
+          >
+            Submit
+          </Button>
+        </DialogActions>
+      </FormGrid>
+    </FormModal>
   );
 };
 

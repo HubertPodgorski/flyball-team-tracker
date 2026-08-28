@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { Box, Chip } from "@mui/material";
 import ChipsGrid from "./ChipsGrid";
 import { DogWithAttendanceAndPlannedInfo } from "../helpers/types";
@@ -10,10 +10,7 @@ interface Props {
 }
 
 const DogAttendanceChips = ({ dogsWithAttendance, showIfPlanned }: Props) => {
-  const sortedDogsByAttendance = useMemo(
-    () => dogsWithAttendance.sort(sortByAttendance),
-    [dogsWithAttendance]
-  );
+  const sortedDogsByAttendance = dogsWithAttendance.sort(sortByAttendance);
 
   return (
     <ChipsGrid>

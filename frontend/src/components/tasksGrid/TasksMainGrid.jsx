@@ -1,6 +1,6 @@
 import React from "react";
 import { Box, styled } from "@mui/material";
-import { Droppable } from "react-beautiful-dnd";
+import { Droppable } from "@hello-pangea/dnd";
 
 const WrapperStyled = styled(Box)(({ theme }) => ({
   display: "grid",

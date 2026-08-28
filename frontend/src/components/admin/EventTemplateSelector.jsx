@@ -1,5 +1,5 @@
-import React, { useMemo } from "react";
-import { FormProvider, useForm } from "react-hook-form";
+import React from "react";
+import { useForm, useStore } from "@tanstack/react-form";
 import FormSelect from "../inputs/FormSelect";
 import { useAppContext } from "../../hooks/useAppContext";
 import { Box, Button, useTheme } from "@mui/material";
@@ -14,16 +14,17 @@ const EventTemplateSelector = () => {
 
   const confirm = useConfirm();
 
-  const formMethods = useForm({
+  const form = useForm({
     defaultValues: { eventTemplate: [] },
   });
 
-  const selectedEventTemplateId = formMethods.watch("eventTemplate");
-
-  const isEventTemplateSelected = useMemo(
-    () => !!selectedEventTemplateId && selectedEventTemplateId.length > 0,
-    [selectedEventTemplateId]
+  const selectedEventTemplateId = useStore(
+    form.store,
+    (state) => state.values.eventTemplate
   );
+
+  const isEventTemplateSelected =
+    !!selectedEventTemplateId && selectedEventTemplateId.length > 0;
 
   const onLoadButtonClick = async () => {
     if (!isEventTemplateSelected) return;
@@ -49,20 +50,19 @@ const EventTemplateSelector = () => {
         gridGap: theme.spacing(1),
       }}
     >
-      <FormProvider {...formMethods}>
-        <FormSelect
-          multi={false}
-          name="eventTemplate"
-          label="Event template"
-          options={[
-            { value: "", label: "Brak" },
-            ...eventTemplates.map(({ name: label, _id: value }) => ({
-              value,
-              label,
-            })),
-          ]}
-        />
-      </FormProvider>
+      <FormSelect
+        form={form}
+        multi={false}
+        name="eventTemplate"
+        label="Event template"
+        options={[
+          { value: "", label: "Brak" },
+          ...eventTemplates.map(({ name: label, _id: value }) => ({
+            value,
+            label,
+          })),
+        ]}
+      />
 
       <Button disabled={!isEventTemplateSelected} onClick={onLoadButtonClick}>
         {isEventTemplateSelected && "Load event template"}

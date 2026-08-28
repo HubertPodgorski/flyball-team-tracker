@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useState } from "react";
 import {
   Accordion,
   AccordionDetails,
@@ -29,33 +29,25 @@ const EventDetails = ({ users, dogs, id }) => {
 
   const isMobile = useIsMobile();
 
-  const usersWithAttendance = useMemo(
-    () =>
-      allUsers.map((user) => {
-        const userFound = users.find(
-          ({ _id: currentEventUserId }) => currentEventUserId === user._id
-        );
+  const usersWithAttendance = allUsers.map((user) => {
+    const userFound = users.find(
+      ({ _id: currentEventUserId }) => currentEventUserId === user._id
+    );
 
-        if (!userFound || !userFound.status) return user;
+    if (!userFound || !userFound.status) return user;
 
-        return { ...user, status: userFound.status };
-      }),
-    [allUsers, users]
-  );
+    return { ...user, status: userFound.status };
+  });
 
-  const dogsWithAttendance = useMemo(
-    () =>
-      allDogs.map((dog) => {
-        const dogFound = dogs.find(
-          ({ _id: currentEventDogId }) => currentEventDogId === dog._id
-        );
+  const dogsWithAttendance = allDogs.map((dog) => {
+    const dogFound = dogs.find(
+      ({ _id: currentEventDogId }) => currentEventDogId === dog._id
+    );
 
-        if (!dogFound || !dogFound.status) return dog;
+    if (!dogFound || !dogFound.status) return dog;
 
-        return { ...dog, status: dogFound.status };
-      }),
-    [allDogs, dogs]
-  );
+    return { ...dog, status: dogFound.status };
+  });
 
   const onDogPresenceUpdateClick = (dogId) => {
     socket.emit("toggle_event_dog", { dogId, _id: id });
@@ -69,48 +61,37 @@ const EventDetails = ({ users, dogs, id }) => {
     setDetailsOpen(!detailsOpen);
   };
 
-  const sortedUsersByAttendance = useMemo(
-    () => usersWithAttendance.sort(sortByAttendance),
-    [usersWithAttendance]
-  );
+  const sortedUsersByAttendance = usersWithAttendance.sort(sortByAttendance);
 
-  const getUserButtonColorById = useCallback(
-    (_id) => {
-      const defaultColor = "warning";
+  const getUserButtonColorById = (_id) => {
+    const defaultColor = "warning";
 
-      const userFound = users.find(
-        ({ _id: currentEventUserId }) => currentEventUserId === _id
-      );
+    const userFound = users.find(
+      ({ _id: currentEventUserId }) => currentEventUserId === _id
+    );
 
-      if (!userFound) return defaultColor;
+    if (!userFound) return defaultColor;
 
-      if (userFound?.status === "PRESENT") return "success";
+    if (userFound?.status === "PRESENT") return "success";
 
-      if (userFound?.status === "ABSENT") return "error";
+    if (userFound?.status === "ABSENT") return "error";
 
-      return defaultColor;
-    },
-    [users]
-  );
+    return defaultColor;
+  };
 
-  const getDogButtonColorById = useCallback(
-    (_id) => {
-      const defaultColor = "warning";
+  const getDogButtonColorById = (_id) => {
+    const defaultColor = "warning";
 
-      const dogFound = dogs.find(
-        ({ _id: currentDogId }) => currentDogId === _id
-      );
+    const dogFound = dogs.find(({ _id: currentDogId }) => currentDogId === _id);
 
-      if (!dogFound) return defaultColor;
+    if (!dogFound) return defaultColor;
 
-      if (dogFound?.status === "PRESENT") return "success";
+    if (dogFound?.status === "PRESENT") return "success";
 
-      if (dogFound?.status === "ABSENT") return "error";
+    if (dogFound?.status === "ABSENT") return "error";
 
-      return defaultColor;
-    },
-    [dogs]
-  );
+    return defaultColor;
+  };
 
   return (
     <Accordion

@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { useAppContext } from "../../hooks/useAppContext";
 import { Box, useTheme } from "@mui/material";
 import { sortByNewest } from "../../helpers/calendar";
@@ -9,7 +9,7 @@ const Calendar = () => {
 
   const { events } = useAppContext();
 
-  const sortedEvents = useMemo(() => events.sort(sortByNewest), [events]);
+  const sortedEvents = events.sort(sortByNewest);
 
   return (
     <Box

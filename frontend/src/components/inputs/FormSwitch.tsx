@@ -1,31 +1,25 @@
 import { Box, Switch, Typography } from "@mui/material";
-import { Controller, useFormContext } from "react-hook-form";
 import React from "react";
+import type { AnyFieldApi } from "@tanstack/react-form";
+import { FormFieldProps } from "./utils";
 
-interface Props {
-  name: string;
+interface Props extends FormFieldProps {
   label?: string;
 }
 
-const FormSwitch = ({ name, label }: Props) => {
-  const { control } = useFormContext();
+const FormSwitch = ({ form, name, label }: Props) => (
+  <form.Field name={name}>
+    {(field: AnyFieldApi) => (
+      <Box sx={{ display: "flex", alignItems: "center" }}>
+        <Switch
+          onClick={() => field.handleChange(!field.state.value)}
+          checked={!!field.state.value}
+        />
 
-  return (
-    <Controller
-      control={control}
-      name={name}
-      render={({ field }) => (
-        <Box sx={{ display: "flex", alignItems: "center" }}>
-          <Switch
-            onClick={() => field.onChange(!field.value)}
-            checked={!!field.value}
-          />
-
-          <Typography>{label}</Typography>
-        </Box>
-      )}
-    />
-  );
-};
+        <Typography>{label}</Typography>
+      </Box>
+    )}
+  </form.Field>
+);
 
 export default FormSwitch;
