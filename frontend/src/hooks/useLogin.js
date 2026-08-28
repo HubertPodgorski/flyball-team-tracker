@@ -2,7 +2,7 @@ import { useAuthContext } from "./useAuthContext";
 import { useState } from "react";
 import axios from "axios";
 import { userPaths } from "../helpers/routesAndPaths";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@tanstack/react-router";
 import { apiSuffix } from "../helpers/apiCall";
 import { getAuthErrorMessage } from "../helpers/authErrors";
 
@@ -30,7 +30,7 @@ export const useLogin = () => {
 
       localStorage.setItem("user", JSON.stringify(responseData));
       login(responseData.user);
-      navigate(userPaths.root);
+      navigate({ to: userPaths.root });
     } catch (loginError) {
       setError(getAuthErrorMessage(loginError));
     } finally {

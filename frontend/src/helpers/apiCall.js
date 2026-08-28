@@ -1,1 +1,1 @@
-export const apiSuffix = process.env.REACT_APP_HTTPS_PROXY;
+export const apiSuffix = import.meta.env.VITE_HTTPS_PROXY;

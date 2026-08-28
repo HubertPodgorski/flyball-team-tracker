@@ -3,7 +3,7 @@ import { useAuthContext } from "../../hooks/useAuthContext";
 import { useAppContext } from "../../hooks/useAppContext";
 import { useSocketContext } from "../../hooks/useSocketContext";
 import { useConfirmModal } from "../../hooks/useConfirmModal";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import EditNoteIcon from "@mui/icons-material/EditNote";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
@@ -29,7 +29,7 @@ const MyDogs = () => {
   const [userDogs, setUserDogs] = useState(user?.dogs || []);
 
   useEffect(() => {
-    const userDogIds = user.dogs.map(({ _id }) => _id);
+    const userDogIds = user!.dogs.map(({ _id }) => _id);
 
     setUserDogs(
       dogs
@@ -44,11 +44,8 @@ const MyDogs = () => {
     );
   }, [user, dogs]);
 
-  const getCrossPassesForDog = useCallback(
-    (givenDogId: string): CrossPass[] =>
-      crossPasses.filter(({ dogId }) => dogId === givenDogId),
-    [crossPasses]
-  );
+  const getCrossPassesForDog = (givenDogId: string): CrossPass[] =>
+    crossPasses.filter(({ dogId }) => dogId === givenDogId);
 
   const onDeleteCrossPass = async (crossPassId: string) => {
     try {

@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect } from "react";
 import { Button, DialogActions } from "@mui/material";
-import { FormProvider, useForm } from "react-hook-form";
+import { useForm } from "@tanstack/react-form";
 import FormModal from "../../components/FormModal";
 import FormGrid from "../../components/FormGrid";
 import { useAppContext } from "../../hooks/useAppContext";
@@ -16,107 +16,101 @@ const EventTemplateForm = ({ open, onClose, initialData, editingId }) => {
 
   const { enqueueSnackbar } = useSnackbar();
 
-  const formMethods = useForm({
+  const form = useForm({
     defaultValues: initialData,
-  });
+    onSubmit: async ({ value: { name } }) => {
+      const data = { name };
 
-  const { handleSubmit, reset } = useMemo(() => formMethods, [formMethods]);
+      if (editingId) {
+        await socket.emit(
+          "update_event_template",
+          { _id: editingId, ...data },
+          // TODO: not necessary as it always do something (either update existing or create new one)
+          handleError(
+            (error) => {
+              enqueueSnackbar(error, { variant: "error" });
+            },
+            () => onClose()
+          )
+        );
+      } else {
+        await socket.emit(
+          "add_event_template",
+          data,
+          // TODO: not necessary as it always do something (either update existing or create new one)
+          handleError(
+            (error) => {
+              enqueueSnackbar(error, { variant: "error" });
+            },
+            () => onClose()
+          )
+        );
+      }
+
+      // TODO: error handling eventually?
+    },
+  });
 
   useEffect(() => {
     const { name } = initialData;
 
-    reset({ name });
-  }, [initialData, reset]);
-
-  const onSubmit = async ({ name }) => {
-    const data = { name };
-
-    if (editingId) {
-      await socket.emit(
-        "update_event_template",
-        { _id: editingId, ...data },
-        // TODO: not necessary as it always do something (either update existing or create new one)
-        handleError(
-          (error) => {
-            enqueueSnackbar(error, { variant: "error" });
-          },
-          () => onClose()
-        )
-      );
-    } else {
-      await socket.emit(
-        "add_event_template",
-        data,
-        // TODO: not necessary as it always do something (either update existing or create new one)
-        handleError(
-          (error) => {
-            enqueueSnackbar(error, { variant: "error" });
-          },
-          () => onClose()
-        )
-      );
-    }
-
-    // TODO: error handling eventually?
-  };
+    form.reset({ name });
+  }, [initialData, form]);
 
   // TODO: add template names already created and remove duplicates here
-  const eventNamesOptions = useMemo(() => {
-    return [...events, ...eventTemplates].reduce(
-      (uniqueEventTemplateNameSuggestions, currentValue) => {
-        const nameToCompare =
-          "date" in currentValue
-            ? `${currentValue.name} ${getFormattedDate(currentValue.date)}`
-            : currentValue.name;
+  const eventNamesOptions = [...events, ...eventTemplates].reduce(
+    (uniqueEventTemplateNameSuggestions, currentValue) => {
+      const nameToCompare =
+        "date" in currentValue
+          ? `${currentValue.name} ${getFormattedDate(currentValue.date)}`
+          : currentValue.name;
 
-        if (
-          uniqueEventTemplateNameSuggestions.some(
-            ({ value }) => value === nameToCompare
-          )
+      if (
+        uniqueEventTemplateNameSuggestions.some(
+          ({ value }) => value === nameToCompare
         )
-          return uniqueEventTemplateNameSuggestions;
+      )
+        return uniqueEventTemplateNameSuggestions;
 
-        return [
-          ...uniqueEventTemplateNameSuggestions,
-          { value: nameToCompare, label: nameToCompare },
-        ];
-      },
-      []
-    );
-  }, [events, eventTemplates]);
+      return [
+        ...uniqueEventTemplateNameSuggestions,
+        { value: nameToCompare, label: nameToCompare },
+      ];
+    },
+    []
+  );
 
   return (
-    <FormProvider {...formMethods}>
-      <FormModal
-        onClose={onClose}
-        open={open}
-        title="Add or update event template"
-      >
-        <FormGrid>
-          <FormSingleAutocomplete
-            required
-            name="name"
-            label="Template name"
-            multi={false}
-            options={eventNamesOptions}
-          />
+    <FormModal
+      onClose={onClose}
+      open={open}
+      title="Add or update event template"
+    >
+      <FormGrid>
+        <FormSingleAutocomplete
+          form={form}
+          required
+          name="name"
+          label="Template name"
+          multi={false}
+          options={eventNamesOptions}
+        />
 
-          <DialogActions sx={{ padding: 0 }}>
-            <Button size="medium" variant="outlined" onClick={onClose}>
-              Cancel
-            </Button>
+        <DialogActions sx={{ padding: 0 }}>
+          <Button size="medium" variant="outlined" onClick={onClose}>
+            Cancel
+          </Button>
 
-            <Button
-              size="medium"
-              variant="contained"
-              onClick={handleSubmit(onSubmit)}
-            >
-              Submit
-            </Button>
-          </DialogActions>
-        </FormGrid>
-      </FormModal>
-    </FormProvider>
+          <Button
+            size="medium"
+            variant="contained"
+            onClick={() => form.handleSubmit()}
+          >
+            Submit
+          </Button>
+        </DialogActions>
+      </FormGrid>
+    </FormModal>
   );
 };
 

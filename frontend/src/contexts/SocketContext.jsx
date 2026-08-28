@@ -11,7 +11,7 @@ export const SocketContextProvider = ({ children }) => {
     const userLocalstorage = localStorage.getItem("user");
 
     return io.connect(
-      `${process.env.REACT_APP_HTTPS_PROXY}${
+      `${import.meta.env.VITE_HTTPS_PROXY}${
         userLocalstorage ? `?token=${JSON.parse(userLocalstorage).token}` : ""
       }`
     );

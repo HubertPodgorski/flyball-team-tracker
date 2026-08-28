@@ -1,34 +1,32 @@
 import React from "react";
-import { Controller, useFormContext } from "react-hook-form";
 import { Autocomplete, TextField } from "@mui/material";
+import type { AnyFieldApi } from "@tanstack/react-form";
 import { SelectOption } from "./types";
+import { FormFieldProps } from "./utils";
 
-interface Props {
+interface Props extends FormFieldProps {
   options: SelectOption[];
-  name: string;
   label: string;
 }
 
-const FormTextSelect = ({ options, name, label }: Props) => {
-  const { control } = useFormContext();
-
-  return (
-    <Controller
-      control={control}
-      name={name}
-      render={({ field: { onChange, value } }) => (
-        <Autocomplete
-          onChange={(event, value: string) => onChange(value)}
-          value={value}
-          freeSolo
-          options={options.map(({ value }) => value)}
-          renderInput={(params) => (
-            <TextField {...params} onChange={onChange} label={label} />
-          )}
-        />
-      )}
-    />
-  );
-};
+const FormTextSelect = ({ form, name, options, label }: Props) => (
+  <form.Field name={name}>
+    {(field: AnyFieldApi) => (
+      <Autocomplete
+        onChange={(event, value: string) => field.handleChange(value)}
+        value={field.state.value}
+        freeSolo
+        options={options.map(({ value }) => value)}
+        renderInput={(params) => (
+          <TextField
+            {...params}
+            onChange={(event) => field.handleChange(event.target.value)}
+            label={label}
+          />
+        )}
+      />
+    )}
+  </form.Field>
+);
 
 export default FormTextSelect;

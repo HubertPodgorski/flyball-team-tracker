@@ -1,6 +1,6 @@
 import React from "react";
 import { Box, Button, styled, useTheme } from "@mui/material";
-import { Draggable } from "react-beautiful-dnd";
+import { Draggable } from "@hello-pangea/dnd";
 import OpenWithIcon from "@mui/icons-material/OpenWith";
 
 const WrapperStyled = styled(Box)(({ theme }) => ({

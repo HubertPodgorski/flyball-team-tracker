@@ -1,5 +1,5 @@
-import React, { useCallback, useMemo } from "react";
-import { FormProvider, useForm } from "react-hook-form";
+import React from "react";
+import { useForm, useStore } from "@tanstack/react-form";
 import FormSelect from "../inputs/FormSelect";
 import { getFormattedDate } from "../../helpers/calendar";
 import { useAppContext } from "../../hooks/useAppContext";
@@ -8,13 +8,13 @@ import DogAttendanceChips from "../DogAttendanceChips";
 const CurrentEventSelectWithDogs = () => {
   const { events, tasks, dogs } = useAppContext();
 
-  const formMethods = useForm({
+  const form = useForm({
     defaultValues: { event: [] },
   });
 
-  const selectedEvent = formMethods.watch("event");
+  const selectedEvent = useStore(form.store, (state) => state.values.event);
 
-  const selectedEventDogs = useMemo(() => {
+  const getSelectedEventDogs = () => {
     if (!selectedEvent) return [];
 
     const event = events.find(({ _id }) => _id === selectedEvent);
@@ -30,17 +30,16 @@ const CurrentEventSelectWithDogs = () => {
 
       return { ...foundDog, status: eventDogData.status };
     });
-  }, [selectedEvent, events, dogs]);
+  };
 
-  const isDogPlanned = useCallback(
-    (dogId) =>
-      tasks.some(({ dogs }) =>
-        dogs.some(({ _id: taskDogId }) => dogId === taskDogId)
-      ),
-    [tasks]
-  );
+  const selectedEventDogs = getSelectedEventDogs();
 
-  const dogsWithAttendance = useMemo(() => {
+  const isDogPlanned = (dogId) =>
+    tasks.some(({ dogs }) =>
+      dogs.some(({ _id: taskDogId }) => dogId === taskDogId)
+    );
+
+  const getDogsWithAttendance = () => {
     if (!selectedEvent) return [];
 
     const event = events.find(({ _id }) => _id === selectedEvent);
@@ -62,24 +61,25 @@ const CurrentEventSelectWithDogs = () => {
         isPlanned,
       };
     });
-  }, [dogs, selectedEvent, events, isDogPlanned, selectedEventDogs]);
+  };
+
+  const dogsWithAttendance = getDogsWithAttendance();
 
   return (
     <>
-      <FormProvider {...formMethods}>
-        <FormSelect
-          multi={false}
-          name="event"
-          label="Event"
-          options={[
-            { value: "", label: "Brak" },
-            ...events.map(({ name, _id: value, date }) => ({
-              value,
-              label: `${name} ${getFormattedDate(date)}`,
-            })),
-          ]}
-        />
-      </FormProvider>
+      <FormSelect
+        form={form}
+        multi={false}
+        name="event"
+        label="Event"
+        options={[
+          { value: "", label: "Brak" },
+          ...events.map(({ name, _id: value, date }) => ({
+            value,
+            label: `${name} ${getFormattedDate(date)}`,
+          })),
+        ]}
+      />
 
       {dogsWithAttendance.length > 0 && (
         <DogAttendanceChips

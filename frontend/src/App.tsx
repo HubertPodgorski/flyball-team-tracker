@@ -1,16 +1,15 @@
 import React from "react";
-import { BrowserRouter } from "react-router-dom";
-import { Box, CssBaseline, ThemeProvider } from "@mui/material";
+import { RouterProvider } from "@tanstack/react-router";
+import { CssBaseline, ThemeProvider } from "@mui/material";
 import { AppContextProvider } from "./contexts/AppContext";
-import Router from "./Router";
+import { router } from "./router";
 import theme from "./helpers/theme";
 import SocketHandler from "./components/SocketHandler";
 import { AuthContextProvider } from "./contexts/AuthContext";
-import BottomNavBar from "./components/BottomNavBar";
 import { ConfirmProvider } from "material-ui-confirm";
 import { SnackbarProvider } from "notistack";
 import { SocketContextProvider } from "./contexts/SocketContext.jsx";
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFnsV3";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { pl } from "date-fns/locale/pl";
 
@@ -29,21 +28,7 @@ const App = () => (
 
                 <CssBaseline />
 
-                <BrowserRouter>
-                  <Box
-                    sx={{
-                      padding: theme.spacing(2, 2, 9, 2),
-                      [theme.breakpoints.down("md")]: {
-                        gridGap: theme.spacing(1),
-                        padding: theme.spacing(1, 1, 9, 1),
-                      },
-                    }}
-                  >
-                    <Router />
-
-                    <BottomNavBar />
-                  </Box>
-                </BrowserRouter>
+                <RouterProvider router={router} />
               </AppContextProvider>
             </LocalizationProvider>
           </SocketContextProvider>

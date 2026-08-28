@@ -1,7 +1,7 @@
 import React from "react";
 import { ListItemButton, ListItemText, styled } from "@mui/material";
 import { useAuthContext } from "../hooks/useAuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@tanstack/react-router";
 import { notAuthenticatedRoutes } from "../helpers/routesAndPaths";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 
@@ -17,7 +17,7 @@ const LoginLogoutListButton = () => {
     <MenuListItemStyled
       onClick={() => {
         logout();
-        navigate(notAuthenticatedRoutes.login);
+        navigate({ to: notAuthenticatedRoutes.login });
       }}
     >
       <LogoutRoundedIcon /> <ListItemText primary="Logout" />

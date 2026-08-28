@@ -6,19 +6,31 @@ import { Chip, IconButton, Typography } from "@mui/material";
 import TaskCell from "../tasksGrid/TaskCell";
 import ChipsGrid from "../ChipsGrid";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { DragDropContext } from "react-beautiful-dnd";
+import { DragDropContext } from "@hello-pangea/dnd";
 import { useIsMobile } from "../../hooks/useIsMobile";
 import { useMoveTasksRow } from "../../hooks/useMoveTasksRow";
 import { useMoveTasksCell } from "../../hooks/useMoveTasksCell";
 import AddTaskHereButton from "../../components/AddTaskHereButton";
 import { getNewTaskPosition } from "./helpers";
 import { useSocketContext } from "../../hooks/useSocketContext";
+import { Task } from "../../helpers/types";
+
+export type MappedTasks = Record<string, Record<string, Task[]>>;
+
+interface Props {
+  onTaskEditClick: (
+    task: Pick<Task, "position" | "description" | "dogs">,
+    _id: string
+  ) => Promise<void>;
+  mappedTasks: MappedTasks;
+  setMappedTasks: (mappedTasks: MappedTasks) => void;
+}
 
 const TasksDragNDrop = ({
   onTaskEditClick,
   mappedTasks,
   setMappedTasks,
-}) => {
+}: Props) => {
   const { socket } = useSocketContext();
 
   const moveTasksRow = useMoveTasksRow();

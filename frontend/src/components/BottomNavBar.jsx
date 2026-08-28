@@ -19,7 +19,7 @@ import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
 import TextSnippetIcon from "@mui/icons-material/TextSnippet";
 
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@tanstack/react-router";
 import { adminRoutes, userRoutes } from "../helpers/routesAndPaths";
 import LoginLogoutListButton from "./LoginLogoutListButton";
 import FormatListNumberedIcon from "@mui/icons-material/FormatListNumbered";
@@ -55,7 +55,7 @@ const BottomNavBar = () => {
 
         <MenuListItemStyled
           onClick={() => {
-            navigate(userRoutes.tasks);
+            navigate({ to: userRoutes.tasks });
           }}
         >
           <FormatListNumberedIcon /> <ListItemText primary="Tasks" />
@@ -63,7 +63,7 @@ const BottomNavBar = () => {
 
         <MenuListItemStyled
           onClick={() => {
-            navigate(userRoutes.calendar);
+            navigate({ to: userRoutes.calendar });
           }}
         >
           <CalendarMonthIcon /> <ListItemText primary="Calendar" />
@@ -71,7 +71,7 @@ const BottomNavBar = () => {
 
         <MenuListItemStyled
           onClick={() => {
-            navigate(userRoutes.myDogs);
+            navigate({ to: userRoutes.myDogs });
           }}
         >
           <PetsIcon /> <ListItemText primary="My Dogs" />
@@ -85,7 +85,7 @@ const BottomNavBar = () => {
 
             <MenuListItemStyled
               onClick={() => {
-                navigate(adminRoutes.tasks);
+                navigate({ to: adminRoutes.tasks });
               }}
             >
               <FormatListBulletedIcon />
@@ -94,7 +94,7 @@ const BottomNavBar = () => {
 
             <MenuListItemStyled
               onClick={() => {
-                navigate(adminRoutes.dogs);
+                navigate({ to: adminRoutes.dogs });
               }}
             >
               <PetsIcon />
@@ -103,7 +103,7 @@ const BottomNavBar = () => {
 
             <MenuListItemStyled
               onClick={() => {
-                navigate(adminRoutes.dogTasks);
+                navigate({ to: adminRoutes.dogTasks });
               }}
             >
               <TextSnippetIcon />
@@ -112,7 +112,7 @@ const BottomNavBar = () => {
 
             <MenuListItemStyled
               onClick={() => {
-                navigate(adminRoutes.events);
+                navigate({ to: adminRoutes.events });
               }}
             >
               <CalendarMonthIcon />
@@ -121,7 +121,7 @@ const BottomNavBar = () => {
 
             <MenuListItemStyled
               onClick={() => {
-                navigate(adminRoutes.eventTemplates);
+                navigate({ to: adminRoutes.eventTemplates });
               }}
             >
               <SaveIcon />
@@ -130,7 +130,7 @@ const BottomNavBar = () => {
 
             <MenuListItemStyled
               onClick={() => {
-                navigate(adminRoutes.users);
+                navigate({ to: adminRoutes.users });
               }}
             >
               <PersonIcon />
