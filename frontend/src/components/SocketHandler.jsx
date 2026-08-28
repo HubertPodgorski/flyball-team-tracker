@@ -14,6 +14,7 @@ const SocketHandler = () => {
     setDogTasks,
     setEventTemplates,
     setSubscriptionDetails,
+    setCrossPasses,
   } = useAppContext();
   const { user, setUserDogs } = useAuthContext();
 
@@ -47,6 +48,10 @@ const SocketHandler = () => {
       setEventTemplates(received);
     });
 
+    socket.on("cross_passes_updated", (received) => {
+      setCrossPasses(received);
+    });
+
     return () => {
       socket.disconnect();
     };
@@ -63,6 +68,7 @@ const SocketHandler = () => {
       setUsers([]);
       setDogTasks([]);
       setEventTemplates([]);
+      setCrossPasses([]);
 
       return;
     }
@@ -93,6 +99,10 @@ const SocketHandler = () => {
 
     socket.emit("get_subscription_details", (subscriptionDetails) => {
       setSubscriptionDetails(subscriptionDetails);
+    });
+
+    socket.emit("get_all_cross_passes", (crossPasses) => {
+      setCrossPasses(crossPasses);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, socket]);

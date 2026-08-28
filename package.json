@@ -5,13 +5,16 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build:api": "cd ./api npm run build",
-    "build:frontend": "cd ./frontend npm run build"
+    "postinstall": "cd api && yarn && cd ../frontend && yarn",
+    "dev": "concurrently -n api,frontend -c blue,green \"cd api && yarn dev\" \"cd frontend && yarn start\""
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "prettier": "^2.7.1"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.5"
   }
 }

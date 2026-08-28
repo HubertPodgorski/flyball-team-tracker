@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import {
+  Alert,
   Box,
   Button,
   Card,
@@ -26,7 +27,7 @@ const SignupForm = () => {
   const theme = useTheme();
 
   const navigate = useNavigate();
-  const { signup, loading } = useSignup();
+  const { signup, loading, error } = useSignup();
 
   const formMethods = useForm({
     defaultValues: {
@@ -50,6 +51,8 @@ const SignupForm = () => {
         <CardContent>
           <FormGrid>
             <Typography variant="h4">Signup</Typography>
+
+            {error && <Alert severity="error">{error}</Alert>}
 
             <FormTextField name="name" label="Name" required />
 

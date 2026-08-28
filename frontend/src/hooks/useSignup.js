@@ -4,9 +4,10 @@ import axios from "axios";
 import { userPaths } from "../helpers/routesAndPaths";
 import { useNavigate } from "react-router-dom";
 import { apiSuffix } from "../helpers/apiCall";
+import { getAuthErrorMessage } from "../helpers/authErrors";
 
 export const useSignup = () => {
-  const [error] = useState(null);
+  const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -14,6 +15,8 @@ export const useSignup = () => {
 
   const signup = async (name, email, password, teamCode) => {
     setLoading(true);
+    setError(null);
+
     const data = {
       password,
       email,
@@ -21,17 +24,20 @@ export const useSignup = () => {
       teamCode,
     };
 
-    const { data: responseData } = await axios.post(
-      `${apiSuffix}/users/signup`,
-      data
-    );
+    try {
+      const { data: responseData } = await axios.post(
+        `${apiSuffix}/users/signup`,
+        data
+      );
 
-    localStorage.setItem("user", JSON.stringify(responseData));
-    login(responseData.user);
-    navigate(userPaths.root);
-
-    // TODO: error handling
-    setLoading(false);
+      localStorage.setItem("user", JSON.stringify(responseData));
+      login(responseData.user);
+      navigate(userPaths.root);
+    } catch (signupError) {
+      setError(getAuthErrorMessage(signupError));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return { signup, loading, error };

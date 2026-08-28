@@ -6,7 +6,7 @@ Team/dog-club management app: tasks, dogs, events, event templates, calendar —
 
 - **Frontend** (`frontend/`): React 18 (CRA, mixed JS/TSX), MUI, socket.io-client, react-hook-form, react-router-dom v6.
 - **Backend** (`api/`): Express + Socket.IO, MongoDB via Mongoose, JWT auth (`jsonwebtoken` + `bcrypt`).
-- Package manager: **Yarn**. `frontend/` and `api/` are independent packages (own `yarn.lock` each) — there's no root workspace, don't `yarn install` at repo root.
+- Package manager: **Yarn**. `frontend/` and `api/` are independent packages (own `yarn.lock` each, no shared workspace) — kept deliberately separate since Heroku and Vercel each deploy one of them in isolation. The root `package.json` just wires up convenience scripts (see Setup/Running below); it doesn't merge them into one dependency tree.
 
 ## Prerequisites
 
@@ -21,16 +21,13 @@ frontend/   CRA app
 api/        Express + Socket.IO API
 ```
 
-Root `package.json` only holds `prettier` as a dependency. Its `build:api` / `build:frontend` scripts are broken (missing `&&`, and `api` has no `build` script) — ignore them, run each package's own scripts directly.
-
 ## Setup
 
-Install dependencies in each package separately:
-
 ```bash
-cd api && yarn
-cd ../frontend && yarn
+yarn
 ```
+
+Run once at the repo root — its `postinstall` cds into `api/` and `frontend/` and installs each. You still get two independent `node_modules`/`yarn.lock` pairs underneath, just without having to run the command twice yourself.
 
 ### Backend env
 
@@ -61,15 +58,11 @@ Used as the base URL for both REST calls and the Socket.IO connection — point 
 
 ## Running locally
 
-Two terminals:
-
 ```bash
-cd api && yarn dev        # nodemon, http://localhost:4001
+yarn dev
 ```
 
-```bash
-cd frontend && yarn start  # CRA dev server, http://localhost:3000
-```
+Runs both at once (`concurrently`) — API on http://localhost:4001 (nodemon), frontend on http://localhost:3000 (CRA dev server) — with each line prefixed so you can tell which process is talking. Still need both `.env` files in place first (below). To run just one side, use its own `yarn dev`/`yarn start` inside `api/`/`frontend/` directly.
 
 ## Creating a local account
 
@@ -88,6 +81,10 @@ All data (dogs, tasks, events, event templates, dog tasks) is scoped by `team` �
 New users get no `roles`. The admin panel (`/admin-panel/*`) is gated on `roles` including `ADMIN` ([useIsAdmin.ts](frontend/src/hooks/useIsAdmin.ts)). There's no UI or API to grant this — after signing up, open the user document in MongoDB (`users` collection) and set `roles: ["ADMIN"]` by hand.
 
 ## Scripts
+
+**Root:**
+- `yarn` — installs both packages (via `postinstall`)
+- `yarn dev` — runs both dev servers at once
 
 **Backend** (`api/`):
 - `yarn dev` — nodemon, restarts on change

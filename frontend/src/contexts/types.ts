@@ -1,4 +1,5 @@
 import {
+  CrossPass,
   Dog,
   DogTask,
   EventTemplate,
@@ -31,4 +32,6 @@ export interface AppContextType {
   setEventTemplates: Dispatch<SetStateAction<EventTemplate[]>>;
   subscriptionDetails?: Subscription;
   setSubscriptionDetails: Dispatch<SetStateAction<Subscription | undefined>>;
+  crossPasses: CrossPass[];
+  setCrossPasses: Dispatch<SetStateAction<CrossPass[]>>;
 }

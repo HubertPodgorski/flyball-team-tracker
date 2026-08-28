@@ -73,3 +73,12 @@ export interface Subscription {
   team: string;
   userId: string;
 }
+
+export interface CrossPass {
+  _id: string;
+  dogId: string;
+  runningOnDog?: Dog;
+  runningOnLights?: boolean;
+  note?: string;
+  startingPosition?: string;
+}
