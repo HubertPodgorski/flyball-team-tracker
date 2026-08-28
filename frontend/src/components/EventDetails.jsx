@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   Accordion,
   AccordionDetails,
@@ -10,7 +10,7 @@ import {
 } from "@mui/material";
 import ChipsGrid from "./ChipsGrid";
 import ButtonsGrid from "./ButtonsGrid";
-import { AppContext } from "../contexts/AppContext";
+import { useAppContext } from "../hooks/useAppContext";
 import { useAuthContext } from "../hooks/useAuthContext";
 import { useIsMobile } from "../hooks/useIsMobile";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -23,7 +23,7 @@ const EventDetails = ({ users, dogs, id }) => {
 
   const [detailsOpen, setDetailsOpen] = useState(false);
 
-  const { dogs: allDogs, users: allUsers } = useContext(AppContext);
+  const { dogs: allDogs, users: allUsers } = useAppContext();
   const { user } = useAuthContext();
   const { socket } = useSocketContext();
 
@@ -65,7 +65,7 @@ const EventDetails = ({ users, dogs, id }) => {
     socket.emit("toggle_event_user", { userId: user._id, _id: id });
   };
 
-  const handleDetailsOpenChange = () => {
+  const onDetailsOpenChange = () => {
     setDetailsOpen(!detailsOpen);
   };
 
@@ -116,7 +116,7 @@ const EventDetails = ({ users, dogs, id }) => {
     <Accordion
       TransitionProps={{ unmountOnExit: true, mountOnEnter: true }}
       expanded={detailsOpen}
-      onChange={handleDetailsOpenChange}
+      onChange={onDetailsOpenChange}
       disableGutters
       sx={{
         background: "#333",

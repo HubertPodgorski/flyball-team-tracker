@@ -21,8 +21,8 @@ const Tasks = () => {
     editingId: taskEditingId,
     formOpen: taskFormOpen,
     setFormOpen: setTaskFormOpen,
-    handleEditClick: handleTaskEditClick,
-    handleFormClose: handleTaskFormClose,
+    onEditClick: onTaskEditClick,
+    onFormClose: onTaskFormClose,
     formInitialData: taskFormInitialData,
   } = useFormHelpers({
     description: "",
@@ -46,7 +46,7 @@ const Tasks = () => {
       <CurrentEventSelectWithDogs />
 
       <TasksDragNDrop
-        handleTaskEditClick={handleTaskEditClick}
+        onTaskEditClick={onTaskEditClick}
         mappedTasks={mappedTasks}
         setMappedTasks={setMappedTasks}
       />
@@ -65,7 +65,7 @@ const Tasks = () => {
 
       <TaskForm
         open={taskFormOpen}
-        onClose={handleTaskFormClose}
+        onClose={onTaskFormClose}
         maxRowIndex={maxRowIndex}
         initialData={taskFormInitialData}
         editingId={taskEditingId}

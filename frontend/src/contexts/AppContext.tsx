@@ -1,14 +1,9 @@
 import React, { createContext, useState } from "react";
 import { AppContextType } from "./types";
 
-export const AppContext = createContext<Partial<AppContextType>>({
-  tasks: [],
-  dogs: [],
-  events: [],
-  users: [],
-  dogTasks: [],
-  eventTemplates: [],
-});
+export const AppContext = createContext<AppContextType | undefined>(
+  undefined
+);
 
 // TODO: start using reducers and actions
 export const AppContextProvider = ({ children }) => {
@@ -19,6 +14,7 @@ export const AppContextProvider = ({ children }) => {
   const [dogTasks, setDogTasks] = useState([]);
   const [eventTemplates, setEventTemplates] = useState([]);
   const [subscriptionDetails, setSubscriptionDetails] = useState();
+  const [crossPasses, setCrossPasses] = useState([]);
 
   return (
     <AppContext.Provider
@@ -37,6 +33,8 @@ export const AppContextProvider = ({ children }) => {
         setEventTemplates,
         subscriptionDetails,
         setSubscriptionDetails,
+        crossPasses,
+        setCrossPasses,
       }}
     >
       {children}

@@ -36,14 +36,14 @@ const BottomNavBar = () => {
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = React.useState(false);
 
-  const handleDrawerToggle = () => {
+  const onDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
 
   const isAdmin = useIsAdmin();
 
   const drawer = (
-    <Box onClick={handleDrawerToggle} sx={{ textAlign: "center" }}>
+    <Box onClick={onDrawerToggle} sx={{ textAlign: "center" }}>
       <Typography variant="h6" sx={{ my: 2 }}>
         Go to
       </Typography>
@@ -157,7 +157,7 @@ const BottomNavBar = () => {
           container={container}
           variant="temporary"
           open={mobileOpen}
-          onClose={handleDrawerToggle}
+          onClose={onDrawerToggle}
           ModalProps={{
             keepMounted: true,
           }}
@@ -173,17 +173,13 @@ const BottomNavBar = () => {
       </Box>
 
       <Toolbar>
-        {/*<StyledFab color="secondary" aria-label="add">*/}
-        {/*  <AddIcon />*/}
-        {/*</StyledFab>*/}
-
         <Box sx={{ flexGrow: 1 }} />
 
         <IconButton
           color="inherit"
           aria-label="open drawer"
           edge="start"
-          onClick={handleDrawerToggle}
+          onClick={onDrawerToggle}
           sx={{
             marginRight: 2,
           }}

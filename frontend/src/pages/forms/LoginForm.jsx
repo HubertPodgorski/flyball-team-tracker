@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo } from "react";
 import {
+  Alert,
   Box,
   Button,
   Card,
@@ -23,7 +24,7 @@ const LoginForm = () => {
 
   const { user } = useAuthContext();
   const navigate = useNavigate();
-  const { login, loading } = useLogin();
+  const { login, loading, error } = useLogin();
 
   useEffect(() => {
     const initialLocation = JSON.parse(
@@ -51,6 +52,8 @@ const LoginForm = () => {
         <CardContent>
           <FormGrid>
             <Typography variant="h4">Login</Typography>
+
+            {error && <Alert severity="error">{error}</Alert>}
 
             <FormTextField name="email" label="Email" required />
 

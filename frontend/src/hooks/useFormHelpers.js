@@ -5,7 +5,7 @@ export const useFormHelpers = (initialFormData) => {
   const [editingId, setEditingId] = useState();
   const [formOpen, setFormOpen] = useState(false);
 
-  const handleEditClick = async (formEditInitialData, id) => {
+  const onEditClick = async (formEditInitialData, id) => {
     await setFormInitialData(formEditInitialData);
 
     await setEditingId(id);
@@ -13,7 +13,7 @@ export const useFormHelpers = (initialFormData) => {
     setFormOpen(true);
   };
 
-  const handleFormClose = () => {
+  const onFormClose = () => {
     setFormOpen(false);
     setEditingId(undefined);
     setFormInitialData(initialFormData);
@@ -24,7 +24,7 @@ export const useFormHelpers = (initialFormData) => {
     editingId,
     formOpen,
     setFormOpen,
-    handleEditClick,
-    handleFormClose,
+    onEditClick,
+    onFormClose,
   };
 };

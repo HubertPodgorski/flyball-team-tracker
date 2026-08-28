@@ -25,7 +25,7 @@ const FormSingleAutocomplete = ({
           freeSolo
           fullWidth
           options={options}
-          onChange={(e, newValue) => {
+          onChange={(event, newValue) => {
             let valueToSet = "";
 
             if (typeof newValue === "string") {

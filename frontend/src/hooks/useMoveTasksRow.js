@@ -1,5 +1,4 @@
-import { useContext } from "react";
-import { AppContext } from "../contexts/AppContext";
+import { useAppContext } from "./useAppContext";
 import { useSocketContext } from "./useSocketContext";
 
 const mapTasksToNewRowIndex = (oldRowIndex, newRowIndex, tasks) =>
@@ -19,7 +18,7 @@ const mapTasksToNewRowIndex = (oldRowIndex, newRowIndex, tasks) =>
 
 export const useMoveTasksRow = () => {
   const { socket } = useSocketContext();
-  const { tasks } = useContext(AppContext);
+  const { tasks } = useAppContext();
 
   return (result, mappedTasks, setMappedTasks) => {
     const { destination, source } = result;

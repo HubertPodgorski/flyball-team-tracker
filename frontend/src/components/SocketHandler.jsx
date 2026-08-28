@@ -1,5 +1,5 @@
-import { useContext, useEffect } from "react";
-import { AppContext } from "../contexts/AppContext";
+import { useEffect } from "react";
+import { useAppContext } from "../hooks/useAppContext";
 import { useSocketContext } from "../hooks/useSocketContext";
 import { useAuthContext } from "../hooks/useAuthContext";
 
@@ -14,7 +14,8 @@ const SocketHandler = () => {
     setDogTasks,
     setEventTemplates,
     setSubscriptionDetails,
-  } = useContext(AppContext);
+    setCrossPasses,
+  } = useAppContext();
   const { user, setUserDogs } = useAuthContext();
 
   useEffect(() => {
@@ -30,7 +31,7 @@ const SocketHandler = () => {
       setDogs(received);
 
       // sync dog changes to user dogs
-      const userDogIds = user.dogs.flatMap(({ _id }) => _id);
+      const userDogIds = user.dogs.map(({ _id }) => _id);
       const userDogs = received.filter(({ _id }) => userDogIds.includes(_id));
       setUserDogs(userDogs);
     });
@@ -45,6 +46,10 @@ const SocketHandler = () => {
 
     socket.on("event_templates_updated", (received) => {
       setEventTemplates(received);
+    });
+
+    socket.on("cross_passes_updated", (received) => {
+      setCrossPasses(received);
     });
 
     return () => {
@@ -63,6 +68,7 @@ const SocketHandler = () => {
       setUsers([]);
       setDogTasks([]);
       setEventTemplates([]);
+      setCrossPasses([]);
 
       return;
     }
@@ -93,6 +99,10 @@ const SocketHandler = () => {
 
     socket.emit("get_subscription_details", (subscriptionDetails) => {
       setSubscriptionDetails(subscriptionDetails);
+    });
+
+    socket.emit("get_all_cross_passes", (crossPasses) => {
+      setCrossPasses(crossPasses);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, socket]);

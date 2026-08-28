@@ -1,10 +1,10 @@
-import React, { useContext } from "react";
+import React from "react";
 import { Box, Chip, IconButton, List, ListItem } from "@mui/material";
 import CenteredContent from "../../components/CenteredContent";
 import DeleteIcon from "@mui/icons-material/Delete";
 import UserForm from "../forms/UserForm";
 import { useFormHelpers } from "../../hooks/useFormHelpers";
-import { AppContext } from "../../contexts/AppContext";
+import { useAppContext } from "../../hooks/useAppContext";
 import { useConfirmModal } from "../../hooks/useConfirmModal";
 import ChipsGrid from "../../components/ChipsGrid";
 import { useSocketContext } from "../../hooks/useSocketContext";
@@ -12,14 +12,14 @@ import { useSocketContext } from "../../hooks/useSocketContext";
 const Users = () => {
   const { socket } = useSocketContext();
   const confirm = useConfirmModal();
-  const { users } = useContext(AppContext);
+  const { users } = useAppContext();
 
   const {
     formInitialData,
     editingId,
     formOpen,
-    handleEditClick,
-    handleFormClose,
+    onEditClick,
+    onFormClose,
   } = useFormHelpers({
     name: "",
     dogs: [],
@@ -29,20 +29,6 @@ const Users = () => {
     await confirm();
 
     socket.emit("delete_user", { _id: id });
-  };
-
-  const onFormClose = () => {
-    handleFormClose();
-  };
-
-  const onEditClick = async ({ name, dogs }, id) => {
-    await handleEditClick(
-      {
-        name,
-        dogs,
-      },
-      id
-    );
   };
 
   return (
@@ -74,8 +60,8 @@ const Users = () => {
 
               <IconButton
                 color="error"
-                onClick={(e) => {
-                  e.stopPropagation();
+                onClick={(event) => {
+                  event.stopPropagation();
 
                   onDeleteClick(_id);
                 }}
