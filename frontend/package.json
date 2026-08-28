@@ -27,7 +27,7 @@
     "react-hook-form": "^7.39.1",
     "react-router-dom": "^6.4.3",
     "react-scripts": "^5.0.1",
-    "socket.io-client": "^4.5.3",
+    "socket.io-client": "^4.8.3",
     "styled-components": "^6.1.6",
     "typescript": "^5.3.3",
     "web-vitals": "^3.5.1"
