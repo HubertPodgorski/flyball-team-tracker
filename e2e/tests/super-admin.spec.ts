@@ -1,45 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { uniqueEmail } from "../helpers/testData";
 import { promoteToAdmin, promoteToSuperAdmin } from "../helpers/db";
-
-const signupAndLoginAsAdmin = async (
-  page,
-  { email, name, teamCode }: { email: string; name: string; teamCode: string }
-) => {
-  const password = "password123";
-
-  await page.goto("/signup");
-  await page.getByRole("textbox", { name: "Name", exact: true }).fill(name);
-  await page.getByRole("textbox", { name: "Email", exact: true }).fill(email);
-  await page.getByRole("textbox", { name: "Password", exact: true }).fill(password);
-  await page.getByRole("textbox", { name: "Repeat password", exact: true }).fill(password);
-  await page.getByRole("textbox", { name: "Team code", exact: true }).fill(teamCode);
-  await page.getByRole("button", { name: "Signup" }).click();
-  await page.waitForURL(/\/user-panel/);
-};
-
-const login = async (page, email: string) => {
-  await page.getByRole("textbox", { name: "Email", exact: true }).fill(email);
-  await page
-    .getByRole("textbox", { name: "Password", exact: true })
-    .fill("password123");
-  await page.getByRole("button", { name: "Login" }).click();
-  await page.waitForURL(/\/user-panel/);
-};
-
-const logout = async (page) => {
-  await page.getByRole("button", { name: "open drawer" }).click();
-  await page.getByText("Logout").click();
-  await page.waitForURL(/\/login/);
-};
-
-const addDog = async (page, dogName: string) => {
-  await page.goto("/admin-panel/dogs");
-  await page.getByRole("button", { name: "Add" }).click();
-  await page.getByRole("textbox", { name: "Name", exact: true }).fill(dogName);
-  await page.getByRole("button", { name: "Submit" }).click();
-  await expect(page.getByText(dogName)).toBeVisible();
-};
+import { addDog, login, logout, signupAndLoginAsAdmin } from "../helpers/auth";
 
 test("a super-admin can switch teams, act as them, and stays out of their user lists", async ({
   page,

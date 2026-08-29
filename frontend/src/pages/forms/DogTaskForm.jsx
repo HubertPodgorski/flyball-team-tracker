@@ -6,13 +6,25 @@ import FormModal from "../../components/FormModal";
 import FormGrid from "../../components/FormGrid";
 import { useSocketContext } from "../../hooks/useSocketContext";
 
-const DogTaskForm = ({ open, onClose, initialData, editingId }) => {
+const DogTaskForm = ({
+  open,
+  onClose,
+  initialData,
+  editingId,
+  onSubmitOverride,
+}) => {
   const { socket } = useSocketContext();
 
   const form = useForm({
     defaultValues: initialData,
     onSubmit: async ({ value: { name } }) => {
       const data = { name };
+
+      if (onSubmitOverride) {
+        await onSubmitOverride(data, editingId);
+        onClose();
+        return;
+      }
 
       if (editingId) {
         await socket.emit(

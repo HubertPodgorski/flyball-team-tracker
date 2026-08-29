@@ -1,5 +1,5 @@
 import React from "react";
-import { Box } from "@mui/material";
+import { Box, useTheme } from "@mui/material";
 import { useFormHelpers } from "../hooks/useFormHelpers";
 import TaskForm from "../pages/forms/TaskForm";
 
@@ -10,6 +10,7 @@ interface Props {
 }
 
 const AddTaskHereButton = ({ columnIndex, rowIndex, positionIndex }: Props) => {
+  const theme = useTheme();
   const {
     editingId: taskEditingId,
     formOpen: taskFormOpen,
@@ -27,9 +28,12 @@ const AddTaskHereButton = ({ columnIndex, rowIndex, positionIndex }: Props) => {
       <Box
         sx={{
           padding: 1,
-          background: "#333",
+          background: "transparent",
+          border: `1px solid ${theme.palette.primary.main}`,
+          color: theme.palette.primary.main,
           borderRadius: "6px",
-          alignSelf: "flex-end",
+          width: "100%",
+          textAlign: "center",
           cursor: "pointer",
         }}
         onClick={() => setTaskFormOpen(true)}

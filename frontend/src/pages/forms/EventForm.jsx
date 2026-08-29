@@ -9,7 +9,13 @@ import { eventTypeOptions } from "../../components/inputs/consts";
 import FormSelect from "../../components/inputs/FormSelect";
 import { useSocketContext } from "../../hooks/useSocketContext";
 
-const EventForm = ({ open, onClose, initialData, editingId }) => {
+const EventForm = ({
+  open,
+  onClose,
+  initialData,
+  editingId,
+  onSubmitOverride,
+}) => {
   const { socket } = useSocketContext();
 
   const form = useForm({
@@ -20,6 +26,12 @@ const EventForm = ({ open, onClose, initialData, editingId }) => {
         date: values.date,
         type: values.type,
       };
+
+      if (onSubmitOverride) {
+        await onSubmitOverride(data, editingId);
+        onClose();
+        return;
+      }
 
       if (editingId) {
         socket.emit("update_event", { ...data, _id: editingId }, () => {

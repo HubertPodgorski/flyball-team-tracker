@@ -3,16 +3,22 @@ import { Box, Button, styled, useTheme } from "@mui/material";
 import { Draggable } from "@hello-pangea/dnd";
 import OpenWithIcon from "@mui/icons-material/OpenWith";
 
-const WrapperStyled = styled(Box)(({ theme }) => ({
+const ColumnsStyled = styled(Box, {
+  shouldForwardProp: (prop) => prop !== "userPanel",
+})(({ theme, userPanel }) => ({
   display: "grid",
-  gridGap: theme.spacing(2),
+  // Admin columns touch (no gap); the user-facing board keeps an 8px gap
+  // between them. Computed here, together with its breakpoint override, so
+  // there's a single source of truth instead of an sx prop trying to win a
+  // specificity fight against this same component's own media query.
+  gridGap: userPanel ? "8px" : 0,
   gridTemplateColumns: "1fr 1fr",
   borderRadius: "6px",
   padding: theme.spacing(1),
 
   [theme.breakpoints.down("md")]: {
-    gridGap: theme.spacing(1),
-    padding: theme.spacing(0.5),
+    gridGap: userPanel ? "8px" : 0,
+    padding: userPanel ? theme.spacing(1) : 0,
   },
 }));
 
@@ -23,28 +29,31 @@ const TasksRow = ({ children, rowIndex, userPanel, adminPanel }) => {
     return (
       <Draggable draggableId={`row-${rowIndex}`} index={+rowIndex} type="row">
         {({ draggableProps, dragHandleProps, innerRef }) => (
-          <WrapperStyled
+          <Box
             {...draggableProps}
             ref={innerRef}
             sx={{
-              gridRow: `${Number(rowIndex) + 1} / ${Number(rowIndex) + 2}`,
-              border: userPanel ? "1px solid #ddd" : "none",
-              position: "relative",
-              paddingTop: theme.spacing(4),
+              display: "flex",
+              flexDirection: "column",
+              border: userPanel ? `1px solid ${theme.palette.secondary.main}` : "none",
+              borderRadius: "6px",
               marginBottom: theme.spacing(0.5),
-              [theme.breakpoints.down("md")]: {
-                paddingTop: theme.spacing(4),
-              },
             }}
           >
             <Box {...dragHandleProps}>
               <Button
                 component={Box}
+                nativeButton={false}
+                disableRipple
                 onClick={(event) => event.preventDefault()}
                 sx={{
-                  position: "absolute",
-                  top: 0,
-                  right: 0,
+                  width: "100%",
+                  borderColor: theme.palette.secondary.main,
+                  borderBottom: "none",
+                  borderTopLeftRadius: "6px",
+                  borderTopRightRadius: "6px",
+                  borderBottomLeftRadius: 0,
+                  borderBottomRightRadius: 0,
                 }}
                 variant="outlined"
                 color="info"
@@ -53,21 +62,21 @@ const TasksRow = ({ children, rowIndex, userPanel, adminPanel }) => {
               </Button>
             </Box>
 
-            {children}
-          </WrapperStyled>
+            <ColumnsStyled>{children}</ColumnsStyled>
+          </Box>
         )}
       </Draggable>
     );
 
   return (
-    <WrapperStyled
+    <ColumnsStyled
+      userPanel={userPanel}
       sx={{
-        gridRow: `${Number(rowIndex) + 1} / ${Number(rowIndex) + 2}`,
-        border: userPanel ? "1px solid #ddd" : "none",
+        border: userPanel ? `1px solid ${theme.palette.secondary.main}` : "none",
       }}
     >
       {children}
-    </WrapperStyled>
+    </ColumnsStyled>
   );
 };
 

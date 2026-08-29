@@ -1,12 +1,7 @@
 import React from "react";
-import {
-  Button,
-  IconButton,
-  List,
-  ListItem,
-  ListItemButton,
-} from "@mui/material";
+import { IconButton, List, ListItem, ListItemButton } from "@mui/material";
 import CenteredContent from "../../components/CenteredContent";
+import AddFab, { FAB_CONTENT_CLEARANCE } from "../../components/AddFab";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EventForm from "../forms/EventForm";
 import { useFormHelpers } from "../../hooks/useFormHelpers";
@@ -44,7 +39,7 @@ const Events = () => {
 
   return (
     <>
-      <CenteredContent>
+      <CenteredContent sx={{ marginBottom: `${FAB_CONTENT_CLEARANCE}px` }}>
         <List>
           {events.map(({ name, _id, date, type }) => (
             <ListItem
@@ -73,15 +68,9 @@ const Events = () => {
             </ListItem>
           ))}
         </List>
-
-        <Button
-          variant="contained"
-          color="success"
-          onClick={() => setFormOpen(true)}
-        >
-          Add
-        </Button>
       </CenteredContent>
+
+      <AddFab onClick={() => setFormOpen(true)} />
 
       <EventForm
         onClose={onFormClose}

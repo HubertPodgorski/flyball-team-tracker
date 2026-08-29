@@ -108,8 +108,17 @@ const updateTaskById = async (received, callback, io, userToken) => {
 const updateTasksOrder = async (received, io, userToken) => {
   const { team } = jwt.decode(userToken);
 
-  for (const task of received.tasks) {
-    await TaskModel.findOneAndUpdate({ _id: task._id }, { ...task });
+  // Single round trip instead of N sequential awaited updates - the
+  // previous for-loop's cumulative latency (multiplied by however many
+  // tasks a drag reorders, against a remote replica-set cluster, not
+  // localhost) was long enough to produce a visibly delayed "tasks_updated"
+  // echo that could land well after the client's own optimistic update.
+  if (received.tasks.length) {
+    await TaskModel.bulkWrite(
+      received.tasks.map((task) => ({
+        updateOne: { filter: { _id: task._id }, update: { ...task } },
+      }))
+    );
   }
 
   const allTasks = await TaskModel.find({ team });

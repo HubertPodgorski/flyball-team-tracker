@@ -122,3 +122,34 @@ table {
   border-collapse: collapse;
   border-spacing: 0;
 }
+
+/* @hello-pangea/dnd animates its drag placeholder's height/width/margin by
+   default (0.2s) via an inline style. Override with !important so it
+   resizes instantly instead of visibly growing/shrinking. */
+[data-rfd-placeholder-context-id] {
+  transition: none !important;
+}
+
+/* Same for the other draggable items sliding out of the way of a drag - they
+   get an inline transform transition too.
+   NOTE: this must stay a non-zero duration, not `transition: none` or a
+   near-zero one. Two reasons:
+   1. @hello-pangea/dnd detects the dropped item's own drop animation
+      finishing by listening for a real `transitionend` event on its
+      `transform` property (dnd.cjs.js onMoveEnd/onTransitionEnd) -
+      `transition: none` means that event never fires, so the library's
+      internal state gets stuck thinking a drag/drop is still in progress
+      until the *next* drag forces it to resolve, tripping its "add/remove a
+      Draggable while dragging" warning on an unrelated task.
+   Keep this short, though: the library force-completes a still-animating
+   previous drop when a new drag starts (dnd.cjs.js `lift`), but if THIS
+   drop's own transitionend fires even later than that, it throws "Cannot
+   finish a drop animating when no drop is occurring" - a real crash seen
+   from two drags done in quick succession. A longer duration only widens
+   that race window; the "wrong-spot-then-right-spot" double jump this was
+   originally lengthened to mask turned out to have a different real fix
+   (useGetMappedTasks's useLayoutEffect), so there's no upside to keeping it
+   long - short and reliable is strictly better here. */
+[data-rfd-draggable-context-id] {
+  transition-duration: 0.02s !important;
+}

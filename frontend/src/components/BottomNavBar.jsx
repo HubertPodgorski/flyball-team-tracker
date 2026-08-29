@@ -30,8 +30,11 @@ import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 
 const drawerWidth = 240;
 
-const MenuListItemStyled = styled(ListItemButton)(() => ({
-  textAlign: "center",
+const MenuListItemStyled = styled(ListItemButton)(({ theme }) => ({
+  textAlign: "left",
+  "& .MuiSvgIcon-root": {
+    marginRight: theme.spacing(1),
+  },
 }));
 
 const BottomNavBar = () => {
@@ -47,7 +50,7 @@ const BottomNavBar = () => {
 
   const drawer = (
     <Box onClick={onDrawerToggle} sx={{ textAlign: "center" }}>
-      <Typography variant="h6" sx={{ my: 2 }}>
+      <Typography variant="h6" sx={{ my: 1 }}>
         Go to
       </Typography>
 
@@ -84,7 +87,7 @@ const BottomNavBar = () => {
           <>
             <Divider />
 
-            <MenuListItemStyled>Admin views</MenuListItemStyled>
+            <MenuListItemStyled>Admin</MenuListItemStyled>
 
             <MenuListItemStyled
               onClick={() => {
@@ -155,6 +158,46 @@ const BottomNavBar = () => {
             >
               <SwapHorizIcon /> <ListItemText primary="Team switch" />
             </MenuListItemStyled>
+
+            <MenuListItemStyled
+              onClick={() => {
+                navigate({ to: "/super-admin/users" });
+              }}
+            >
+              <PersonIcon /> <ListItemText primary="All users" />
+            </MenuListItemStyled>
+
+            <MenuListItemStyled
+              onClick={() => {
+                navigate({ to: "/super-admin/dogs" });
+              }}
+            >
+              <PetsIcon /> <ListItemText primary="All dogs" />
+            </MenuListItemStyled>
+
+            <MenuListItemStyled
+              onClick={() => {
+                navigate({ to: "/super-admin/dog-tasks" });
+              }}
+            >
+              <TextSnippetIcon /> <ListItemText primary="All dog tasks" />
+            </MenuListItemStyled>
+
+            <MenuListItemStyled
+              onClick={() => {
+                navigate({ to: "/super-admin/events" });
+              }}
+            >
+              <CalendarMonthIcon /> <ListItemText primary="All events" />
+            </MenuListItemStyled>
+
+            <MenuListItemStyled
+              onClick={() => {
+                navigate({ to: "/super-admin/event-templates" });
+              }}
+            >
+              <SaveIcon /> <ListItemText primary="All event templates" />
+            </MenuListItemStyled>
           </>
         )}
 
@@ -169,7 +212,14 @@ const BottomNavBar = () => {
     window !== undefined ? () => window.document.body : undefined;
 
   return (
-    <AppBar position="fixed" color="primary" sx={{ top: "auto", bottom: 0 }}>
+    <AppBar
+      position="fixed"
+      sx={{
+        top: "auto",
+        bottom: 0,
+        backgroundColor: (theme) => theme.palette.background.paper,
+      }}
+    >
       <Box component="nav">
         <Drawer
           anchor="right"
@@ -191,7 +241,9 @@ const BottomNavBar = () => {
         </Drawer>
       </Box>
 
-      <Toolbar>
+      <Toolbar
+        sx={{ backgroundColor: (theme) => theme.palette.background.paper }}
+      >
         <Box sx={{ flexGrow: 1 }} />
 
         <IconButton

@@ -18,55 +18,55 @@ const mapTasksToNewRowIndex = (oldRowIndex, newRowIndex, tasks) =>
 
 export const useMoveTasksRow = () => {
   const { socket } = useSocketContext();
-  const { tasks } = useAppContext();
+  const { tasks, setTasks } = useAppContext();
 
-  return (result, mappedTasks, setMappedTasks) => {
+  return (result) => {
     const { destination, source } = result;
+
+    if (!destination) return;
 
     const startIndex = Math.min(destination.index, source.index);
     const endIndex = Math.max(destination.index, source.index);
 
-    const movingTopDown = destination.index - source.index > 0;
-
     if (startIndex === endIndex) return;
 
+    const movingTopDown = destination.index - source.index > 0;
+
+    // Every row index between source and destination shifts by one to make
+    // room, except the moved row itself which jumps straight to
+    // destination.index - this only needs the numeric range, not
+    // mappedTasks, so there's a single source of truth for the resulting
+    // task order (mapTasksForAdminPanel deriving it from `tasks`) instead of
+    // this hook computing its own, separately-derived mappedTasks that could
+    // visibly disagree with it once the server's confirmation lands.
     let changedTasks = [];
 
-    const newMappedTasks = Object.keys(mappedTasks).reduce(
-      (newMappedTasks, stringRowKey) => {
-        const rowKey = +stringRowKey;
-        if (rowKey < startIndex || rowKey > endIndex) {
-          return newMappedTasks;
-        }
+    for (let rowKey = startIndex; rowKey <= endIndex; rowKey++) {
+      const newKey =
+        rowKey === source.index
+          ? destination.index
+          : movingTopDown
+            ? rowKey - 1
+            : rowKey + 1;
 
-        if (rowKey === source.index) {
-          changedTasks = [
-            ...changedTasks,
-            ...mapTasksToNewRowIndex(source.index, destination.index, tasks),
-          ];
+      changedTasks = [
+        ...changedTasks,
+        ...mapTasksToNewRowIndex(rowKey, newKey, tasks),
+      ];
+    }
 
-          return {
-            ...newMappedTasks,
-            [destination.index]: { ...mappedTasks[source.index] },
-          };
-        }
+    const updatedTasksListWithChanges = tasks.map((task) => {
+      const updatedTaskFound = changedTasks.find(
+        ({ _id: changedTaskId }) => changedTaskId === task._id
+      );
 
-        const newKey = movingTopDown ? +rowKey - 1 : +rowKey + 1;
+      if (!updatedTaskFound) return task;
 
-        changedTasks = [
-          ...changedTasks,
-          ...mapTasksToNewRowIndex(rowKey, newKey, tasks),
-        ];
+      return { ...task, ...updatedTaskFound };
+    });
 
-        return {
-          ...newMappedTasks,
-          [newKey]: { ...mappedTasks[rowKey] },
-        };
-      },
-      { ...mappedTasks }
-    );
+    setTasks(updatedTasksListWithChanges);
 
-    setMappedTasks(newMappedTasks);
     socket.emit("update_tasks_order", { tasks: changedTasks });
   };
 };

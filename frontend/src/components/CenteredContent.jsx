@@ -16,7 +16,7 @@ const WrapperStyled = styled(Paper)(({ theme }) => ({
   },
 }));
 
-const CenteredContent = ({ children }) => (
-  <WrapperStyled>{children}</WrapperStyled>
+const CenteredContent = ({ children, sx = {} }) => (
+  <WrapperStyled sx={sx}>{children}</WrapperStyled>
 );
 export default CenteredContent;

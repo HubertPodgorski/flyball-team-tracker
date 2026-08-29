@@ -22,6 +22,6 @@
   ],
   "start_url": "./user-panel/tasks",
   "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#FE6B01"
+  "theme_color": "#17191A",
+  "background_color": "#17191A"
 }

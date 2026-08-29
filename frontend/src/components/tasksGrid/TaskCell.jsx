@@ -35,6 +35,7 @@ const TaskCell = ({ children, adminPanel, id, index, onClick }) => {
           {...draggableProps}
           {...dragHandleProps}
           ref={innerRef}
+          sx={{ marginLeft: "4px", marginRight: "4px" }}
           onClick={() => {
             onClick?.();
           }}

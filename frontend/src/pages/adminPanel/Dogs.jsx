@@ -1,13 +1,8 @@
 import React from "react";
 import DogForm from "../forms/DogForm";
-import {
-  Button,
-  IconButton,
-  List,
-  ListItem,
-  ListItemButton,
-} from "@mui/material";
+import { IconButton, List, ListItem, ListItemButton } from "@mui/material";
 import CenteredContent from "../../components/CenteredContent";
+import AddFab, { FAB_CONTENT_CLEARANCE } from "../../components/AddFab";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useFormHelpers } from "../../hooks/useFormHelpers";
 import { useAppContext } from "../../hooks/useAppContext";
@@ -39,7 +34,7 @@ const Dogs = () => {
 
   return (
     <>
-      <CenteredContent>
+      <CenteredContent sx={{ marginBottom: `${FAB_CONTENT_CLEARANCE}px` }}>
         <List>
           {dogs.map(({ name, _id }) => (
             <ListItem
@@ -63,15 +58,9 @@ const Dogs = () => {
             </ListItem>
           ))}
         </List>
-
-        <Button
-          variant="contained"
-          color="success"
-          onClick={() => setFormOpen(true)}
-        >
-          Add
-        </Button>
       </CenteredContent>
+
+      <AddFab onClick={() => setFormOpen(true)} />
 
       <DogForm
         onClose={onFormClose}

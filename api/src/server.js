@@ -8,6 +8,7 @@ const dogTasksSocketRoutes = require("./socketRoutes/dogTasks");
 const eventTemplatesSocketRoutes = require("./socketRoutes/eventTemplates");
 const crossPassesSocketRoutes = require("./socketRoutes/crossPasses");
 const usersRoutes = require("./routes/users");
+const superAdminRoutes = require("./routes/superAdmin");
 
 const jwt = require("jsonwebtoken");
 const express = require("express");
@@ -48,6 +49,7 @@ app.use((req, res, next) => {
 });
 
 app.use("/users", usersRoutes);
+app.use("/super-admin", superAdminRoutes(io));
 
 mongoose
   .connect(process.env.MONGO_URL)

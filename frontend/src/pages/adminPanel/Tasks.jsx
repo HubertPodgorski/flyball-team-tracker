@@ -1,26 +1,23 @@
-import React from "react";
+import React, { useState } from "react";
 import { useGetMappedTasks } from "../../hooks/useGetMappedTasks";
-import { Box, Button, useTheme } from "@mui/material";
+import { Box, useTheme } from "@mui/material";
 import TaskForm from "../forms/TaskForm";
 import { useGetMaxRowIndex } from "../../hooks/useGetMaxRowIndex";
 import { useFormHelpers } from "../../hooks/useFormHelpers";
-import ButtonsGrid from "../../components/ButtonsGrid";
-import SaveEventAsTemplateButton from "../../components/admin/SaveEventAsTemplateButton";
 import TasksDragNDrop from "../../components/admin/TasksDragNDrop";
 import CurrentEventSelectWithDogs from "../../components/admin/CurrentEventSelectWithDogs";
-import EventTemplateSelector from "../../components/admin/EventTemplateSelector";
 
 const Tasks = () => {
   const theme = useTheme();
   // TODO: load tasks from template
 
-  const { mappedTasks, setMappedTasks } = useGetMappedTasks(true);
+  const [isDragging, setIsDragging] = useState(false);
+  const { mappedTasks } = useGetMappedTasks(true, isDragging);
   const maxRowIndex = useGetMaxRowIndex(mappedTasks);
 
   const {
     editingId: taskEditingId,
     formOpen: taskFormOpen,
-    setFormOpen: setTaskFormOpen,
     onEditClick: onTaskEditClick,
     onFormClose: onTaskFormClose,
     formInitialData: taskFormInitialData,
@@ -41,27 +38,14 @@ const Tasks = () => {
         },
       }}
     >
-      <EventTemplateSelector />
-
       <CurrentEventSelectWithDogs />
 
       <TasksDragNDrop
         onTaskEditClick={onTaskEditClick}
         mappedTasks={mappedTasks}
-        setMappedTasks={setMappedTasks}
+        onDragStart={() => setIsDragging(true)}
+        onDragEnd={() => setIsDragging(false)}
       />
-
-      <ButtonsGrid>
-        <Button
-          variant="contained"
-          color="success"
-          onClick={() => setTaskFormOpen(true)}
-        >
-          Add
-        </Button>
-
-        <SaveEventAsTemplateButton />
-      </ButtonsGrid>
 
       <TaskForm
         open={taskFormOpen}

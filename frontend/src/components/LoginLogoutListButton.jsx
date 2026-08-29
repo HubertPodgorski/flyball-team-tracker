@@ -5,8 +5,11 @@ import { useNavigate } from "@tanstack/react-router";
 import { notAuthenticatedRoutes } from "../helpers/routesAndPaths";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 
-const MenuListItemStyled = styled(ListItemButton)(() => ({
-  textAlign: "center",
+const MenuListItemStyled = styled(ListItemButton)(({ theme }) => ({
+  textAlign: "left",
+  "& .MuiSvgIcon-root": {
+    marginRight: theme.spacing(1),
+  },
 }));
 
 const LoginLogoutListButton = () => {

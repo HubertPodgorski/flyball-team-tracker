@@ -10,7 +10,13 @@ import { useSnackbar } from "notistack";
 import FormSingleAutocomplete from "../../components/inputs/FormSingleAutocomplete";
 import { useSocketContext } from "../../hooks/useSocketContext";
 
-const EventTemplateForm = ({ open, onClose, initialData, editingId }) => {
+const EventTemplateForm = ({
+  open,
+  onClose,
+  initialData,
+  editingId,
+  onSubmitOverride,
+}) => {
   const { events, eventTemplates } = useAppContext();
   const { socket } = useSocketContext();
 
@@ -20,6 +26,12 @@ const EventTemplateForm = ({ open, onClose, initialData, editingId }) => {
     defaultValues: initialData,
     onSubmit: async ({ value: { name } }) => {
       const data = { name };
+
+      if (onSubmitOverride) {
+        await onSubmitOverride(data, editingId);
+        onClose();
+        return;
+      }
 
       if (editingId) {
         await socket.emit(

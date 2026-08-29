@@ -8,9 +8,17 @@ import FormSelect from "../../components/inputs/FormSelect";
 import { useAppContext } from "../../hooks/useAppContext";
 import { useSocketContext } from "../../hooks/useSocketContext";
 
-const UserForm = ({ open, onClose, initialData, editingId }) => {
-  const { dogs } = useAppContext();
+const UserForm = ({
+  open,
+  onClose,
+  initialData,
+  editingId,
+  dogsOverride,
+  onSubmitOverride,
+}) => {
+  const { dogs: contextDogs } = useAppContext();
   const { socket } = useSocketContext();
+  const dogs = dogsOverride ?? contextDogs;
 
   const form = useForm({
     defaultValues: initialData,
@@ -30,6 +38,12 @@ const UserForm = ({ open, onClose, initialData, editingId }) => {
         name: values.name,
         dogs: selectedDogs,
       };
+
+      if (onSubmitOverride) {
+        await onSubmitOverride(data, editingId);
+        onClose();
+        return;
+      }
 
       if (editingId) {
         socket.emit("update_user", { ...data, _id: editingId }, () =>

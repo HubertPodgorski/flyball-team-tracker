@@ -1,6 +1,7 @@
 import React from "react";
 import {
   Alert,
+  alpha,
   Box,
   Button,
   Card,
@@ -43,7 +44,14 @@ const SignupForm = () => {
   });
 
   return (
-    <Card sx={{ minWidth: 300, margin: "20px auto" }}>
+    <Card
+      sx={{
+        minWidth: 300,
+        margin: "20px auto",
+        backgroundColor: alpha(theme.palette.background.paper, 0.75),
+        backdropFilter: "blur(6px)",
+      }}
+    >
       <CardContent>
         <FormGrid>
           <Typography variant="h4">Signup</Typography>
