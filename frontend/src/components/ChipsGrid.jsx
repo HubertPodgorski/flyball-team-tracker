@@ -11,12 +11,11 @@ const WrapperStyled = styled(Box)(({ theme }) => ({
   gridGap: theme.spacing(2),
 
   [theme.breakpoints.down("md")]: {
-    padding: theme.spacing(0.5, 0),
     gridGap: theme.spacing(0.5),
   },
 }));
 
-const ChipsGrid = ({ children, sx = {}, dense, people }) => {
+const ChipsGrid = ({ children, sx = {}, dense, people, hideIcon }) => {
   const theme = useTheme();
 
   return (
@@ -33,7 +32,7 @@ const ChipsGrid = ({ children, sx = {}, dense, people }) => {
           : {}),
       }}
     >
-      {people ? <PeopleIcon /> : <PetsIcon />}
+      {!hideIcon && (people ? <PeopleIcon /> : <PetsIcon />)}
       {children}
     </WrapperStyled>
   );

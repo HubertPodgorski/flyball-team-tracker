@@ -41,7 +41,7 @@ const updateCrossPassById = async (received, callback, io, userToken) => {
   const { _id } = received;
 
   const crossPass = await CrossPassModel.findOneAndUpdate({ _id }, received, {
-    new: true,
+    returnDocument: "after",
   });
 
   const allCrossPasses = await CrossPassModel.find({ team });

@@ -89,7 +89,7 @@ const updateTaskById = async (received, callback, io, userToken) => {
   const task = await TaskModel.findOneAndUpdate(
     { _id },
     { ...received },
-    { new: true }
+    { returnDocument: "after" }
   );
 
   // TODO: handle that

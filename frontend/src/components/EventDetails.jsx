@@ -14,6 +14,7 @@ import ButtonsGrid from "./ButtonsGrid";
 import { useAppContext } from "../hooks/useAppContext";
 import { useAuthContext } from "../hooks/useAuthContext";
 import { useIsMobile } from "../hooks/useIsMobile";
+import { useIsSuperAdmin } from "../hooks/useIsSuperAdmin";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { getColorsByStatus, sortByAttendance } from "../helpers/calendar";
 import { useSocketContext } from "../hooks/useSocketContext";
@@ -27,8 +28,13 @@ const EventDetails = ({ users, dogs, id }) => {
   const { dogs: allDogs, users: allUsers } = useAppContext();
   const { user } = useAuthContext();
   const { socket } = useSocketContext();
+  const isSuperAdmin = useIsSuperAdmin();
 
   const isMobile = useIsMobile();
+
+  // allDogs/allUsers are already scoped to the team currently acted-as.
+  const selectableDogs = isSuperAdmin ? allDogs : user.dogs;
+  const selectableUsers = isSuperAdmin ? allUsers : [user];
 
   const usersWithAttendance = allUsers.map((user) => {
     const userFound = users.find(
@@ -54,8 +60,8 @@ const EventDetails = ({ users, dogs, id }) => {
     socket.emit("toggle_event_dog", { dogId, _id: id });
   };
 
-  const onUserPresenceUpdateClick = () => {
-    socket.emit("toggle_event_user", { userId: user._id, _id: id });
+  const onUserPresenceUpdateClick = (userId) => {
+    socket.emit("toggle_event_user", { userId, _id: id });
   };
 
   const onDetailsOpenChange = () => {
@@ -152,12 +158,14 @@ const EventDetails = ({ users, dogs, id }) => {
         </ChipsGrid>
 
         <Typography variant={isMobile ? "body2" : "body1"}>
-          Select dog{user.dogs.length > 1 ? "s" : ""} attendance
+          {isSuperAdmin
+            ? "Select any dog's attendance"
+            : `Select dog${selectableDogs.length > 1 ? "s" : ""} attendance`}
         </Typography>
 
-        {user.dogs.length > 0 && (
+        {selectableDogs.length > 0 && (
           <ButtonsGrid sx={{ justifyContent: "flex-start" }}>
-            {user.dogs.map(({ _id: dogId, name }) => (
+            {selectableDogs.map(({ _id: dogId, name }) => (
               <Button
                 variant="contained"
                 key={dogId}
@@ -172,18 +180,21 @@ const EventDetails = ({ users, dogs, id }) => {
         )}
 
         <Typography variant={isMobile ? "body2" : "body1"}>
-          Select my attendance
+          {isSuperAdmin ? "Select anyone's attendance" : "Select my attendance"}
         </Typography>
 
         <ButtonsGrid sx={{ justifyContent: "flex-start" }}>
-          <Button
-            variant="contained"
-            color={getUserButtonColorById(user._id)}
-            onClick={() => onUserPresenceUpdateClick()}
-            sx={{ minWidth: "150px" }}
-          >
-            {user.name}
-          </Button>
+          {selectableUsers.map(({ _id: userId, name }) => (
+            <Button
+              variant="contained"
+              key={userId}
+              color={getUserButtonColorById(userId)}
+              onClick={() => onUserPresenceUpdateClick(userId)}
+              sx={{ minWidth: "150px" }}
+            >
+              {name}
+            </Button>
+          ))}
         </ButtonsGrid>
       </AccordionDetails>
     </Accordion>

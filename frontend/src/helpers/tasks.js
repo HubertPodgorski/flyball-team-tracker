@@ -79,3 +79,35 @@ export const mapTasksForAdminPanel = (rawTasks) => {
 
 export const isMyDog = (dogId, userDogs) =>
   userDogs.some(({ _id }) => _id === dogId);
+
+// Renumbers rowIndex to close gaps, so only the trailing row is ever empty. Returns [] when there's nothing to fix.
+export const getRowCompactionUpdates = (tasks) => {
+  const occupiedRowIndices = [...new Set(tasks.map(({ position }) => position.rowIndex))].sort(
+    (a, b) => a - b
+  );
+
+  const hasGap = occupiedRowIndices.some((rowIndex, index) => rowIndex !== index);
+  if (!hasGap) return [];
+
+  const rowIndexRemap = new Map(
+    occupiedRowIndices.map((oldRowIndex, newRowIndex) => [oldRowIndex, newRowIndex])
+  );
+
+  return tasks
+    .filter((task) => rowIndexRemap.get(task.position.rowIndex) !== task.position.rowIndex)
+    .map((task) => ({
+      _id: task._id,
+      position: { ...task.position, rowIndex: rowIndexRemap.get(task.position.rowIndex) },
+    }));
+};
+
+// Merges partial `{ _id, ...fields }` updates into a full tasks list by _id.
+export const applyTaskUpdates = (tasks, updates) => {
+  if (!updates.length) return tasks;
+
+  return tasks.map((task) => {
+    const update = updates.find(({ _id }) => _id === task._id);
+
+    return update ? { ...task, ...update } : task;
+  });
+};

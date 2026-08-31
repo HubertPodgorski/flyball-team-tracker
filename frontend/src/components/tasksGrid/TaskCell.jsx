@@ -1,6 +1,5 @@
 import React from "react";
 import { alpha, Box, Card, styled } from "@mui/material";
-import { Draggable } from "@hello-pangea/dnd";
 
 const CardStyled = styled(Card)(({ theme }) => ({
   backgroundColor: alpha(theme.palette.background.paper, 0.75),
@@ -20,31 +19,10 @@ const CardContentStyled = styled(Box)(({ theme }) => ({
   },
 }));
 
-const TaskCell = ({ children, adminPanel, id, index, onClick }) => {
-  if (!adminPanel)
-    return (
-      <CardStyled>
-        <CardContentStyled>{children}</CardContentStyled>
-      </CardStyled>
-    );
-
-  return (
-    <Draggable draggableId={id} index={index}>
-      {({ draggableProps, dragHandleProps, innerRef }) => (
-        <CardStyled
-          {...draggableProps}
-          {...dragHandleProps}
-          ref={innerRef}
-          sx={{ marginLeft: "4px", marginRight: "4px" }}
-          onClick={() => {
-            onClick?.();
-          }}
-        >
-          <CardContentStyled>{children}</CardContentStyled>
-        </CardStyled>
-      )}
-    </Draggable>
-  );
-};
+const TaskCell = ({ children }) => (
+  <CardStyled>
+    <CardContentStyled>{children}</CardContentStyled>
+  </CardStyled>
+);
 
 export default TaskCell;

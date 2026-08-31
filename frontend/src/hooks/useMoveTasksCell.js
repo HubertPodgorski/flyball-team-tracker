@@ -1,4 +1,5 @@
 import { getMappedItemsToUpdate } from "../helpers/dragNDrop";
+import { applyTaskUpdates, getRowCompactionUpdates } from "../helpers/tasks";
 import { useAppContext } from "./useAppContext";
 import { useSocketContext } from "./useSocketContext";
 
@@ -34,8 +35,13 @@ export const useMoveTasksCell = () => {
       return { ...task, ...updatedTaskFound };
     });
 
-    setTasks(updatedTasksListWithChanges);
+    // Can leave a row gap - see getRowCompactionUpdates. Computed post-move.
+    const compactionUpdates = getRowCompactionUpdates(updatedTasksListWithChanges);
 
-    socket.emit("update_tasks_order", { tasks: mappedItemsToUpdate });
+    setTasks(applyTaskUpdates(updatedTasksListWithChanges, compactionUpdates));
+
+    socket.emit("update_tasks_order", {
+      tasks: [...mappedItemsToUpdate, ...compactionUpdates],
+    });
   };
 };

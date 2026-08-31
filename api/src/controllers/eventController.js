@@ -82,7 +82,7 @@ const updateEventById = async (received, callback, io, userToken) => {
   const event = await EventModel.findOneAndUpdate(
     { _id },
     { ...received },
-    { new: true }
+    { returnDocument: "after" }
   );
 
   // TODO: handle that

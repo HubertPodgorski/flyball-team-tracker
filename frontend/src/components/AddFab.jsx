@@ -1,11 +1,13 @@
 import React from "react";
 import { Fab } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
+import { BOTTOM_NAV_HEIGHT } from "./BottomNavBar";
 
-// Default MUI Fab size + clearance top and bottom - reserve this much
-// bottom space in a view's content so the floating button never covers it.
 const FAB_HEIGHT = 56;
-export const FAB_CONTENT_CLEARANCE = FAB_HEIGHT + 8 + 8;
+const FAB_GAP = 8;
+
+// Content bottom margin to clear the fab: gap above it + its own height.
+export const FAB_CONTENT_CLEARANCE = 16 + FAB_HEIGHT;
 
 const AddFab = ({ onClick, disabled }) => (
   <Fab
@@ -15,8 +17,8 @@ const AddFab = ({ onClick, disabled }) => (
     disabled={disabled}
     sx={{
       position: "fixed",
-      bottom: (theme) => theme.spacing(10),
-      right: (theme) => theme.spacing(2),
+      bottom: `${BOTTOM_NAV_HEIGHT + FAB_GAP}px`,
+      right: `${FAB_GAP}px`,
     }}
   >
     <AddIcon />

@@ -91,7 +91,7 @@ const updateUserById = async (received, callback, io, userToken) => {
   const user = await UserModel.findOneAndUpdate(
     { _id },
     { ...received, team },
-    { new: true }
+    { returnDocument: "after" }
   );
 
   // TODO: handle that

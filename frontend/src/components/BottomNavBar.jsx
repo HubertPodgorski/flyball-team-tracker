@@ -10,7 +10,6 @@ import {
   ListItemText,
   styled,
   Toolbar,
-  Typography,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import PetsIcon from "@mui/icons-material/Pets";
@@ -19,7 +18,7 @@ import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
 import TextSnippetIcon from "@mui/icons-material/TextSnippet";
 
-import { useNavigate } from "@tanstack/react-router";
+import { useLocation, useNavigate } from "@tanstack/react-router";
 import { adminRoutes, userRoutes } from "../helpers/routesAndPaths";
 import LoginLogoutListButton from "./LoginLogoutListButton";
 import FormatListNumberedIcon from "@mui/icons-material/FormatListNumbered";
@@ -37,8 +36,24 @@ const MenuListItemStyled = styled(ListItemButton)(({ theme }) => ({
   },
 }));
 
-const BottomNavBar = () => {
+// Fixed height regardless of viewport, so AddFab can sit a known gap above it.
+export const BOTTOM_NAV_HEIGHT = 56;
+
+const NavListItem = ({ to, icon, label }) => {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+
+  return (
+    <MenuListItemStyled
+      selected={pathname === to}
+      onClick={() => navigate({ to })}
+    >
+      {icon} <ListItemText primary={label} />
+    </MenuListItemStyled>
+  );
+};
+
+const BottomNavBar = () => {
   const [mobileOpen, setMobileOpen] = React.useState(false);
 
   const onDrawerToggle = () => {
@@ -50,38 +65,24 @@ const BottomNavBar = () => {
 
   const drawer = (
     <Box onClick={onDrawerToggle} sx={{ textAlign: "center" }}>
-      <Typography variant="h6" sx={{ my: 1 }}>
-        Go to
-      </Typography>
-
-      <Divider />
-
       <List>
         {isAdmin && <MenuListItemStyled>User views</MenuListItemStyled>}
 
-        <MenuListItemStyled
-          onClick={() => {
-            navigate({ to: userRoutes.tasks });
-          }}
-        >
-          <FormatListNumberedIcon /> <ListItemText primary="Tasks" />
-        </MenuListItemStyled>
-
-        <MenuListItemStyled
-          onClick={() => {
-            navigate({ to: userRoutes.calendar });
-          }}
-        >
-          <CalendarMonthIcon /> <ListItemText primary="Calendar" />
-        </MenuListItemStyled>
-
-        <MenuListItemStyled
-          onClick={() => {
-            navigate({ to: userRoutes.myDogs });
-          }}
-        >
-          <PetsIcon /> <ListItemText primary="My Dogs" />
-        </MenuListItemStyled>
+        <NavListItem
+          to={userRoutes.tasks}
+          icon={<FormatListNumberedIcon />}
+          label="Tasks"
+        />
+        <NavListItem
+          to={userRoutes.calendar}
+          icon={<CalendarMonthIcon />}
+          label="Calendar"
+        />
+        <NavListItem
+          to={userRoutes.myDogs}
+          icon={<PetsIcon />}
+          label="My Dogs"
+        />
 
         {isAdmin && (
           <>
@@ -89,59 +90,36 @@ const BottomNavBar = () => {
 
             <MenuListItemStyled>Admin</MenuListItemStyled>
 
-            <MenuListItemStyled
-              onClick={() => {
-                navigate({ to: adminRoutes.tasks });
-              }}
-            >
-              <FormatListBulletedIcon />
-              <ListItemText primary="Tasks" />
-            </MenuListItemStyled>
-
-            <MenuListItemStyled
-              onClick={() => {
-                navigate({ to: adminRoutes.dogs });
-              }}
-            >
-              <PetsIcon />
-              <ListItemText primary="Dogs" />
-            </MenuListItemStyled>
-
-            <MenuListItemStyled
-              onClick={() => {
-                navigate({ to: adminRoutes.dogTasks });
-              }}
-            >
-              <TextSnippetIcon />
-              <ListItemText primary="Dog tasks" />
-            </MenuListItemStyled>
-
-            <MenuListItemStyled
-              onClick={() => {
-                navigate({ to: adminRoutes.events });
-              }}
-            >
-              <CalendarMonthIcon />
-              <ListItemText primary="Events" />
-            </MenuListItemStyled>
-
-            <MenuListItemStyled
-              onClick={() => {
-                navigate({ to: adminRoutes.eventTemplates });
-              }}
-            >
-              <SaveIcon />
-              <ListItemText primary="Event templates" />
-            </MenuListItemStyled>
-
-            <MenuListItemStyled
-              onClick={() => {
-                navigate({ to: adminRoutes.users });
-              }}
-            >
-              <PersonIcon />
-              <ListItemText primary="Users" />
-            </MenuListItemStyled>
+            <NavListItem
+              to={adminRoutes.tasks}
+              icon={<FormatListBulletedIcon />}
+              label="Tasks"
+            />
+            <NavListItem
+              to={adminRoutes.dogs}
+              icon={<PetsIcon />}
+              label="Dogs"
+            />
+            <NavListItem
+              to={adminRoutes.dogTasks}
+              icon={<TextSnippetIcon />}
+              label="Dog tasks"
+            />
+            <NavListItem
+              to={adminRoutes.events}
+              icon={<CalendarMonthIcon />}
+              label="Events"
+            />
+            <NavListItem
+              to={adminRoutes.eventTemplates}
+              icon={<SaveIcon />}
+              label="Event templates"
+            />
+            <NavListItem
+              to={adminRoutes.users}
+              icon={<PersonIcon />}
+              label="Users"
+            />
           </>
         )}
 
@@ -151,53 +129,36 @@ const BottomNavBar = () => {
 
             <MenuListItemStyled>Super Admin</MenuListItemStyled>
 
-            <MenuListItemStyled
-              onClick={() => {
-                navigate({ to: "/team-switch" });
-              }}
-            >
-              <SwapHorizIcon /> <ListItemText primary="Team switch" />
-            </MenuListItemStyled>
-
-            <MenuListItemStyled
-              onClick={() => {
-                navigate({ to: "/super-admin/users" });
-              }}
-            >
-              <PersonIcon /> <ListItemText primary="All users" />
-            </MenuListItemStyled>
-
-            <MenuListItemStyled
-              onClick={() => {
-                navigate({ to: "/super-admin/dogs" });
-              }}
-            >
-              <PetsIcon /> <ListItemText primary="All dogs" />
-            </MenuListItemStyled>
-
-            <MenuListItemStyled
-              onClick={() => {
-                navigate({ to: "/super-admin/dog-tasks" });
-              }}
-            >
-              <TextSnippetIcon /> <ListItemText primary="All dog tasks" />
-            </MenuListItemStyled>
-
-            <MenuListItemStyled
-              onClick={() => {
-                navigate({ to: "/super-admin/events" });
-              }}
-            >
-              <CalendarMonthIcon /> <ListItemText primary="All events" />
-            </MenuListItemStyled>
-
-            <MenuListItemStyled
-              onClick={() => {
-                navigate({ to: "/super-admin/event-templates" });
-              }}
-            >
-              <SaveIcon /> <ListItemText primary="All event templates" />
-            </MenuListItemStyled>
+            <NavListItem
+              to="/team-switch"
+              icon={<SwapHorizIcon />}
+              label="Team switch"
+            />
+            <NavListItem
+              to="/super-admin/users"
+              icon={<PersonIcon />}
+              label="All users"
+            />
+            <NavListItem
+              to="/super-admin/dogs"
+              icon={<PetsIcon />}
+              label="All dogs"
+            />
+            <NavListItem
+              to="/super-admin/dog-tasks"
+              icon={<TextSnippetIcon />}
+              label="All dog tasks"
+            />
+            <NavListItem
+              to="/super-admin/events"
+              icon={<CalendarMonthIcon />}
+              label="All events"
+            />
+            <NavListItem
+              to="/super-admin/event-templates"
+              icon={<SaveIcon />}
+              label="All event templates"
+            />
           </>
         )}
 
@@ -242,7 +203,14 @@ const BottomNavBar = () => {
       </Box>
 
       <Toolbar
-        sx={{ backgroundColor: (theme) => theme.palette.background.paper }}
+        sx={{
+          backgroundColor: (theme) => theme.palette.background.paper,
+          // MUI overrides minHeight again at this breakpoint - restate it.
+          minHeight: `${BOTTOM_NAV_HEIGHT}px`,
+          "@media (min-width:600px)": {
+            minHeight: `${BOTTOM_NAV_HEIGHT}px`,
+          },
+        }}
       >
         <Box sx={{ flexGrow: 1 }} />
 
@@ -251,9 +219,6 @@ const BottomNavBar = () => {
           aria-label="open drawer"
           edge="start"
           onClick={onDrawerToggle}
-          sx={{
-            marginRight: 2,
-          }}
         >
           <MenuIcon />
         </IconButton>

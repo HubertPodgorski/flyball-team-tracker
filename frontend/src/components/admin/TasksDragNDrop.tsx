@@ -1,21 +1,117 @@
-import React, { useState } from "react";
-import TasksMainGrid from "../tasksGrid/TasksMainGrid";
-import TasksRow from "../tasksGrid/TasksRow";
-import TasksColumn from "../tasksGrid/TasksColumn";
-import { Chip, IconButton, Typography } from "@mui/material";
-import TaskCell from "../tasksGrid/TaskCell";
-import ChipsGrid from "../ChipsGrid";
+import React, { useEffect, useState } from "react";
+import { ReactSortable, type ItemInterface } from "react-sortablejs";
+import { Box, Card, Chip, IconButton, Typography, alpha, styled } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { DragDropContext } from "@hello-pangea/dnd";
-import { useIsMobile } from "../../hooks/useIsMobile";
-import { useMoveTasksRow } from "../../hooks/useMoveTasksRow";
-import { useMoveTasksCell } from "../../hooks/useMoveTasksCell";
+import OpenWithIcon from "@mui/icons-material/OpenWith";
 import AddTaskHereButton from "../../components/AddTaskHereButton";
 import { getNewTaskPosition } from "./helpers";
-import { useSocketContext } from "../../hooks/useSocketContext";
+import { useMoveTasksRow } from "../../hooks/useMoveTasksRow";
+import { useMoveTasksCell } from "../../hooks/useMoveTasksCell";
+import { useDeleteTasksRow } from "../../hooks/useDeleteTasksRow";
+import { useDeleteTask } from "../../hooks/useDeleteTask";
+import { useIsMobile } from "../../hooks/useIsMobile";
+import { useConfirmModalSoft } from "../../hooks/useConfirmModal";
+import { useDogsWithAttendance } from "../../hooks/useDogsWithAttendance";
+import { useTaskPlanningContext } from "../../hooks/useTaskPlanningContext";
+import { getDogPlanningColor } from "../../helpers/calendar";
 import { Task } from "../../helpers/types";
 
 export type MappedTasks = Record<string, Record<string, Task[]>>;
+
+// Built on react-sortablejs - `list`/`setList` per row/column is real state, re-synced from `mappedTasks` below.
+
+const RowStyled = styled(Box)(({ theme }) => ({
+  display: "flex",
+  flexDirection: "column",
+  borderRadius: "6px",
+  marginBottom: theme.spacing(0.5),
+}));
+
+const RowHandleBarStyled = styled(Box)(({ theme }) => ({
+  display: "flex",
+  alignItems: "center",
+  padding: theme.spacing(0.5),
+  paddingLeft: theme.spacing(1),
+  border: `1px solid ${theme.palette.secondary.main}`,
+  borderBottom: "none",
+  borderTopLeftRadius: "6px",
+  borderTopRightRadius: "6px",
+  color: theme.palette.info.main,
+  position: "relative",
+}));
+
+// The actual drag handle - no icon of its own (see RowMoveIconStyled).
+const RowDragZoneStyled = styled(Box)(() => ({
+  flexGrow: 1,
+  // Empty div - stretch it, or it collapses to 0 height (no content).
+  alignSelf: "stretch",
+  cursor: "grab",
+}));
+
+const RowMoveIconStyled = styled(OpenWithIcon)(() => ({
+  position: "absolute",
+  left: "50%",
+  top: "50%",
+  transform: "translate(-50%, -50%)",
+  // Decorative only - let clicks pass through to the drag zone underneath.
+  pointerEvents: "none",
+}));
+
+const ColumnsGridStyled = styled(Box)(() => ({
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr",
+  borderRadius: "6px",
+}));
+
+const ColumnStyled = styled(Box)(({ theme }) => ({
+  display: "flex",
+  flexDirection: "column",
+  outline: `1px solid ${theme.palette.secondary.main}`,
+  outlineOffset: "-1px",
+  borderRadius: "6px",
+  borderTopLeftRadius: 0,
+  borderTopRightRadius: 0,
+  minHeight: "88px",
+}));
+
+const CardStyled = styled(Card)(({ theme }) => ({
+  backgroundColor: alpha(theme.palette.background.paper, 0.75),
+  backdropFilter: "blur(6px)",
+  cursor: "grab",
+}));
+
+const CardContentStyled = styled(Box)(({ theme }) => ({
+  display: "grid",
+  gridAutoFlow: "row",
+  padding: theme.spacing(1),
+  gridGap: theme.spacing(2),
+  alignItems: "center",
+  position: "relative",
+}));
+
+interface RowItem extends ItemInterface {
+  rowIndex: string;
+}
+
+interface CellItem extends ItemInterface {
+  task: Task;
+}
+
+const buildRowList = (mappedTasks: MappedTasks): RowItem[] =>
+  Object.keys(mappedTasks).map((rowIndex) => ({ id: rowIndex, rowIndex }));
+
+const buildCellLists = (mappedTasks: MappedTasks): Record<string, CellItem[]> => {
+  const cellLists: Record<string, CellItem[]> = {};
+  Object.entries(mappedTasks).forEach(([rowIndex, columns]) => {
+    Object.entries(columns).forEach(([columnIndex, items]) => {
+      cellLists[`${rowIndex}_${columnIndex}`] = items.map((task) => ({
+        id: task._id,
+        task,
+      }));
+    });
+  });
+  return cellLists;
+};
 
 interface Props {
   onTaskEditClick: (
@@ -30,153 +126,250 @@ interface Props {
 const TasksDragNDrop = ({
   onTaskEditClick,
   mappedTasks,
-  onDragStart: onDragStartProp,
-  onDragEnd: onDragEndProp,
+  onDragStart,
+  onDragEnd,
 }: Props) => {
-  const { socket } = useSocketContext();
-
   const moveTasksRow = useMoveTasksRow();
   const moveTasksCell = useMoveTasksCell();
-
+  const deleteTasksRow = useDeleteTasksRow();
+  const deleteTask = useDeleteTask();
+  const confirmSoft = useConfirmModalSoft();
   const isMobile = useIsMobile();
+  const { selectedEventId } = useTaskPlanningContext();
+  const dogsWithAttendance = useDogsWithAttendance(selectedEventId);
 
-  // Once the dragged item has left its source column for a different one,
-  // there's no reason to keep the source's placeholder reserving space -
-  // collapse it instead of holding the gap open for the whole drag.
-  const [collapsedDroppableId, setCollapsedDroppableId] = useState<
-    string | null
-  >(null);
+  const [rowList, setRowList] = useState<RowItem[]>(() => buildRowList(mappedTasks));
+  const [cellLists, setCellLists] = useState<Record<string, CellItem[]>>(() =>
+    buildCellLists(mappedTasks)
+  );
 
-  const onDelete = (taskId) => {
-    socket.emit("delete_task", { _id: taskId });
+  // Re-sync local state whenever the real data (mappedTasks) changes.
+  useEffect(() => {
+    setRowList(buildRowList(mappedTasks));
+    setCellLists(buildCellLists(mappedTasks));
+  }, [mappedTasks]);
+
+  const onDelete = (taskId: string) => {
+    deleteTask(taskId);
   };
 
-  const onDragUpdate = (update) => {
-    const { source, destination } = update;
-
-    // destination is null while the pointer is between valid drop targets
-    // (e.g. exactly on the border between two touching columns) - that's
-    // not "back in the source column", it's just a transient gap. Leave
-    // collapsedDroppableId as-is rather than un-collapsing the source for
-    // that instant, which was causing a visible flash right at the border.
-    if (!destination) return;
-
-    if (destination.droppableId !== source.droppableId) {
-      setCollapsedDroppableId(source.droppableId);
-    } else {
-      setCollapsedDroppableId(null);
-    }
+  const onDeleteRowClick = async (rowIndex: string) => {
+    await confirmSoft("Remove all tasks in this row?");
+    deleteTasksRow(+rowIndex);
   };
 
-  const onDragEnd = async (result) => {
-    setCollapsedDroppableId(null);
-
-    // Update state synchronously here, same tick - this is
-    // @hello-pangea/dnd's own recommended pattern. Deferring it (e.g. via
-    // setTimeout) makes the browser paint the library's own resting frame
-    // first and our re-sorted data a moment later, which is what caused a
-    // visible jump on drop. The "add/remove a Draggable while dragging"
-    // warning this used to work around was actually caused elsewhere (a
-    // killed CSS transition breaking the library's drop-completion
-    // detection) and is now fixed at that source - see index.css.
-    if (result.type === "row") {
-      moveTasksRow(result);
-    } else {
-      moveTasksCell(result, mappedTasks);
-    }
-
-    onDragEndProp?.();
-  };
-
-  const onEditClick = async ({ position, description, dogs, _id }) => {
-    await onTaskEditClick(
-      {
-        position,
-        description,
-        dogs,
-      },
-      _id
-    );
+  const onEditClick = async ({ position, description, dogs, _id }: Task) => {
+    await onTaskEditClick({ position, description, dogs }, _id);
   };
 
   return (
-    <DragDropContext
-      onDragStart={onDragStartProp}
-      onDragEnd={onDragEnd}
-      onDragUpdate={onDragUpdate}
+    <ReactSortable
+      list={rowList}
+      setList={setRowList}
+      handle="[data-row-handle]"
+      animation={150}
+      // Drives the drag via pointer events instead of native HTML5 DnD.
+      forceFallback
+      // Blocks dropping any row past the trailing empty row.
+      onMove={(evt) => {
+        // react-sortablejs treats a returned `undefined` as cancel - must return `true` to allow.
+        const relatedIsEmptyRow = evt.related.hasAttribute("data-row-empty");
+        const isPastLastItem =
+          evt.related === evt.to && evt.to.lastElementChild?.hasAttribute("data-row-empty");
+
+        if ((relatedIsEmptyRow && evt.willInsertAfter) || isPastLastItem) {
+          return false;
+        }
+        return true;
+      }}
+      onStart={() => onDragStart?.()}
+      onEnd={(evt) => {
+        onDragEnd?.();
+        const { oldIndex, newIndex } = evt;
+        if (
+          typeof oldIndex !== "number" ||
+          typeof newIndex !== "number" ||
+          oldIndex === newIndex
+        ) {
+          return;
+        }
+        moveTasksRow({ source: { index: oldIndex }, destination: { index: newIndex } });
+      }}
     >
-      <TasksMainGrid adminPanel>
-        {Object.entries(mappedTasks).map(([rowIndex, columns], index) => (
-          <TasksRow
-            key={`${rowIndex}_${index}`}
-            rowIndex={rowIndex}
-            adminPanel
-            index={index}
-          >
-            {Object.entries(columns).map(([columnIndex, items]) => (
-              <TasksColumn
-                rowIndex={rowIndex}
-                columnIndex={columnIndex}
-                key={columnIndex}
-                adminPanel
-                isEmpty={!items.length}
-                collapsePlaceholder={
-                  collapsedDroppableId === `${rowIndex}_${columnIndex}`
-                }
-                footer={
-                  <AddTaskHereButton
-                    columnIndex={+columnIndex}
-                    rowIndex={+rowIndex}
-                    positionIndex={getNewTaskPosition(items)}
-                  />
-                }
-              >
-                {!!items.length &&
-                  items.map((item, index) => (
-                    <TaskCell
-                      index={index}
-                      adminPanel
-                      id={item._id}
-                      key={item._id}
-                      onClick={() => {
-                        onEditClick(item);
+      {rowList.map(({ rowIndex }) => {
+        const columns = mappedTasks[rowIndex] ?? {};
+        const isEmptyRow = Object.values(columns).every((tasks) => tasks.length === 0);
+
+        return (
+          <RowStyled key={rowIndex} data-row-empty={isEmptyRow || undefined}>
+            {/* Empty row can't be moved or deleted - skip the bar entirely. */}
+            {!isEmptyRow && (
+              <RowHandleBarStyled>
+                <RowDragZoneStyled data-row-handle />
+                <RowMoveIconStyled fontSize="small" />
+
+                <IconButton
+                  size="small"
+                  color="error"
+                  // Stops this press from ever being read as a drag start.
+                  onPointerDown={(event) => {
+                    event.stopPropagation();
+                  }}
+                  onClick={() => {
+                    onDeleteRowClick(rowIndex);
+                  }}
+                >
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              </RowHandleBarStyled>
+            )}
+
+            <ColumnsGridStyled>
+              {Object.entries(columns).map(([columnIndex]) => {
+                const cellKey = `${rowIndex}_${columnIndex}`;
+                const cellList = cellLists[cellKey] ?? [];
+
+                return (
+                  <ColumnStyled
+                    key={columnIndex}
+                    // Empty row has no handle bar, so columns own the rounding.
+                    sx={
+                      isEmptyRow
+                        ? {
+                            borderTopLeftRadius: columnIndex === "0" ? "6px" : 0,
+                            borderTopRightRadius: columnIndex === "1" ? "6px" : 0,
+                          }
+                        : undefined
+                    }
+                  >
+                    <ReactSortable
+                      list={cellList}
+                      setList={(newList) =>
+                        setCellLists((prev) => ({ ...prev, [cellKey]: newList }))
+                      }
+                      group="tasks-cells"
+                      animation={150}
+                      forceFallback
+                      // This div is the actual droppable target - flexGrow keeps it from staying a sliver.
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        flexGrow: 1,
+                        gap: "4px",
+                        padding: "4px",
+                      }}
+                      // `id`, not data-*: ReactSortable only forwards id.
+                      id={cellKey}
+                      onStart={() => onDragStart?.()}
+                      onEnd={(evt) => {
+                        onDragEnd?.();
+                        const { oldIndex, newIndex, from, to, item } = evt;
+                        const sourceDroppableId = from.id;
+                        const destinationDroppableId = to.id;
+                        const draggableId = item.dataset.taskId;
+
+                        if (
+                          typeof oldIndex !== "number" ||
+                          typeof newIndex !== "number" ||
+                          !sourceDroppableId ||
+                          !destinationDroppableId ||
+                          !draggableId ||
+                          (sourceDroppableId === destinationDroppableId &&
+                            oldIndex === newIndex)
+                        ) {
+                          return;
+                        }
+
+                        moveTasksCell(
+                          {
+                            draggableId,
+                            source: { droppableId: sourceDroppableId, index: oldIndex },
+                            destination: {
+                              droppableId: destinationDroppableId,
+                              index: newIndex,
+                            },
+                          },
+                          mappedTasks
+                        );
                       }}
                     >
-                      <Typography variant={isMobile ? "body2" : "h5"}>
-                        {item.description}
-                      </Typography>
+                      {cellList.map(({ task }) => (
+                        <CardStyled key={task._id} data-task-id={task._id}>
+                          <CardContentStyled
+                            onClick={() => {
+                              onEditClick(task);
+                            }}
+                          >
+                            <Typography variant={isMobile ? "body2" : "h5"}>
+                              {task.description}
+                            </Typography>
 
-                      {item.dogs.length > 0 && (
-                        <ChipsGrid>
-                          {item.dogs.map(({ name, _id }) => (
-                            <Chip label={name} key={_id} />
-                          ))}
-                        </ChipsGrid>
+                            {task.dogs.length > 0 && (
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  gap: "4px",
+                                }}
+                              >
+                                {task.dogs.map(({ name, _id }) => {
+                                  const attendance = dogsWithAttendance.find(
+                                    ({ _id: dogId }) => dogId === _id
+                                  );
+                                  // Only flag "shouldn't be planned" here - full legend is on the dogs list/select.
+                                  const isMisplanned =
+                                    !!attendance &&
+                                    getDogPlanningColor(
+                                      attendance.isPlanned,
+                                      attendance.status
+                                    ) === "error";
+
+                                  return (
+                                    <Chip
+                                      label={name}
+                                      key={_id}
+                                      color={isMisplanned ? "error" : "default"}
+                                      sx={{ alignSelf: "flex-start" }}
+                                    />
+                                  );
+                                })}
+                              </Box>
+                            )}
+
+                            {task.dogs.length === 0 && (
+                              <Typography>No dogs selected</Typography>
+                            )}
+
+                            <IconButton
+                              sx={{ position: "absolute", top: 2, right: 2 }}
+                              color="error"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                onDelete(task._id);
+                              }}
+                            >
+                              <DeleteIcon />
+                            </IconButton>
+                          </CardContentStyled>
+                        </CardStyled>
+                      ))}
+                    </ReactSortable>
+
+                    <AddTaskHereButton
+                      columnIndex={+columnIndex}
+                      rowIndex={+rowIndex}
+                      positionIndex={getNewTaskPosition(
+                        cellList.map(({ task }) => task)
                       )}
-
-                      {item.dogs.length === 0 && (
-                        <Typography>No dogs selected</Typography>
-                      )}
-
-                      <IconButton
-                        sx={{ position: "absolute", top: 2, right: 2 }}
-                        color="error"
-                        onClick={(event) => {
-                          event.stopPropagation();
-
-                          onDelete(item._id);
-                        }}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </TaskCell>
-                  ))}
-              </TasksColumn>
-            ))}
-          </TasksRow>
-        ))}
-      </TasksMainGrid>
-    </DragDropContext>
+                    />
+                  </ColumnStyled>
+                );
+              })}
+            </ColumnsGridStyled>
+          </RowStyled>
+        );
+      })}
+    </ReactSortable>
   );
 };
 
