@@ -138,11 +138,11 @@ const TaskForm = ({
 
       if (editingId) {
         socket.emit("update_task", { ...data, _id: editingId }, () => {
-          onClose();
+          handleClose();
         });
       } else {
         socket.emit("add_task", data, () => {
-          onClose();
+          handleClose();
         });
       }
 
@@ -153,6 +153,11 @@ const TaskForm = ({
   useEffect(() => {
     form.reset(mapToFormType(initialData));
   }, [initialData, form]);
+
+  const handleClose = () => {
+    form.reset();
+    onClose();
+  };
 
   const dogTaskOptions = dogTasks.map(({ name }) => ({
     value: name,
@@ -169,7 +174,7 @@ const TaskForm = ({
   });
 
   return (
-    <FormModal onClose={onClose} open={open} title="Task">
+    <FormModal onClose={handleClose} open={open} title="Task">
       <FormGrid>
         <FormTextSelect
           form={form}
@@ -183,7 +188,7 @@ const TaskForm = ({
         <DogsOrderField form={form} />
 
         <DialogActions sx={{ padding: 0 }}>
-          <Button size="medium" variant="outlined" onClick={onClose}>
+          <Button size="medium" variant="outlined" onClick={handleClose}>
             Cancel
           </Button>
 

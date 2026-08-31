@@ -34,6 +34,7 @@ const SuperAdminEvents = () => (
       name: row.name,
       date: row.date,
       type: row.type ?? EventType.TRAINING,
+      team: row.team,
     })}
     FormComponent={EventForm}
   />

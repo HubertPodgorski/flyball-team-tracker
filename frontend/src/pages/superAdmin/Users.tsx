@@ -26,9 +26,15 @@ const SuperAdminUsers = () => (
     title="Users"
     entity="users"
     columns={columns}
-    emptyFormData={{ name: "", dogs: [] }}
-    getEditFormData={(row) => ({ name: row.name, dogs: row.dogs })}
+    emptyFormData={{ name: "", dogs: [], roles: [] }}
+    getEditFormData={(row) => ({
+      name: row.name,
+      dogs: row.dogs,
+      team: row.team,
+      roles: row.roles,
+    })}
     FormComponent={UserForm}
+    allowAdd={false}
     resolveFormExtraProps={async (team) => ({
       dogsOverride: await fetchSuperAdminList("dogs", team),
     })}

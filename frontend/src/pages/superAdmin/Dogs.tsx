@@ -13,8 +13,8 @@ const SuperAdminDogs = () => (
     title="Dogs"
     entity="dogs"
     columns={columns}
-    emptyFormData={{ name: "" }}
-    getEditFormData={(row) => ({ name: row.name })}
+    emptyFormData={{ name: "", note: "" }}
+    getEditFormData={(row) => ({ name: row.name, note: row.note, team: row.team })}
     FormComponent={DogForm}
   />
 );

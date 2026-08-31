@@ -69,17 +69,26 @@ const updateItem = (entity, io) => async (req, res) => {
     return res.status(400).json({ error: "INVALID_TEAM" });
   }
 
+  const existing = await Model.findById(_id);
+
+  if (!existing) {
+    return res.status(404).json({ error: "NOT_FOUND" });
+  }
+
+  const previousTeam = existing.team;
+
   const updated = await Model.findOneAndUpdate(
     { _id },
     { ...data, team },
     { returnDocument: "after" }
   );
 
-  if (!updated) {
-    return res.status(404).json({ error: "NOT_FOUND" });
-  }
-
   await broadcastTeam(io, entity, team);
+
+  // Row moved teams - refresh the old team's clients too.
+  if (previousTeam && previousTeam !== team) {
+    await broadcastTeam(io, entity, previousTeam);
+  }
 
   res.status(200).json(updated);
 };

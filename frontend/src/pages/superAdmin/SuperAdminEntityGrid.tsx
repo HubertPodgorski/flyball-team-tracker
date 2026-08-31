@@ -14,6 +14,7 @@ import {
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { useSnackbar } from "notistack";
 import AddFab, { FAB_CONTENT_CLEARANCE } from "../../components/AddFab";
 import { TEAMS } from "../../helpers/teams";
 import {
@@ -52,9 +53,9 @@ const SuperAdminEntityGrid = ({
   const [team, setTeam] = useState("");
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [editingRow, setEditingRow] = useState<any>();
   const [formExtraProps, setFormExtraProps] = useState<object>({});
   const confirm = useConfirmModal();
+  const { enqueueSnackbar } = useSnackbar();
 
   const {
     formInitialData,
@@ -72,6 +73,8 @@ const SuperAdminEntityGrid = ({
       const data = await fetchSuperAdminList(entity, team || undefined);
 
       setRows(data);
+    } catch {
+      enqueueSnackbar("Failed to load data", { variant: "error" });
     } finally {
       setLoading(false);
     }
@@ -94,37 +97,63 @@ const SuperAdminEntityGrid = ({
   };
 
   const onAddClick = async () => {
-    setEditingRow(undefined);
-    setFormExtraProps((await resolveFormExtraProps?.(team)) ?? {});
+    try {
+      setFormExtraProps((await resolveFormExtraProps?.(team)) ?? {});
+    } catch {
+      enqueueSnackbar("Failed to load data", { variant: "error" });
+      return;
+    }
+
     setFormOpen(true);
   };
 
   const onEditRowClick = async (row: any) => {
-    setEditingRow(row);
-    setFormExtraProps((await resolveFormExtraProps?.(row.team)) ?? {});
+    try {
+      setFormExtraProps((await resolveFormExtraProps?.(row.team)) ?? {});
+    } catch {
+      enqueueSnackbar("Failed to load data", { variant: "error" });
+      return;
+    }
+
     onEditClick(getEditFormData(row), row._id);
   };
 
-  const onSubmitOverride = async (data: object, submittedEditingId?: string) => {
-    if (submittedEditingId) {
-      await updateSuperAdminItem(entity, {
-        ...data,
-        _id: submittedEditingId,
-        team: editingRow.team,
-      });
-    } else {
-      await createSuperAdminItem(entity, { ...data, team });
+  const onSubmitOverride = async (data: any, submittedEditingId?: string) => {
+    try {
+      // Every super-admin form carries its own `team` field now, so it can move a row to a different team.
+      if (submittedEditingId) {
+        await updateSuperAdminItem(entity, { ...data, _id: submittedEditingId });
+      } else {
+        await createSuperAdminItem(entity, data);
+      }
+    } catch {
+      enqueueSnackbar("Failed to save", { variant: "error" });
+      return;
     }
 
     await load();
   };
 
+  // These fit their own content instead of a 220px floor - short values.
+  const FIT_CONTENT_FIELDS = new Set(["actions", "roles", "team"]);
+
+  const withColumnSizing = (column: GridColDef): GridColDef => {
+    if (!FIT_CONTENT_FIELDS.has(column.field)) {
+      return { minWidth: 220, ...column };
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- deliberately dropping flex so this column can size to content instead
+    const { flex, ...rest } = column;
+
+    return rest;
+  };
+
   const gridColumns: GridColDef[] = [
-    ...columns,
+    ...columns.map(withColumnSizing),
     ...(team
       ? []
-      : [{ field: "team", headerName: "Team", flex: 1 } as GridColDef]),
-    {
+      : [withColumnSizing({ field: "team", headerName: "Team" })]),
+    withColumnSizing({
       field: "actions",
       type: "actions",
       headerName: "Actions",
@@ -142,7 +171,7 @@ const SuperAdminEntityGrid = ({
           onClick={() => onDeleteClick(params.row)}
         />,
       ],
-    },
+    }),
   ];
 
   return (
@@ -169,7 +198,7 @@ const SuperAdminEntityGrid = ({
         </FormControl>
       </Box>
 
-      {allowAdd && <AddFab disabled={!team} onClick={onAddClick} />}
+      {allowAdd && <AddFab onClick={onAddClick} />}
 
       <Box
         sx={{
@@ -179,6 +208,7 @@ const SuperAdminEntityGrid = ({
       >
         <DataGrid
           autoHeight
+          autosizeOnMount
           rows={rows}
           columns={gridColumns}
           getRowId={(row) => row._id}
@@ -194,7 +224,11 @@ const SuperAdminEntityGrid = ({
       <FormComponent
         open={formOpen}
         onClose={onFormClose}
-        initialData={formInitialData}
+        // Default a new row's team to the grid's current filter; no-op when editing (already set).
+        initialData={{
+          ...formInitialData,
+          team: (formInitialData as any).team || team,
+        }}
         editingId={editingId}
         onSubmitOverride={onSubmitOverride}
         {...formExtraProps}

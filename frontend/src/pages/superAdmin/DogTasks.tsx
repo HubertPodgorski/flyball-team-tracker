@@ -11,7 +11,7 @@ const SuperAdminDogTasks = () => (
     entity="dog-tasks"
     columns={columns}
     emptyFormData={{ name: "" }}
-    getEditFormData={(row) => ({ name: row.name })}
+    getEditFormData={(row) => ({ name: row.name, team: row.team })}
     FormComponent={DogTaskForm}
   />
 );

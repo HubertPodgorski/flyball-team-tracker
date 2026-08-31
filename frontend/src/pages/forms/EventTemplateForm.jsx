@@ -8,7 +8,11 @@ import { getFormattedDate } from "../../helpers/calendar";
 import { handleError } from "../../helpers/errorHandler";
 import { useSnackbar } from "notistack";
 import FormSingleAutocomplete from "../../components/inputs/FormSingleAutocomplete";
+import FormSelect from "../../components/inputs/FormSelect";
+import { TEAMS } from "../../helpers/teams";
 import { useSocketContext } from "../../hooks/useSocketContext";
+
+const teamOptions = TEAMS.map((team) => ({ value: team, label: team }));
 
 const EventTemplateForm = ({
   open,
@@ -24,14 +28,18 @@ const EventTemplateForm = ({
 
   const form = useForm({
     defaultValues: initialData,
-    onSubmit: async ({ value: { name } }) => {
-      const data = { name };
-
+    onSubmit: async ({ value: values }) => {
+      // Team reassignment is super-admin only (onSubmitOverride).
       if (onSubmitOverride) {
-        await onSubmitOverride(data, editingId);
-        onClose();
+        await onSubmitOverride(
+          { name: values.name, team: values.team },
+          editingId
+        );
+        handleClose();
         return;
       }
+
+      const data = { name: values.name };
 
       if (editingId) {
         await socket.emit(
@@ -42,7 +50,7 @@ const EventTemplateForm = ({
             (error) => {
               enqueueSnackbar(error, { variant: "error" });
             },
-            () => onClose()
+            () => handleClose()
           )
         );
       } else {
@@ -54,7 +62,7 @@ const EventTemplateForm = ({
             (error) => {
               enqueueSnackbar(error, { variant: "error" });
             },
-            () => onClose()
+            () => handleClose()
           )
         );
       }
@@ -64,10 +72,15 @@ const EventTemplateForm = ({
   });
 
   useEffect(() => {
-    const { name } = initialData;
+    const { name, team } = initialData;
 
-    form.reset({ name });
+    form.reset({ name, team: team ?? "" });
   }, [initialData, form]);
+
+  const handleClose = () => {
+    form.reset();
+    onClose();
+  };
 
   // TODO: add template names already created and remove duplicates here
   const eventNamesOptions = [...events, ...eventTemplates].reduce(
@@ -94,7 +107,7 @@ const EventTemplateForm = ({
 
   return (
     <FormModal
-      onClose={onClose}
+      onClose={handleClose}
       open={open}
       title="Add or update event template"
     >
@@ -108,8 +121,18 @@ const EventTemplateForm = ({
           options={eventNamesOptions}
         />
 
+        {onSubmitOverride && (
+          <FormSelect
+            form={form}
+            name="team"
+            label="Team"
+            multi={false}
+            options={teamOptions}
+          />
+        )}
+
         <DialogActions sx={{ padding: 0 }}>
-          <Button size="medium" variant="outlined" onClick={onClose}>
+          <Button size="medium" variant="outlined" onClick={handleClose}>
             Cancel
           </Button>
 
