@@ -76,7 +76,7 @@ const updateDogById = async (received, callback, io, userToken) => {
     { _id: _id },
     { ...received, team },
     {
-      new: true,
+      returnDocument: "after",
     }
   );
 
@@ -114,7 +114,7 @@ const updateDogById = async (received, callback, io, userToken) => {
       { _id: taskToUpdate._id },
       { $set: { dogs: taskToUpdate.dogs } },
       {
-        new: true,
+        returnDocument: "after",
       }
     );
   }

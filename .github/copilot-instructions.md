@@ -33,6 +33,7 @@ Caveman response mode. Terse, technical prose. Drop greetings, filler, repeated 
 - Do not repeat the feature/folder name as a prefix on components used only inside that folder. Only the component consumed from outside the folder carries the full feature-prefixed name; internal components (and their supporting context/hooks) use short, unprefixed names.
 - Do not self-suppress a component with an early `return null` based on a condition the parent owns. Let the parent decide whether to render it via `{condition && <Component />}`. A component should render its own UI, not opt out of existing.
 - `disabled` means disabled, not hidden. Use the `disabled` prop to make a control non-interactive; use conditional rendering in the parent to omit it entirely. Never conflate the two.
+- A control repeated across multiple pages/views (e.g. a floating action button) is one shared component, not a copy per page. Its markup, placement, and styling live in that one file; pages only pass in what's genuinely page-specific (a click handler, a disabled flag). A style or position change should require editing exactly one file.
 
 ## Routing
 
@@ -55,3 +56,4 @@ Caveman response mode. Terse, technical prose. Drop greetings, filler, repeated 
 ## Comments
 
 - Do not add comments (line, block, JSDoc, or JSX) unless the user explicitly asks for them. Let names and structure carry the intent. Preserve existing functional comments such as `eslint-disable`, `@ts-expect-error`, and codegen directives.
+- When a comment is warranted, keep it to one short line above the thing it describes — a caveman-style label, not a paragraph explaining the reasoning, the history, or the alternatives considered. If it takes more than one line to say, either the code needs a better name instead, or it doesn't belong as an inline comment.

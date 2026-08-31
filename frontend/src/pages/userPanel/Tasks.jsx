@@ -11,7 +11,7 @@ const Tasks = () => {
   return (
     <TasksMainGrid>
       {Object.entries(mappedTasks).map(([rowIndex, columns]) => (
-        <TasksRow key={rowIndex} rowIndex={rowIndex} userPanel>
+        <TasksRow key={rowIndex} userPanel>
           {Object.entries(columns).map(([columnIndex, items]) => (
             <TasksColumn columnIndex={columnIndex} key={columnIndex}>
               {items.map((item, index) => (

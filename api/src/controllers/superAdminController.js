@@ -72,7 +72,7 @@ const updateItem = (entity, io) => async (req, res) => {
   const updated = await Model.findOneAndUpdate(
     { _id },
     { ...data, team },
-    { new: true }
+    { returnDocument: "after" }
   );
 
   if (!updated) {

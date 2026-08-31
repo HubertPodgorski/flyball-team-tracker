@@ -4,6 +4,7 @@ import { Box } from "@mui/material";
 import theme from "../helpers/theme";
 import BottomNavBar from "../components/BottomNavBar";
 import AppBackground from "../components/AppBackground";
+import ActingAsBanner from "../components/ActingAsBanner";
 
 const NotFound = () => {
   const navigate = useNavigate();
@@ -25,6 +26,8 @@ const RootComponent = () => {
 
   return (
     <AppBackground>
+      <ActingAsBanner />
+
       <Box
         sx={{
           padding: theme.spacing(2, 2, 9, 2),

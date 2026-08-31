@@ -1,8 +1,9 @@
-import { Box, Card, IconButton, Typography } from "@mui/material";
+import { Autocomplete, Box, Card, IconButton, TextField, Typography } from "@mui/material";
 import { useAuthContext } from "../../hooks/useAuthContext";
 import { useAppContext } from "../../hooks/useAppContext";
 import { useSocketContext } from "../../hooks/useSocketContext";
 import { useConfirmModal } from "../../hooks/useConfirmModal";
+import { useIsSuperAdmin } from "../../hooks/useIsSuperAdmin";
 import React, { useEffect, useState } from "react";
 import EditNoteIcon from "@mui/icons-material/EditNote";
 import AddIcon from "@mui/icons-material/Add";
@@ -18,6 +19,7 @@ const MyDogs = () => {
   const { dogs, crossPasses } = useAppContext();
   const { socket } = useSocketContext();
   const confirm = useConfirmModal();
+  const isSuperAdmin = useIsSuperAdmin();
 
   const [isNoteModalOpen, setIsNoteModalOpen] = useState<Dog | undefined>();
   const [crossPassForDogId, setCrossPassForDogId] = useState<
@@ -27,6 +29,12 @@ const MyDogs = () => {
     CrossPass | undefined
   >();
   const [userDogs, setUserDogs] = useState(user?.dogs || []);
+  const [pickedDog, setPickedDog] = useState<Dog | null>(null);
+
+  // Super-admins have no dogs of their own - let them pick any dog instead.
+  const dogsToShow = isSuperAdmin
+    ? [pickedDog].filter((dog): dog is Dog => !!dog)
+    : userDogs;
 
   useEffect(() => {
     const userDogIds = user!.dogs.map(({ _id }) => _id);
@@ -59,7 +67,18 @@ const MyDogs = () => {
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-      {userDogs.map((dog) => (
+      {isSuperAdmin && (
+        <Autocomplete
+          options={dogs}
+          getOptionLabel={(dog) => dog.name}
+          isOptionEqualToValue={(option, value) => option._id === value._id}
+          value={pickedDog}
+          onChange={(_event, dog) => setPickedDog(dog)}
+          renderInput={(params) => <TextField {...params} label="Dog" />}
+        />
+      )}
+
+      {dogsToShow.map((dog) => (
         <Card
           key={dog._id}
           sx={{

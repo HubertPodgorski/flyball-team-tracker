@@ -7,6 +7,7 @@ import FormGrid from "../../components/FormGrid";
 import FormSelect from "../../components/inputs/FormSelect";
 import { useAppContext } from "../../hooks/useAppContext";
 import { useSocketContext } from "../../hooks/useSocketContext";
+import { resolveDogsByIds } from "../../helpers/dogs";
 
 const UserForm = ({
   open,
@@ -23,16 +24,7 @@ const UserForm = ({
   const form = useForm({
     defaultValues: initialData,
     onSubmit: async ({ value: values }) => {
-      // TODO: make helper and reuse it in tasks?
-      const selectedDogs = values.dogs
-        .map((dogId) => {
-          const dog = dogs.find(({ _id }) => _id === dogId);
-
-          if (!dog) return undefined;
-
-          return dog;
-        })
-        .filter((dog) => !!dog);
+      const selectedDogs = resolveDogsByIds(values.dogs, dogs);
 
       const data = {
         name: values.name,

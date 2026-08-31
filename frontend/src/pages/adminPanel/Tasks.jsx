@@ -6,6 +6,7 @@ import { useGetMaxRowIndex } from "../../hooks/useGetMaxRowIndex";
 import { useFormHelpers } from "../../hooks/useFormHelpers";
 import TasksDragNDrop from "../../components/admin/TasksDragNDrop";
 import CurrentEventSelectWithDogs from "../../components/admin/CurrentEventSelectWithDogs";
+import { TaskPlanningProvider } from "../../contexts/TaskPlanningContext";
 
 const Tasks = () => {
   const theme = useTheme();
@@ -28,33 +29,35 @@ const Tasks = () => {
   });
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        gridGap: theme.spacing(2),
-        [theme.breakpoints.down("md")]: {
-          gridGap: theme.spacing(1),
-        },
-      }}
-    >
-      <CurrentEventSelectWithDogs />
+    <TaskPlanningProvider>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          gridGap: theme.spacing(2),
+          [theme.breakpoints.down("md")]: {
+            gridGap: theme.spacing(1),
+          },
+        }}
+      >
+        <CurrentEventSelectWithDogs />
 
-      <TasksDragNDrop
-        onTaskEditClick={onTaskEditClick}
-        mappedTasks={mappedTasks}
-        onDragStart={() => setIsDragging(true)}
-        onDragEnd={() => setIsDragging(false)}
-      />
+        <TasksDragNDrop
+          onTaskEditClick={onTaskEditClick}
+          mappedTasks={mappedTasks}
+          onDragStart={() => setIsDragging(true)}
+          onDragEnd={() => setIsDragging(false)}
+        />
 
-      <TaskForm
-        open={taskFormOpen}
-        onClose={onTaskFormClose}
-        maxRowIndex={maxRowIndex}
-        initialData={taskFormInitialData}
-        editingId={taskEditingId}
-      />
-    </Box>
+        <TaskForm
+          open={taskFormOpen}
+          onClose={onTaskFormClose}
+          maxRowIndex={maxRowIndex}
+          initialData={taskFormInitialData}
+          editingId={taskEditingId}
+        />
+      </Box>
+    </TaskPlanningProvider>
   );
 };
 

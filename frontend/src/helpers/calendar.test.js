@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   getBackgroundColorBasedOnType,
   getColorsByStatus,
+  getDogPlanningColor,
   getFormattedDate,
   sortByAttendance,
   sortByNewest,
@@ -67,21 +68,41 @@ describe("getColorsByStatus", () => {
   it("returns the theme's success color for PRESENT", () => {
     expect(getColorsByStatus("PRESENT")).toEqual({
       background: theme.palette.success.main,
-      color: "#333",
+      color: theme.palette.success.contrastText,
     });
   });
 
   it("returns the theme's error color for ABSENT", () => {
     expect(getColorsByStatus("ABSENT")).toEqual({
       background: theme.palette.error.main,
-      color: "#fff",
+      color: theme.palette.error.contrastText,
     });
   });
 
   it("falls back to the theme's warning color for anything else", () => {
     expect(getColorsByStatus(undefined)).toEqual({
       background: theme.palette.warning.main,
-      color: "#333",
+      color: theme.palette.warning.contrastText,
     });
+  });
+});
+
+describe("getDogPlanningColor", () => {
+  it("flags a planned dog that isn't present as error - shouldn't be planned", () => {
+    expect(getDogPlanningColor(true, "ABSENT")).toBe("error");
+    expect(getDogPlanningColor(true, undefined)).toBe("error");
+  });
+
+  it("flags a planned, present dog as success - correctly planned", () => {
+    expect(getDogPlanningColor(true, "PRESENT")).toBe("success");
+  });
+
+  it("flags a present, unplanned dog as warning - still needs planning", () => {
+    expect(getDogPlanningColor(false, "PRESENT")).toBe("warning");
+  });
+
+  it("returns null when neither planned nor present - nothing to flag", () => {
+    expect(getDogPlanningColor(false, "ABSENT")).toBeNull();
+    expect(getDogPlanningColor(false, undefined)).toBeNull();
   });
 });

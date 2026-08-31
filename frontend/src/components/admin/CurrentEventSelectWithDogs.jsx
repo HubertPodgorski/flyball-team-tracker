@@ -1,12 +1,17 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useForm, useStore } from "@tanstack/react-form";
+import { Box, Typography } from "@mui/material";
 import FormSelect from "../inputs/FormSelect";
 import { getFormattedDate } from "../../helpers/calendar";
 import { useAppContext } from "../../hooks/useAppContext";
+import { useDogsWithAttendance } from "../../hooks/useDogsWithAttendance";
+import { useTaskPlanningContext } from "../../hooks/useTaskPlanningContext";
 import DogAttendanceChips from "../DogAttendanceChips";
+import DogPlanningLegend from "../DogPlanningLegend";
 
 const CurrentEventSelectWithDogs = () => {
-  const { events, tasks, dogs } = useAppContext();
+  const { events } = useAppContext();
+  const { setSelectedEventId } = useTaskPlanningContext();
 
   const form = useForm({
     defaultValues: { event: [] },
@@ -14,56 +19,12 @@ const CurrentEventSelectWithDogs = () => {
 
   const selectedEvent = useStore(form.store, (state) => state.values.event);
 
-  const getSelectedEventDogs = () => {
-    if (!selectedEvent) return [];
+  // Shared with TaskForm's dog select - see TaskPlanningContext.
+  useEffect(() => {
+    setSelectedEventId(selectedEvent);
+  }, [selectedEvent, setSelectedEventId]);
 
-    const event = events.find(({ _id }) => _id === selectedEvent);
-
-    if (!event) return [];
-
-    return event.dogs.map((eventDogData) => {
-      const foundDog = dogs.find(
-        ({ _id: dogId }) => eventDogData._id === dogId
-      );
-
-      if (!foundDog) return eventDogData;
-
-      return { ...foundDog, status: eventDogData.status };
-    });
-  };
-
-  const selectedEventDogs = getSelectedEventDogs();
-
-  const isDogPlanned = (dogId) =>
-    tasks.some(({ dogs }) =>
-      dogs.some(({ _id: taskDogId }) => dogId === taskDogId)
-    );
-
-  const getDogsWithAttendance = () => {
-    if (!selectedEvent) return [];
-
-    const event = events.find(({ _id }) => _id === selectedEvent);
-
-    if (!event) return [];
-
-    return dogs.map((dog) => {
-      const dogFound = selectedEventDogs.find(
-        ({ _id: currentEventDogId }) => currentEventDogId === dog._id
-      );
-
-      const isPlanned = isDogPlanned(dog._id);
-
-      if (!dogFound || !dogFound.status) return { ...dog, isPlanned };
-
-      return {
-        ...dog,
-        status: dogFound.status,
-        isPlanned,
-      };
-    });
-  };
-
-  const dogsWithAttendance = getDogsWithAttendance();
+  const dogsWithAttendance = useDogsWithAttendance(selectedEvent);
 
   return (
     <>
@@ -82,10 +43,21 @@ const CurrentEventSelectWithDogs = () => {
       />
 
       {dogsWithAttendance.length > 0 && (
-        <DogAttendanceChips
-          dogsWithAttendance={dogsWithAttendance}
-          showIfPlanned
-        />
+        <>
+          <DogPlanningLegend />
+
+          {/* Grouped so the layout gap above doesn't also land between label and chips. */}
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+            <Typography variant="body2" color="text.secondary">
+              Dogs
+            </Typography>
+
+            <DogAttendanceChips
+              dogsWithAttendance={dogsWithAttendance}
+              showIfPlanned
+            />
+          </Box>
+        </>
       )}
     </>
   );

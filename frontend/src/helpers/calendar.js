@@ -49,17 +49,34 @@ export const getBackgroundColorBasedOnType = (type) => {
 export const getColorsByStatus = (status) => {
   const defaultColors = {
     background: theme.palette.warning.main,
-    color: "#333",
+    color: theme.palette.warning.contrastText,
   };
 
   switch (status) {
     case "PRESENT":
-      return { background: theme.palette.success.main, color: "#333" };
+      return {
+        background: theme.palette.success.main,
+        color: theme.palette.success.contrastText,
+      };
 
     case "ABSENT":
-      return { background: theme.palette.error.main, color: "#fff" };
+      return {
+        background: theme.palette.error.main,
+        color: theme.palette.error.contrastText,
+      };
 
     default:
       return defaultColors;
   }
+};
+
+// Attendance + planned -> an MUI palette color key (or null if nothing to flag).
+export const getDogPlanningColor = (isPlanned, status) => {
+  const isPresent = status === "PRESENT";
+
+  if (isPlanned && !isPresent) return "error";
+  if (isPlanned && isPresent) return "success";
+  if (!isPlanned && isPresent) return "warning";
+
+  return null;
 };

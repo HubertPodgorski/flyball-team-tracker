@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import { Chip, Typography } from "@mui/material";
-import ChipsGrid from "./ChipsGrid";
+import { Box, Chip, Typography } from "@mui/material";
 import TaskCell from "./tasksGrid/TaskCell";
 import { useAuthContext } from "../hooks/useAuthContext";
 import { isMyDog } from "../helpers/tasks";
@@ -28,7 +27,7 @@ const DogsTaskCell = ({ item: { _id, dogs, description }, index }: Props) => {
         </Typography>
 
         {dogs.length > 0 && (
-          <ChipsGrid dense>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: "4px" }}>
             {dogs.map((dog: Dog) => {
               const { name, _id } = dog;
 
@@ -38,10 +37,11 @@ const DogsTaskCell = ({ item: { _id, dogs, description }, index }: Props) => {
                   key={_id}
                   color={isMyDog(_id, user!.dogs) ? "success" : "default"}
                   onClick={() => setIsNoteModalOpen(dog)}
+                  sx={{ alignSelf: "flex-start" }}
                 />
               );
             })}
-          </ChipsGrid>
+          </Box>
         )}
 
         {dogs.length === 0 && <Typography>No dogs selected</Typography>}

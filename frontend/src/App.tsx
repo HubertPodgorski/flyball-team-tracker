@@ -16,7 +16,8 @@ import { pl } from "date-fns/locale/pl";
 const App = () => (
   <ThemeProvider theme={theme}>
     <SnackbarProvider maxSnack={3}>
-      <ConfirmProvider>
+      {/* useLegacyReturn: v4's confirm() otherwise never rejects on cancel. */}
+      <ConfirmProvider useLegacyReturn>
         <AuthContextProvider>
           <SocketContextProvider>
             <LocalizationProvider
