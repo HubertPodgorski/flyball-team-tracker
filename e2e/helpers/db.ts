@@ -10,7 +10,7 @@ const getMongoUrl = (): string => {
   return mongoUrl;
 };
 
-export const promoteToAdmin = async (email: string): Promise<void> => {
+export const promoteToTrainer = async (email: string): Promise<void> => {
   const client = new MongoClient(getMongoUrl());
 
   try {
@@ -19,7 +19,7 @@ export const promoteToAdmin = async (email: string): Promise<void> => {
     await client
       .db()
       .collection("users")
-      .updateOne({ email }, { $set: { roles: ["ADMIN"] } });
+      .updateOne({ email }, { $set: { roles: ["TRAINER"] } });
   } finally {
     await client.close();
   }

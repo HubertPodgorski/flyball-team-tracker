@@ -19,10 +19,10 @@ import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
 import TextSnippetIcon from "@mui/icons-material/TextSnippet";
 
 import { useLocation, useNavigate } from "@tanstack/react-router";
-import { adminRoutes, userRoutes } from "../helpers/routesAndPaths";
+import { trainerRoutes, userRoutes } from "../helpers/routesAndPaths";
 import LoginLogoutListButton from "./LoginLogoutListButton";
 import FormatListNumberedIcon from "@mui/icons-material/FormatListNumbered";
-import { useIsAdmin } from "../hooks/useIsAdmin";
+import { useIsTrainer } from "../hooks/useIsTrainer";
 import { useIsSuperAdmin } from "../hooks/useIsSuperAdmin";
 import SaveIcon from "@mui/icons-material/Save";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
@@ -60,13 +60,13 @@ const BottomNavBar = () => {
     setMobileOpen(!mobileOpen);
   };
 
-  const isAdmin = useIsAdmin();
+  const isTrainer = useIsTrainer();
   const isSuperAdmin = useIsSuperAdmin();
 
   const drawer = (
     <Box onClick={onDrawerToggle} sx={{ textAlign: "center" }}>
       <List>
-        {isAdmin && <MenuListItemStyled>User views</MenuListItemStyled>}
+        {isTrainer && <MenuListItemStyled>User views</MenuListItemStyled>}
 
         <NavListItem
           to={userRoutes.tasks}
@@ -84,39 +84,39 @@ const BottomNavBar = () => {
           label="My Dogs"
         />
 
-        {isAdmin && (
+        {isTrainer && (
           <>
             <Divider />
 
-            <MenuListItemStyled>Admin</MenuListItemStyled>
+            <MenuListItemStyled>Trainer</MenuListItemStyled>
 
             <NavListItem
-              to={adminRoutes.tasks}
+              to={trainerRoutes.tasks}
               icon={<FormatListBulletedIcon />}
               label="Tasks"
             />
             <NavListItem
-              to={adminRoutes.dogs}
+              to={trainerRoutes.dogs}
               icon={<PetsIcon />}
               label="Dogs"
             />
             <NavListItem
-              to={adminRoutes.dogTasks}
+              to={trainerRoutes.dogTasks}
               icon={<TextSnippetIcon />}
               label="Dog tasks"
             />
             <NavListItem
-              to={adminRoutes.events}
+              to={trainerRoutes.events}
               icon={<CalendarMonthIcon />}
               label="Events"
             />
             <NavListItem
-              to={adminRoutes.eventTemplates}
+              to={trainerRoutes.eventTemplates}
               icon={<SaveIcon />}
               label="Event templates"
             />
             <NavListItem
-              to={adminRoutes.users}
+              to={trainerRoutes.users}
               icon={<PersonIcon />}
               label="Users"
             />

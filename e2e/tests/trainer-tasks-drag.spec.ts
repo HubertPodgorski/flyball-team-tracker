@@ -1,25 +1,25 @@
 import { test, expect } from "@playwright/test";
 import { uniqueEmail } from "../helpers/testData";
-import { promoteToAdmin } from "../helpers/db";
-import { signupAndLoginAsAdmin, login, logout } from "../helpers/auth";
+import { promoteToTrainer } from "../helpers/db";
+import { signupAndLoginAsTrainer, login, logout } from "../helpers/auth";
 
 // Regression test: the drag handle once collapsed to 0 height - drag twice to catch it.
-test("admin can reorder task rows via drag and drop, more than once in a row", async ({
+test("trainer can reorder task rows via drag and drop, more than once in a row", async ({
   page,
 }) => {
-  const email = uniqueEmail("admin");
-  await signupAndLoginAsAdmin(page, {
+  const email = uniqueEmail("trainer");
+  await signupAndLoginAsTrainer(page, {
     email,
-    name: "E2E Admin",
+    name: "E2E Trainer",
     teamCode: "TEST",
   });
-  await promoteToAdmin(email);
+  await promoteToTrainer(email);
   await logout(page);
   await login(page, email);
 
-  await page.goto("/admin-panel/tasks");
+  await page.goto("/trainer-panel/tasks");
 
-  // All e2e admins share one team - use unique names, not fixed indices.
+  // All e2e trainers share one team - use unique names, not fixed indices.
   const suffix = Date.now();
   const taskA = `Box turn ${suffix}`;
   const taskB = `Passing ${suffix}`;

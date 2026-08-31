@@ -55,6 +55,15 @@ const runMigrations = async () => {
   // const result7 = await DogModel.updateMany({}, { $set: { note: "" } });
   //
   // console.log("result7 => ", result7);
+
+  // Rename the ADMIN role to TRAINER
+  // const result8 = await UserModel.updateMany(
+  //   {},
+  //   { $set: { "roles.$[r]": "TRAINER" } },
+  //   { arrayFilters: [{ r: "ADMIN" }] }
+  // );
+  //
+  // console.log("result8 => ", result8);
 };
 
 runMigrations();

@@ -16,17 +16,17 @@ export const userPaths = {
   myDogs: "my-dogs",
 };
 
-export const adminRoutes = {
-  tasks: "/admin-panel/tasks",
-  events: "/admin-panel/events",
-  dogs: "/admin-panel/dogs",
-  users: "/admin-panel/users",
-  dogTasks: "/admin-panel/dog-tasks",
-  eventTemplates: "/admin-panel/event-templates",
+export const trainerRoutes = {
+  tasks: "/trainer-panel/tasks",
+  events: "/trainer-panel/events",
+  dogs: "/trainer-panel/dogs",
+  users: "/trainer-panel/users",
+  dogTasks: "/trainer-panel/dog-tasks",
+  eventTemplates: "/trainer-panel/event-templates",
 };
 
-export const adminPaths = {
-  root: "/admin-panel",
+export const trainerPaths = {
+  root: "/trainer-panel",
   tasks: "tasks",
   events: "events",
   dogs: "dogs",

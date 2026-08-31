@@ -1,6 +1,6 @@
 import { expect, Page } from "@playwright/test";
 
-export const signupAndLoginAsAdmin = async (
+export const signupAndLoginAsTrainer = async (
   page: Page,
   { email, name, teamCode }: { email: string; name: string; teamCode: string }
 ) => {
@@ -32,7 +32,7 @@ export const logout = async (page: Page) => {
 };
 
 export const addDog = async (page: Page, dogName: string) => {
-  await page.goto("/admin-panel/dogs");
+  await page.goto("/trainer-panel/dogs");
   await page.getByRole("button", { name: "Add" }).click();
   await page.getByRole("textbox", { name: "Name", exact: true }).fill(dogName);
   await page.getByRole("button", { name: "Submit" }).click();

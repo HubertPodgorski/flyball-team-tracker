@@ -81,7 +81,7 @@ Signup requires a `teamCode` (checked in [userModel.js](api/src/models/userModel
 
 All data (dogs, tasks, events, event templates, dog tasks) is scoped by `team` — only visible to/editable by users who signed up with the same code.
 
-New users get no `roles`. The admin panel (`/admin-panel/*`) is gated on `roles` including `ADMIN` ([useIsAdmin.ts](frontend/src/hooks/useIsAdmin.ts)). There's no UI or API to grant this — after signing up, open the user document in MongoDB (`users` collection) and set `roles: ["ADMIN"]` by hand.
+New users get no `roles`. The trainer panel (`/trainer-panel/*`) is gated on `roles` including `TRAINER` ([useIsTrainer.ts](frontend/src/hooks/useIsTrainer.ts)). There's no UI or API to grant this — after signing up, open the user document in MongoDB (`users` collection) and set `roles: ["TRAINER"]` by hand.
 
 ## Scripts
 
@@ -120,7 +120,7 @@ yarn test:e2e                                        # from repo root, any time 
 
 Each run spins up an in-memory MongoDB (`mongodb-memory-server`, downloads a real `mongod` binary the first time — needs internet once), boots the API against it on port 4101, boots the Vite dev server on port 3100 with `VITE_HTTPS_PROXY` pointed at that API, runs the tests, then tears everything down. Doesn't touch your real `.env`, your Atlas cluster, or ports 3000/4001, so it's safe to run alongside normal local dev.
 
-Current coverage ([e2e/tests](e2e/tests)): signup, logout/login, and an admin promoting via direct DB write (there's no UI path, same limitation as real usage — see "Creating a local account" above) then adding a dog through the admin panel. `e2e/helpers/db.ts` is where that kind of direct-DB test setup lives if you add more tests needing it.
+Current coverage ([e2e/tests](e2e/tests)): signup, logout/login, and a trainer promoting via direct DB write (there's no UI path, same limitation as real usage — see "Creating a local account" above) then adding a dog through the trainer panel. `e2e/helpers/db.ts` is where that kind of direct-DB test setup lives if you add more tests needing it.
 
 ## Deploying after the Vite migration
 

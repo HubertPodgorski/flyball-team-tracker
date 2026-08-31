@@ -1,24 +1,24 @@
 import React, { useEffect } from "react";
 import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
 import { useAuthContext } from "../../hooks/useAuthContext";
-import { useIsAdmin } from "../../hooks/useIsAdmin";
+import { useIsTrainer } from "../../hooks/useIsTrainer";
 
-const AdminPanelLayout = () => {
+const TrainerPanelLayout = () => {
   const { user } = useAuthContext();
-  const isAdmin = useIsAdmin();
+  const isTrainer = useIsTrainer();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!user || !isAdmin) {
+    if (!user || !isTrainer) {
       navigate({ to: "/login" });
     }
-  }, [user, isAdmin, navigate]);
+  }, [user, isTrainer, navigate]);
 
-  if (!user || !isAdmin) return null;
+  if (!user || !isTrainer) return null;
 
   return <Outlet />;
 };
 
-export const Route = createFileRoute("/admin-panel")({
-  component: AdminPanelLayout,
+export const Route = createFileRoute("/trainer-panel")({
+  component: TrainerPanelLayout,
 });

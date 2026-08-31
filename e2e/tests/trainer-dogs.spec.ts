@@ -1,13 +1,13 @@
 import { test, expect } from "@playwright/test";
 import { uniqueEmail } from "../helpers/testData";
-import { promoteToAdmin } from "../helpers/db";
+import { promoteToTrainer } from "../helpers/db";
 
-test("an admin can add a dog and see it in the roster", async ({ page }) => {
-  const email = uniqueEmail("admin");
+test("a trainer can add a dog and see it in the roster", async ({ page }) => {
+  const email = uniqueEmail("trainer");
   const password = "password123";
 
   await page.goto("/signup");
-  await page.getByRole("textbox", { name: "Name", exact: true }).fill("E2E Admin User");
+  await page.getByRole("textbox", { name: "Name", exact: true }).fill("E2E Trainer User");
   await page.getByRole("textbox", { name: "Email", exact: true }).fill(email);
   await page.getByRole("textbox", { name: "Password", exact: true }).fill(password);
   await page.getByRole("textbox", { name: "Repeat password", exact: true }).fill(password);
@@ -15,7 +15,7 @@ test("an admin can add a dog and see it in the roster", async ({ page }) => {
   await page.getByRole("button", { name: "Signup" }).click();
   await page.waitForURL(/\/user-panel/);
 
-  await promoteToAdmin(email);
+  await promoteToTrainer(email);
 
   // Re-login so the returned user object (and its roles) reflects the promotion.
   await page.getByRole("button", { name: "open drawer" }).click();
@@ -27,7 +27,7 @@ test("an admin can add a dog and see it in the roster", async ({ page }) => {
   await page.getByRole("button", { name: "Login" }).click();
   await page.waitForURL(/\/user-panel/);
 
-  await page.goto("/admin-panel/dogs");
+  await page.goto("/trainer-panel/dogs");
 
   const dogName = `E2E Dog ${Date.now()}`;
 

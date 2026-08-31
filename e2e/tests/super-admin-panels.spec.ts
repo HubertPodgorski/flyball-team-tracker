@@ -1,10 +1,10 @@
 import { test, expect } from "@playwright/test";
 import { uniqueEmail } from "../helpers/testData";
-import { promoteToAdmin, promoteToSuperAdmin } from "../helpers/db";
-import { login, logout, signupAndLoginAsAdmin } from "../helpers/auth";
+import { promoteToTrainer, promoteToSuperAdmin } from "../helpers/db";
+import { login, logout, signupAndLoginAsTrainer } from "../helpers/auth";
 
 const addDogTask = async (page, taskName: string) => {
-  await page.goto("/admin-panel/dog-tasks");
+  await page.goto("/trainer-panel/dog-tasks");
   await page.getByRole("button", { name: "Add" }).click();
   await page
     .getByRole("textbox", { name: "Task name", exact: true })
@@ -16,36 +16,36 @@ const addDogTask = async (page, taskName: string) => {
 test("super-admin dog-tasks panel lists across teams, filters by team, and supports full CRUD", async ({
   page,
 }) => {
-  const teamAEmail = uniqueEmail("panel-team-a-admin");
-  const teamBEmail = uniqueEmail("panel-team-b-admin");
+  const teamAEmail = uniqueEmail("panel-team-a-trainer");
+  const teamBEmail = uniqueEmail("panel-team-b-trainer");
   const superAdminEmail = uniqueEmail("panel-super-admin");
 
   const teamATaskName = `TeamA DogTask ${Date.now()}`;
   const teamBTaskName = `TeamB DogTask ${Date.now()}`;
 
-  await signupAndLoginAsAdmin(page, {
+  await signupAndLoginAsTrainer(page, {
     email: teamAEmail,
-    name: "E2E Panel Team A Admin",
+    name: "E2E Panel Team A Trainer",
     teamCode: "TEST",
   });
-  await promoteToAdmin(teamAEmail);
+  await promoteToTrainer(teamAEmail);
   await logout(page);
   await login(page, teamAEmail);
   await addDogTask(page, teamATaskName);
   await logout(page);
 
-  await signupAndLoginAsAdmin(page, {
+  await signupAndLoginAsTrainer(page, {
     email: teamBEmail,
-    name: "E2E Panel Team B Admin",
+    name: "E2E Panel Team B Trainer",
     teamCode: "WEST_SIDE_DOGZ",
   });
-  await promoteToAdmin(teamBEmail);
+  await promoteToTrainer(teamBEmail);
   await logout(page);
   await login(page, teamBEmail);
   await addDogTask(page, teamBTaskName);
   await logout(page);
 
-  await signupAndLoginAsAdmin(page, {
+  await signupAndLoginAsTrainer(page, {
     email: superAdminEmail,
     name: "E2E Panel Super Admin",
     teamCode: "TEST",
