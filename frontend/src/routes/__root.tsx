@@ -1,10 +1,20 @@
 import React, { useEffect } from "react";
-import { createRootRoute, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
+import {
+  createRootRouteWithContext,
+  Outlet,
+  useLocation,
+  useNavigate,
+} from "@tanstack/react-router";
+import type { QueryClient } from "@tanstack/react-query";
 import { Box } from "@mui/material";
 import theme from "../helpers/theme";
 import BottomNavBar from "../components/BottomNavBar";
 import AppBackground from "../components/AppBackground";
 import ActingAsBanner from "../components/ActingAsBanner";
+
+export interface RouterContext {
+  queryClient: QueryClient;
+}
 
 const NotFound = () => {
   const navigate = useNavigate();
@@ -45,7 +55,7 @@ const RootComponent = () => {
   );
 };
 
-export const Route = createRootRoute({
+export const Route = createRootRouteWithContext<RouterContext>()({
   component: RootComponent,
   notFoundComponent: NotFound,
 });

@@ -15,10 +15,12 @@ import { useDogsWithAttendance } from "../../hooks/useDogsWithAttendance";
 import { useTaskPlanningContext } from "../../hooks/useTaskPlanningContext";
 import { getDogPlanningColor } from "../../helpers/calendar";
 import { Task } from "../../helpers/types";
+import { findLinkedLineup } from "../../helpers/lineupLink";
+import { useTeamsQuery } from "../../queries/teams";
 
 export type MappedTasks = Record<string, Record<string, Task[]>>;
 
-// Built on react-sortablejs - `list`/`setList` per row/column is real state, re-synced from `mappedTasks` below.
+// Built on react-sortablejs.
 
 const RowStyled = styled(Box)(({ theme }) => ({
   display: "flex",
@@ -40,10 +42,10 @@ const RowHandleBarStyled = styled(Box)(({ theme }) => ({
   position: "relative",
 }));
 
-// The actual drag handle - no icon of its own (see RowMoveIconStyled).
+// The actual drag handle (icon is RowMoveIconStyled, decorative).
 const RowDragZoneStyled = styled(Box)(() => ({
   flexGrow: 1,
-  // Empty div - stretch it, or it collapses to 0 height (no content).
+  // Empty - collapses to 0 height without flexGrow.
   alignSelf: "stretch",
   cursor: "grab",
 }));
@@ -53,7 +55,7 @@ const RowMoveIconStyled = styled(OpenWithIcon)(() => ({
   left: "50%",
   top: "50%",
   transform: "translate(-50%, -50%)",
-  // Decorative only - let clicks pass through to the drag zone underneath.
+  // Decorative - clicks pass through to the drag zone.
   pointerEvents: "none",
 }));
 
@@ -74,8 +76,12 @@ const ColumnStyled = styled(Box)(({ theme }) => ({
   minHeight: "88px",
 }));
 
-const CardStyled = styled(Card)(({ theme }) => ({
-  backgroundColor: alpha(theme.palette.background.paper, 0.75),
+const CardStyled = styled(Card, {
+  shouldForwardProp: (prop) => prop !== "lineupLinked",
+})<{ lineupLinked?: boolean }>(({ theme, lineupLinked }) => ({
+  backgroundColor: lineupLinked
+    ? alpha(theme.palette.info.main, 0.16)
+    : alpha(theme.palette.background.paper, 0.75),
   backdropFilter: "blur(6px)",
   cursor: "grab",
 }));
@@ -115,7 +121,7 @@ const buildCellLists = (mappedTasks: MappedTasks): Record<string, CellItem[]> =>
 
 interface Props {
   onTaskEditClick: (
-    task: Pick<Task, "position" | "description" | "dogs">,
+    task: Pick<Task, "position" | "description" | "dogs" | "matchupRef">,
     _id: string
   ) => Promise<void>;
   mappedTasks: MappedTasks;
@@ -137,13 +143,13 @@ const TasksDragNDrop = ({
   const isMobile = useIsMobile();
   const { selectedEventId } = useTaskPlanningContext();
   const dogsWithAttendance = useDogsWithAttendance(selectedEventId);
+  const { data: teams = [] } = useTeamsQuery();
 
   const [rowList, setRowList] = useState<RowItem[]>(() => buildRowList(mappedTasks));
   const [cellLists, setCellLists] = useState<Record<string, CellItem[]>>(() =>
     buildCellLists(mappedTasks)
   );
 
-  // Re-sync local state whenever the real data (mappedTasks) changes.
   useEffect(() => {
     setRowList(buildRowList(mappedTasks));
     setCellLists(buildCellLists(mappedTasks));
@@ -158,21 +164,23 @@ const TasksDragNDrop = ({
     deleteTasksRow(+rowIndex);
   };
 
-  const onEditClick = async ({ position, description, dogs, _id }: Task) => {
-    await onTaskEditClick({ position, description, dogs }, _id);
+  // Always edits, lineup-linked or not (cross-pass view is DogsTaskCell only).
+  const onCardClick = async (task: Task) => {
+    const { position, description, dogs, matchupRef, _id } = task;
+    await onTaskEditClick({ position, description, dogs, matchupRef }, _id);
   };
 
-  return (
+  const sortableTree = (
     <ReactSortable
       list={rowList}
       setList={setRowList}
       handle="[data-row-handle]"
       animation={150}
-      // Drives the drag via pointer events instead of native HTML5 DnD.
+      // Pointer-based drag, not native HTML5 DnD.
       forceFallback
-      // Blocks dropping any row past the trailing empty row.
+      // No dropping past the trailing empty row.
       onMove={(evt) => {
-        // react-sortablejs treats a returned `undefined` as cancel - must return `true` to allow.
+        // Must return `true` to allow - `undefined` reads as cancel.
         const relatedIsEmptyRow = evt.related.hasAttribute("data-row-empty");
         const isPastLastItem =
           evt.related === evt.to && evt.to.lastElementChild?.hasAttribute("data-row-empty");
@@ -250,7 +258,6 @@ const TasksDragNDrop = ({
                       group="tasks-cells"
                       animation={150}
                       forceFallback
-                      // This div is the actual droppable target - flexGrow keeps it from staying a sliver.
                       style={{
                         display: "flex",
                         flexDirection: "column",
@@ -293,11 +300,18 @@ const TasksDragNDrop = ({
                         );
                       }}
                     >
-                      {cellList.map(({ task }) => (
-                        <CardStyled key={task._id} data-task-id={task._id}>
+                      {cellList.map(({ task }) => {
+                        const isLineupLinked = !!findLinkedLineup(task, teams);
+
+                        return (
+                        <CardStyled
+                          key={task._id}
+                          data-task-id={task._id}
+                          lineupLinked={isLineupLinked}
+                        >
                           <CardContentStyled
                             onClick={() => {
-                              onEditClick(task);
+                              onCardClick(task);
                             }}
                           >
                             <Typography variant={isMobile ? "body2" : "h5"}>
@@ -316,7 +330,7 @@ const TasksDragNDrop = ({
                                   const attendance = dogsWithAttendance.find(
                                     ({ _id: dogId }) => dogId === _id
                                   );
-                                  // Only flag "shouldn't be planned" here - full legend is on the dogs list/select.
+                                  // "Shouldn't be planned" flag only.
                                   const isMisplanned =
                                     !!attendance &&
                                     getDogPlanningColor(
@@ -352,7 +366,8 @@ const TasksDragNDrop = ({
                             </IconButton>
                           </CardContentStyled>
                         </CardStyled>
-                      ))}
+                        );
+                      })}
                     </ReactSortable>
 
                     <AddTaskHereButton
@@ -371,6 +386,8 @@ const TasksDragNDrop = ({
       })}
     </ReactSortable>
   );
+
+  return sortableTree;
 };
 
 export default TasksDragNDrop;

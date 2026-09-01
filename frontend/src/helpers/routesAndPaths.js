@@ -7,6 +7,7 @@ export const userRoutes = {
   tasks: "/user-panel/tasks",
   calendar: "/user-panel/calendar",
   myDogs: "/user-panel/my-dogs",
+  teams: "/user-panel/teams",
 };
 
 export const userPaths = {
@@ -14,6 +15,7 @@ export const userPaths = {
   tasks: "tasks",
   calendar: "calendar",
   myDogs: "my-dogs",
+  teams: "teams",
 };
 
 export const trainerRoutes = {
@@ -23,6 +25,7 @@ export const trainerRoutes = {
   users: "/trainer-panel/users",
   dogTasks: "/trainer-panel/dog-tasks",
   eventTemplates: "/trainer-panel/event-templates",
+  teams: "/trainer-panel/teams",
 };
 
 export const trainerPaths = {
@@ -33,4 +36,5 @@ export const trainerPaths = {
   users: "users",
   dogTasks: "dog-tasks",
   eventTemplates: "event-templates",
+  teams: "teams",
 };

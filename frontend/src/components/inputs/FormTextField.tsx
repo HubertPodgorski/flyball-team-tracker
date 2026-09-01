@@ -1,7 +1,7 @@
 import React from "react";
-import { TextField } from "@mui/material";
 import type { AnyFieldApi } from "@tanstack/react-form";
 import { FormFieldProps, getFieldErrorMessage } from "./utils";
+import ClearableTextField from "./ClearableTextField";
 
 interface Props extends FormFieldProps {
   label: string;
@@ -31,8 +31,8 @@ const FormTextField = ({
     }}
   >
     {(field: AnyFieldApi) => (
-      <TextField
-        onChange={(event) => field.handleChange(event.target.value)}
+      <ClearableTextField
+        onChange={(value) => field.handleChange(value)}
         onBlur={field.handleBlur}
         value={field.state.value ?? ""}
         label={label}

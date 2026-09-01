@@ -1,14 +1,14 @@
 import React from "react";
 import { Box, Typography } from "@mui/material";
 import { useIsSuperAdmin } from "../hooks/useIsSuperAdmin";
-import { useCurrentTeam } from "../hooks/useCurrentTeam";
+import { useCurrentClub } from "../hooks/useCurrentClub";
 
-// Reminds a super-admin which team they're currently acting as.
+// Reminds a super-admin which club they're currently acting as.
 const ActingAsBanner = () => {
   const isSuperAdmin = useIsSuperAdmin();
-  const currentTeam = useCurrentTeam();
+  const currentClub = useCurrentClub();
 
-  if (!isSuperAdmin || !currentTeam) return null;
+  if (!isSuperAdmin || !currentClub) return null;
 
   return (
     <Box
@@ -19,7 +19,7 @@ const ActingAsBanner = () => {
         padding: 0.5,
       }}
     >
-      <Typography variant="caption">Acting as: {currentTeam}</Typography>
+      <Typography variant="caption">Acting as: {currentClub}</Typography>
     </Box>
   );
 };

@@ -1,10 +1,13 @@
 import React from "react";
 import { RouterProvider } from "@tanstack/react-router";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { CssBaseline, ThemeProvider } from "@mui/material";
 import { AppContextProvider } from "./contexts/AppContext";
 import { router } from "./router";
+import { queryClient } from "./queryClient";
 import theme from "./helpers/theme";
 import SocketHandler from "./components/SocketHandler";
+import SseHandler from "./components/SseHandler";
 import { AuthContextProvider } from "./contexts/AuthContext";
 import { ConfirmProvider } from "material-ui-confirm";
 import { SnackbarProvider } from "notistack";
@@ -18,22 +21,25 @@ const App = () => (
     <SnackbarProvider maxSnack={3}>
       {/* useLegacyReturn: v4's confirm() otherwise never rejects on cancel. */}
       <ConfirmProvider useLegacyReturn>
-        <AuthContextProvider>
-          <SocketContextProvider>
-            <LocalizationProvider
-              dateAdapter={AdapterDateFns}
-              adapterLocale={pl}
-            >
-              <AppContextProvider>
-                <SocketHandler />
+        <QueryClientProvider client={queryClient}>
+          <AuthContextProvider>
+            <SocketContextProvider>
+              <LocalizationProvider
+                dateAdapter={AdapterDateFns}
+                adapterLocale={pl}
+              >
+                <AppContextProvider>
+                  <SocketHandler />
+                  <SseHandler />
 
-                <CssBaseline />
+                  <CssBaseline />
 
-                <RouterProvider router={router} />
-              </AppContextProvider>
-            </LocalizationProvider>
-          </SocketContextProvider>
-        </AuthContextProvider>
+                  <RouterProvider router={router} />
+                </AppContextProvider>
+              </LocalizationProvider>
+            </SocketContextProvider>
+          </AuthContextProvider>
+        </QueryClientProvider>
       </ConfirmProvider>
     </SnackbarProvider>
   </ThemeProvider>

@@ -1,14 +1,9 @@
 import axios from "axios";
 import { apiSuffix } from "./apiCall";
-
-const getToken = (): string => {
-  const { token } = JSON.parse(localStorage.getItem("user") || "{}");
-
-  return token;
-};
+import { getAuthToken } from "./authToken";
 
 const authHeaders = () => ({
-  headers: { Authorization: `Bearer ${getToken()}` },
+  headers: { Authorization: `Bearer ${getAuthToken()}` },
 });
 
 export const fetchSuperAdminList = async (

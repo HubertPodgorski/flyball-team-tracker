@@ -6,6 +6,7 @@ import { useGetMaxRowIndex } from "../../hooks/useGetMaxRowIndex";
 import { useFormHelpers } from "../../hooks/useFormHelpers";
 import TasksDragNDrop from "../../components/admin/TasksDragNDrop";
 import CurrentEventSelectWithDogs from "../../components/admin/CurrentEventSelectWithDogs";
+import LineupTaskLegend from "../../components/LineupTaskLegend";
 import { TaskPlanningProvider } from "../../contexts/TaskPlanningContext";
 
 const Tasks = () => {
@@ -42,12 +43,16 @@ const Tasks = () => {
       >
         <CurrentEventSelectWithDogs />
 
-        <TasksDragNDrop
-          onTaskEditClick={onTaskEditClick}
-          mappedTasks={mappedTasks}
-          onDragStart={() => setIsDragging(true)}
-          onDragEnd={() => setIsDragging(false)}
-        />
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+          <LineupTaskLegend />
+
+          <TasksDragNDrop
+            onTaskEditClick={onTaskEditClick}
+            mappedTasks={mappedTasks}
+            onDragStart={() => setIsDragging(true)}
+            onDragEnd={() => setIsDragging(false)}
+          />
+        </Box>
 
         <TaskForm
           open={taskFormOpen}

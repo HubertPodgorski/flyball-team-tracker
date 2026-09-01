@@ -1,18 +1,16 @@
 import React, { ReactNode } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  styled,
-  useTheme,
-} from "@mui/material";
+import { Dialog, DialogContent, DialogTitle, styled, useTheme } from "@mui/material";
 
 interface Props {
   open: boolean;
-  title: string;
+  title: ReactNode;
   onClose: () => void;
   children: ReactNode;
 }
+
+const DialogTitleStyled = styled(DialogTitle)({
+  padding: "8px",
+});
 
 const DialogContentStyled = styled(DialogContent)(({ theme }) => ({
   minWidth: 400,
@@ -39,7 +37,7 @@ const Modal = ({ open, onClose, children, title }: Props) => {
         },
       }}
     >
-      <DialogTitle>{title}</DialogTitle>
+      <DialogTitleStyled>{title}</DialogTitleStyled>
 
       <DialogContentStyled>{children}</DialogContentStyled>
     </Dialog>

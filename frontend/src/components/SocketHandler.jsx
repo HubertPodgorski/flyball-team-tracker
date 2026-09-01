@@ -1,10 +1,12 @@
 import { useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAppContext } from "../hooks/useAppContext";
 import { useSocketContext } from "../hooks/useSocketContext";
 import { useAuthContext } from "../hooks/useAuthContext";
 
 const SocketHandler = () => {
   const { socket } = useSocketContext();
+  const queryClient = useQueryClient();
 
   const {
     setTasks,
@@ -69,6 +71,7 @@ const SocketHandler = () => {
       setDogTasks([]);
       setEventTemplates([]);
       setCrossPasses([]);
+      queryClient.removeQueries({ queryKey: ["squads"] });
 
       return;
     }

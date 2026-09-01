@@ -86,10 +86,10 @@ const SignupForm = () => {
           <FormTextField
             form={form}
             name="teamCode"
-            label="Team code"
+            label="Club code"
             validate={(currentValue) => {
               if (!validTeamCodes.includes(currentValue)) {
-                return "Invalid team invitation code";
+                return "Invalid club invitation code";
               }
             }}
             required

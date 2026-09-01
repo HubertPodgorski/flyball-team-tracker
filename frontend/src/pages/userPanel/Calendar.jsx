@@ -3,6 +3,7 @@ import { useAppContext } from "../../hooks/useAppContext";
 import { Box, useTheme } from "@mui/material";
 import { sortByNewest } from "../../helpers/calendar";
 import EventCard from "../../components/EventCard";
+import EventTypeLegend from "../../components/EventTypeLegend";
 
 const Calendar = () => {
   const theme = useTheme();
@@ -12,20 +13,24 @@ const Calendar = () => {
   const sortedEvents = events.sort(sortByNewest);
 
   return (
-    <Box
-      sx={{
-        display: "grid",
-        gridAutoFlow: "row",
-        gridGap: theme.spacing(2),
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+      <EventTypeLegend />
 
-        [theme.breakpoints.down("md")]: {
-          gridGap: theme.spacing(1),
-        },
-      }}
-    >
-      {sortedEvents.map((event) => (
-        <EventCard event={event} key={event._id} />
-      ))}
+      <Box
+        sx={{
+          display: "grid",
+          gridAutoFlow: "row",
+          gridGap: theme.spacing(2),
+
+          [theme.breakpoints.down("md")]: {
+            gridGap: theme.spacing(1),
+          },
+        }}
+      >
+        {sortedEvents.map((event) => (
+          <EventCard event={event} key={event._id} />
+        ))}
+      </Box>
     </Box>
   );
 };

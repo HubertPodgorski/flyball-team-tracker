@@ -3,6 +3,7 @@ const DogModel = require("../models/dogModel");
 const DogTaskModel = require("../models/dogTaskModel");
 const EventModel = require("../models/eventModel");
 const EventTemplateModel = require("../models/eventTemplateModel");
+const SquadModel = require("../models/squadModel");
 const { TEAMS } = require("../helpers/teams");
 
 const entityConfig = {
@@ -14,10 +15,10 @@ const entityConfig = {
     Model: EventTemplateModel,
     updatedEvent: "event_templates_updated",
   },
+  squads: { Model: SquadModel, updatedEvent: "squads_updated" },
 };
 
-// super-admins are not real members of any team - keep them out of every
-// user list, same as the regular admin's getAllUsers.
+// Same exclusion as userController's getAllUsers.
 const withoutSuperAdmins = (entity, filter) =>
   entity === "users" ? { ...filter, roles: { $nin: ["SUPER_ADMIN"] } } : filter;
 

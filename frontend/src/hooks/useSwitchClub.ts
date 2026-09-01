@@ -4,12 +4,12 @@ import { useAuthContext } from "./useAuthContext";
 import { apiSuffix } from "../helpers/apiCall";
 import { getAuthErrorMessage } from "../helpers/authErrors";
 
-export const useSwitchTeam = () => {
+export const useSwitchClub = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { login } = useAuthContext();
 
-  const switchTeam = async (team: string) => {
+  const switchClub = async (team: string) => {
     setLoading(true);
     setError(null);
 
@@ -23,14 +23,14 @@ export const useSwitchTeam = () => {
 
       localStorage.setItem("user", JSON.stringify(data));
       // new object reference from the network response - triggers the
-      // socket to reconnect with the new token and refetch team-scoped data
+      // socket to reconnect with the new token and refetch club-scoped data
       login(data.user);
-    } catch (switchTeamError) {
-      setError(getAuthErrorMessage(switchTeamError));
+    } catch (switchClubError) {
+      setError(getAuthErrorMessage(switchClubError));
     } finally {
       setLoading(false);
     }
   };
 
-  return { switchTeam, loading, error };
+  return { switchClub, loading, error };
 };
