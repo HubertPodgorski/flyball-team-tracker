@@ -9,12 +9,15 @@ import { CrossPass, Dog } from "../../helpers/types";
 import FormSwitch from "../inputs/FormSwitch";
 import FormSelect from "../inputs/FormSelect";
 import FormTextSelect from "../inputs/FormTextSelect";
+import FormTextField from "../inputs/FormTextField";
+import FormStartingPositionField from "../inputs/FormStartingPositionField";
 
 interface FormData {
   runningOnDogId?: string;
   runningOnLights?: boolean;
   note?: string;
   startingPosition?: string;
+  time?: string;
 }
 
 interface Props {
@@ -25,15 +28,18 @@ interface Props {
 }
 
 const getSubmitData = (
-  { runningOnLights, runningOnDogId, note, startingPosition }: FormData,
+  { runningOnLights, runningOnDogId, note, startingPosition, time }: FormData,
   dogs: Dog[],
   dogId: string | undefined
 ) => {
+  const time_ = time ? Number(time) : undefined;
+
   if (runningOnLights) {
     return {
       runningOnLights,
       note,
       startingPosition,
+      time: time_,
       runningOnDog: null,
       dogId,
     };
@@ -45,21 +51,18 @@ const getSubmitData = (
     runningOnLights,
     note,
     startingPosition,
+    time: time_,
     runningOnDog: dog,
     dogId,
   };
 };
-
-const startingPositionOptions = new Array(20).fill("").map((value, index) => ({
-  value: `${index + 1}m`,
-  label: `${index + 1}m`,
-}));
 
 const initialData: FormData = {
   note: "",
   runningOnDogId: "",
   runningOnLights: false,
   startingPosition: "",
+  time: "",
 };
 
 const CrossPassModal = ({
@@ -109,6 +112,7 @@ const CrossPassModal = ({
       runningOnDogId: crossPass?.runningOnDog?._id || "",
       runningOnLights: crossPass?.runningOnLights || false,
       startingPosition: crossPass?.startingPosition || "",
+      time: crossPass?.time !== undefined ? String(crossPass.time) : "",
     });
   }, [crossPass, form, dogId]);
 
@@ -139,12 +143,9 @@ const CrossPassModal = ({
           />
         )}
 
-        <FormTextSelect
-          form={form}
-          name="startingPosition"
-          label="Starting position"
-          options={startingPositionOptions}
-        />
+        <FormStartingPositionField form={form} name="startingPosition" label="Starting position" />
+
+        <FormTextField form={form} name="time" label="Time (s)" type="number" />
 
         <FormTextSelect form={form} name="note" label="Note" options={[]} />
 

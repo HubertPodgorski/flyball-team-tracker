@@ -128,6 +128,11 @@ const MyDogs = () => {
                   flex: 1,
                 },
                 {
+                  headerName: "Time (s)",
+                  field: "time",
+                  flex: 1,
+                },
+                {
                   headerName: "Notes",
                   field: "note",
                   flex: 1,

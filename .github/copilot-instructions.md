@@ -49,6 +49,10 @@ Caveman response mode. Terse, technical prose. Drop greetings, filler, repeated 
 
 - Dialog open/close state should live in the component that triggers the dialog.
 
+## MUI
+
+- Never nest an interactive element (`IconButton`, `Button`, etc.) directly inside `AccordionSummary` — it renders as a `<button>` itself, and a `<button>` inside a `<button>` is invalid HTML that crashes on expand, not just a lint warning. Give the inner element `component="span"`.
+
 ## Lint Rules
 
 - `@typescript-eslint/consistent-type-assertions`: Never use `{} as Type`. Use `undefined` with a type guard or provide a real default value.

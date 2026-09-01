@@ -17,8 +17,9 @@ import PersonIcon from "@mui/icons-material/Person";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
 import TextSnippetIcon from "@mui/icons-material/TextSnippet";
+import GroupsIcon from "@mui/icons-material/Groups";
 
-import { useLocation, useNavigate } from "@tanstack/react-router";
+import { Link, useLocation } from "@tanstack/react-router";
 import { trainerRoutes, userRoutes } from "../helpers/routesAndPaths";
 import LoginLogoutListButton from "./LoginLogoutListButton";
 import FormatListNumberedIcon from "@mui/icons-material/FormatListNumbered";
@@ -39,15 +40,13 @@ const MenuListItemStyled = styled(ListItemButton)(({ theme }) => ({
 // Fixed height regardless of viewport, so AddFab can sit a known gap above it.
 export const BOTTOM_NAV_HEIGHT = 56;
 
+// component={Link} (not onClick + navigate()) so hovering/focusing the item
+// triggers the router's intent-preload (see router.ts's defaultPreload).
 const NavListItem = ({ to, icon, label }) => {
-  const navigate = useNavigate();
   const { pathname } = useLocation();
 
   return (
-    <MenuListItemStyled
-      selected={pathname === to}
-      onClick={() => navigate({ to })}
-    >
+    <MenuListItemStyled component={Link} to={to} selected={pathname === to}>
       {icon} <ListItemText primary={label} />
     </MenuListItemStyled>
   );
@@ -82,6 +81,11 @@ const BottomNavBar = () => {
           to={userRoutes.myDogs}
           icon={<PetsIcon />}
           label="My Dogs"
+        />
+        <NavListItem
+          to={userRoutes.teams}
+          icon={<GroupsIcon />}
+          label="Teams"
         />
 
         {isTrainer && (
@@ -120,6 +124,11 @@ const BottomNavBar = () => {
               icon={<PersonIcon />}
               label="Users"
             />
+            <NavListItem
+              to={trainerRoutes.teams}
+              icon={<GroupsIcon />}
+              label="Teams"
+            />
           </>
         )}
 
@@ -130,9 +139,9 @@ const BottomNavBar = () => {
             <MenuListItemStyled>Super Admin</MenuListItemStyled>
 
             <NavListItem
-              to="/team-switch"
+              to="/club-switch"
               icon={<SwapHorizIcon />}
-              label="Team switch"
+              label="Club switch"
             />
             <NavListItem
               to="/super-admin/users"
@@ -158,6 +167,11 @@ const BottomNavBar = () => {
               to="/super-admin/event-templates"
               icon={<SaveIcon />}
               label="All event templates"
+            />
+            <NavListItem
+              to="/super-admin/teams"
+              icon={<GroupsIcon />}
+              label="All teams"
             />
           </>
         )}

@@ -9,6 +9,11 @@ const taskSchema = new Schema(
     dogs: {
       type: [DogModel.schema],
     },
+    // Kept even if dogs later drift from the matchup.
+    matchupRef: {
+      squadId: { type: Schema.Types.ObjectId },
+      matchupId: { type: Schema.Types.ObjectId },
+    },
     description: { type: String },
     position: {
       columnIndex: {

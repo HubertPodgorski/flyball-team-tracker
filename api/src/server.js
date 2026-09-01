@@ -9,6 +9,8 @@ const eventTemplatesSocketRoutes = require("./socketRoutes/eventTemplates");
 const crossPassesSocketRoutes = require("./socketRoutes/crossPasses");
 const usersRoutes = require("./routes/users");
 const superAdminRoutes = require("./routes/superAdmin");
+const squadsRoutes = require("./routes/squads");
+const streamRoutes = require("./routes/stream");
 
 const jwt = require("jsonwebtoken");
 const express = require("express");
@@ -50,6 +52,8 @@ app.use((req, res, next) => {
 
 app.use("/users", usersRoutes);
 app.use("/super-admin", superAdminRoutes(io));
+app.use("/squads", squadsRoutes);
+app.use("/stream", streamRoutes);
 
 mongoose
   .connect(process.env.MONGO_URL)

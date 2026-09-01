@@ -11,6 +11,7 @@ const crossPassSchema = new Schema(
     runningOnLights: { type: Boolean },
     note: { type: String },
     startingPosition: { type: String },
+    time: { type: Number },
     team: { type: String, required: true },
   },
   {

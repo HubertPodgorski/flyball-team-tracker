@@ -36,9 +36,15 @@ const getTaskById = async (received, callback) => {
 // create new task
 const createTask = async (received, callback, io, userToken) => {
   const { team } = jwt.decode(userToken);
-  const { dogs, description, position } = received;
+  const { dogs, description, position, matchupRef } = received;
 
-  const task = await TaskModel.create({ dogs, description, position, team });
+  const task = await TaskModel.create({
+    dogs,
+    description,
+    position,
+    matchupRef,
+    team,
+  });
 
   // TODO: handle that
   // try {
@@ -104,7 +110,7 @@ const updateTaskById = async (received, callback, io, userToken) => {
   io.to(team).emit("tasks_updated", allTasks);
 };
 
-// update tasks order // body = {tasks: [{_id: xx, position: {...}}, {_id: xx2, position: {...}}]}
+// body = { tasks: [{ _id, position }, ...] }
 const updateTasksOrder = async (received, io, userToken) => {
   const { team } = jwt.decode(userToken);
 

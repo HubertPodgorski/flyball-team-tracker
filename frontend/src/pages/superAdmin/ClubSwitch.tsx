@@ -10,16 +10,16 @@ import {
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import { useAuthContext } from "../../hooks/useAuthContext";
 import { useIsSuperAdmin } from "../../hooks/useIsSuperAdmin";
-import { useCurrentTeam } from "../../hooks/useCurrentTeam";
-import { useSwitchTeam } from "../../hooks/useSwitchTeam";
+import { useCurrentClub } from "../../hooks/useCurrentClub";
+import { useSwitchClub } from "../../hooks/useSwitchClub";
 import { TEAMS } from "../../helpers/teams";
 
-const TeamSwitch = () => {
+const ClubSwitch = () => {
   const { user } = useAuthContext();
   const isSuperAdmin = useIsSuperAdmin();
   const navigate = useNavigate();
-  const currentTeam = useCurrentTeam();
-  const { switchTeam } = useSwitchTeam();
+  const currentClub = useCurrentClub();
+  const { switchClub } = useSwitchClub();
 
   useEffect(() => {
     if (!user || !isSuperAdmin) {
@@ -31,22 +31,22 @@ const TeamSwitch = () => {
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-      <Typography variant="h4">Team switch</Typography>
+      <Typography variant="h4">Club switch</Typography>
 
       <Typography variant="body1">
-        Currently acting as <b>{currentTeam}</b>
+        Currently acting as <b>{currentClub}</b>
       </Typography>
 
       <List>
-        {TEAMS.map((team) => (
+        {TEAMS.map((club) => (
           <ListItemButton
             divider
-            key={team}
-            disabled={team === currentTeam}
-            onClick={() => switchTeam(team)}
+            key={club}
+            disabled={club === currentClub}
+            onClick={() => switchClub(club)}
           >
             <SwapHorizIcon sx={{ marginRight: 1 }} />
-            <ListItemText primary={team} />
+            <ListItemText primary={club} />
           </ListItemButton>
         ))}
       </List>
@@ -54,4 +54,4 @@ const TeamSwitch = () => {
   );
 };
 
-export default TeamSwitch;
+export default ClubSwitch;

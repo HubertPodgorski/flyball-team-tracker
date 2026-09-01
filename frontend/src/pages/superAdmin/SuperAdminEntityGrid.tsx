@@ -152,7 +152,7 @@ const SuperAdminEntityGrid = ({
     ...columns.map(withColumnSizing),
     ...(team
       ? []
-      : [withColumnSizing({ field: "team", headerName: "Team" })]),
+      : [withColumnSizing({ field: "team", headerName: "Club" })]),
     withColumnSizing({
       field: "actions",
       type: "actions",
@@ -180,14 +180,14 @@ const SuperAdminEntityGrid = ({
 
       <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
         <FormControl sx={{ minWidth: 220 }}>
-          <InputLabel id="super-admin-team-select-label">Team</InputLabel>
+          <InputLabel id="super-admin-team-select-label">Club</InputLabel>
           <Select
             labelId="super-admin-team-select-label"
-            label="Team"
+            label="Club"
             value={team}
             onChange={(event) => setTeam(event.target.value)}
           >
-            <MenuItem value="">All teams</MenuItem>
+            <MenuItem value="">All clubs</MenuItem>
 
             {TEAMS.map((teamOption) => (
               <MenuItem key={teamOption} value={teamOption}>

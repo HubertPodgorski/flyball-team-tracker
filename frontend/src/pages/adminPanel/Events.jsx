@@ -1,5 +1,5 @@
 import React from "react";
-import { IconButton, List, ListItem, ListItemButton } from "@mui/material";
+import { Box, IconButton, List, ListItem, ListItemButton } from "@mui/material";
 import CenteredContent from "../../components/CenteredContent";
 import AddFab, { FAB_CONTENT_CLEARANCE } from "../../components/AddFab";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -11,6 +11,7 @@ import { EventType } from "../../components/inputs/consts";
 import { getBackgroundColorBasedOnType } from "../../helpers/calendar";
 import { useSocketContext } from "../../hooks/useSocketContext";
 import { formatDate } from "../../helpers/dateHelpers";
+import EventTypeLegend from "../../components/EventTypeLegend";
 
 const Events = () => {
   const { socket } = useSocketContext();
@@ -40,6 +41,10 @@ const Events = () => {
   return (
     <>
       <CenteredContent sx={{ marginBottom: `${FAB_CONTENT_CLEARANCE}px` }}>
+        <Box sx={{ marginBottom: 1 }}>
+          <EventTypeLegend />
+        </Box>
+
         <List>
           {events.map(({ name, _id, date, type }) => (
             <ListItem
