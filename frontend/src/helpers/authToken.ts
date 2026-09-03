@@ -7,6 +7,9 @@ export const getAuthToken = (): string => {
   return token;
 };
 
-// Differs from a super-admin's own `team` while impersonating.
-export const getCurrentClub = (): string | undefined =>
-  decodeJwtPayload(getAuthToken())?.club;
+// Falls back to `team` for pre-rename tokens.
+export const getCurrentClub = (): string | undefined => {
+  const payload = decodeJwtPayload(getAuthToken());
+
+  return payload?.club ?? payload?.team;
+};

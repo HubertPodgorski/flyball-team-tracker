@@ -1,9 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
 import jwt from "jsonwebtoken";
+import { createRequire } from "module";
 import { streamHandler } from "./stream.js";
 import testHelpersModule from "../testHelpers.js";
 
 const { mockRes } = testHelpersModule;
+// createRequire so this shares stream.js's own CJS module instance of sse.js.
+const { broadcast } = createRequire(import.meta.url)("../sse");
 
 // Regression coverage for the same vulnerability class already fixed in
 // decodeToken.js, missed here because this route verifies its token
@@ -58,5 +61,18 @@ describe("stream route", () => {
 
     expect(res.writeHead).toHaveBeenCalledWith(200, expect.any(Object));
     expect(req.on).toHaveBeenCalledWith("close", expect.any(Function));
+  });
+
+  it("falls back to the old `team` claim for a pre-rename token", () => {
+    const oldToken = jwt.sign({ team: "TEST_TEAM" }, process.env.SECRET);
+    const req = { query: { token: oldToken }, on: vi.fn() };
+    const res = mockRes();
+    res.writeHead = vi.fn();
+    res.write = vi.fn();
+
+    streamHandler(req, res);
+    broadcast("TEST_TEAM", "dogs_updated", []);
+
+    expect(res.write).toHaveBeenCalledWith(expect.stringContaining("dogs_updated"));
   });
 });

@@ -44,6 +44,10 @@ test("user can switch the UI language and toggle a dog's cross-pass sync flags",
   await page.getByRole("option", { name: "Polski" }).click();
   await expect(page.getByRole("heading", { name: "Ustawienia" })).toBeVisible();
 
+  await page.locator(".MuiBottomNavigation-root").getByRole("link", { name: "Moje psy" }).click();
+  await expect(page.getByText("Brak danych")).toBeVisible();
+  await page.goBack();
+
   await page.getByRole("combobox", { name: "Język" }).click();
   await page.getByRole("option", { name: "English" }).click();
   await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible();

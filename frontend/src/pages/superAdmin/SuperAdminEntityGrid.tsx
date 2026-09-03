@@ -26,6 +26,7 @@ import {
 } from "../../helpers/superAdminApi";
 import { useConfirmModal } from "../../hooks/useConfirmModal";
 import { useFormHelpers } from "../../hooks/useFormHelpers";
+import { getDataGridLocaleText } from "../../helpers/dataGridLocale";
 
 interface Props {
   title: string;
@@ -57,7 +58,7 @@ const SuperAdminEntityGrid = ({
   const [formExtraProps, setFormExtraProps] = useState<object>({});
   const confirm = useConfirmModal();
   const { enqueueSnackbar } = useSnackbar();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const {
     formInitialData,
@@ -211,6 +212,7 @@ const SuperAdminEntityGrid = ({
         <DataGrid
           autoHeight
           autosizeOnMount
+          localeText={getDataGridLocaleText(i18n.language)}
           rows={rows}
           columns={gridColumns}
           getRowId={(row) => row._id}

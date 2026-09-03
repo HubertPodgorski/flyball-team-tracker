@@ -18,7 +18,8 @@ const streamHandler = (req, res) => {
     return res.status(401).end();
   }
 
-  const { club } = decoded;
+  // Fallback: old tokens (pre team->club rename) carry `team`, not `club`.
+  const club = decoded.club ?? decoded.team;
 
   res.writeHead(200, {
     "Content-Type": "text/event-stream",

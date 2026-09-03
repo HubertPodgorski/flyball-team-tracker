@@ -14,9 +14,10 @@ import NoteModal from "../../components/modals/NoteModal";
 import CrossPassModal from "../../components/modals/CrossPassModal";
 import { CrossPass, Dog } from "../../helpers/types";
 import { DataGrid } from "@mui/x-data-grid";
+import { getDataGridLocaleText } from "../../helpers/dataGridLocale";
 
 const MyDogs = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user } = useAuthContext();
   const { data: dogs = [] } = useDogsQuery();
   const { data: crossPasses = [] } = useCrossPassesQuery();
@@ -125,6 +126,7 @@ const MyDogs = () => {
             <Typography variant="caption">{t("pages.myDogs.crossPasses")}</Typography>
 
             <DataGrid
+              localeText={getDataGridLocaleText(i18n.language)}
               rows={getCrossPassesForDog(dog._id)}
               getRowId={(row) => row._id}
               columns={[
