@@ -7,16 +7,15 @@ const authHeaders = () => ({
   headers: { Authorization: `Bearer ${getAuthToken()}` },
 });
 
-// Endpoint stays /squads - backend hasn't renamed its side yet.
 export const fetchTeams = async (): Promise<Team[]> => {
-  const { data } = await axios.get(`${apiSuffix}/squads`, authHeaders());
+  const { data } = await axios.get(`${apiSuffix}/teams`, authHeaders());
 
   return data;
 };
 
 export const createTeam = async (data: object): Promise<Team> => {
   const { data: created } = await axios.post(
-    `${apiSuffix}/squads`,
+    `${apiSuffix}/teams`,
     data,
     authHeaders()
   );
@@ -26,7 +25,7 @@ export const createTeam = async (data: object): Promise<Team> => {
 
 export const updateTeam = async (data: object): Promise<Team> => {
   const { data: updated } = await axios.patch(
-    `${apiSuffix}/squads`,
+    `${apiSuffix}/teams`,
     data,
     authHeaders()
   );
@@ -35,5 +34,5 @@ export const updateTeam = async (data: object): Promise<Team> => {
 };
 
 export const deleteTeam = async (id: string): Promise<void> => {
-  await axios.delete(`${apiSuffix}/squads/${id}`, authHeaders());
+  await axios.delete(`${apiSuffix}/teams/${id}`, authHeaders());
 };

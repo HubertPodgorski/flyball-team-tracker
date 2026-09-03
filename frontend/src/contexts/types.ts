@@ -1,12 +1,4 @@
-import {
-  CrossPass,
-  Dog,
-  DogTask,
-  EventTemplate,
-  Subscription,
-  Task,
-  User,
-} from "../helpers/types";
+import { Dog, Task, User } from "../helpers/types";
 import { Dispatch, SetStateAction } from "react";
 
 export interface AuthContextType {
@@ -15,23 +7,10 @@ export interface AuthContextType {
   logout: () => void;
   setUser: Dispatch<SetStateAction<User>>;
   setUserDogs: (dogs: Dog[]) => void;
+  setUserLanguage: (language: "en" | "pl") => void;
 }
 
 export interface AppContextType {
   tasks: Task[];
   setTasks: Dispatch<SetStateAction<Task[]>>;
-  dogs: Dog[];
-  setDogs: Dispatch<SetStateAction<Dog[]>>;
-  events: Event[];
-  setEvents: Dispatch<SetStateAction<Event[]>>;
-  users: User[];
-  setUsers: Dispatch<SetStateAction<User[]>>;
-  dogTasks: DogTask[];
-  setDogTasks: Dispatch<SetStateAction<DogTask[]>>;
-  eventTemplates: EventTemplate[];
-  setEventTemplates: Dispatch<SetStateAction<EventTemplate[]>>;
-  subscriptionDetails?: Subscription;
-  setSubscriptionDetails: Dispatch<SetStateAction<Subscription | undefined>>;
-  crossPasses: CrossPass[];
-  setCrossPasses: Dispatch<SetStateAction<CrossPass[]>>;
 }

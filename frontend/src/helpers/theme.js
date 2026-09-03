@@ -14,8 +14,14 @@ const theme = createTheme({
     error: {
       main: "#d32f2f",
     },
+    // Muted gold, not the standard MUI orange (#ed6c02) - that sat at
+    // nearly the same brightness as success's green, barely distinguishable
+    // on attendance buttons/chips (see calendar.js). Yellow/gold keeps a
+    // real luminance gap from green without being as glaring as a pure
+    // bright yellow on a solid-fill button.
     warning: {
-      main: "#ed6c02",
+      main: "#c9a227",
+      contrastText: "#000000de",
     },
     info: {
       main: "#0288d1",

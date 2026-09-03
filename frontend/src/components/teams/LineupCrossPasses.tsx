@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Box, ButtonBase, Typography, styled } from "@mui/material";
+import { useTranslation } from "react-i18next";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { Dog, Lineup, LineupCrossPass } from "../../helpers/types";
 import LineupCrossPassModal, {
@@ -57,6 +58,7 @@ interface ActiveRow {
 }
 
 const LineupCrossPasses = ({ lineup, editable, onChange }: Props) => {
+  const { t } = useTranslation();
   const [activeRow, setActiveRow] = useState<ActiveRow | undefined>();
 
   const activeCrossPass = activeRow
@@ -113,7 +115,7 @@ const LineupCrossPasses = ({ lineup, editable, onChange }: Props) => {
             />
 
             <Typography color="text.secondary" sx={{ justifySelf: "start" }}>
-              {predecessorDog ? predecessorDog.name : "Lights"}
+              {predecessorDog ? predecessorDog.name : t("pages.teams.lights")}
             </Typography>
 
             <Box sx={{ display: "flex", alignItems: "baseline", gap: 1, justifySelf: "end" }}>
@@ -129,7 +131,7 @@ const LineupCrossPasses = ({ lineup, editable, onChange }: Props) => {
                 </>
               ) : (
                 <Typography variant="body2" color="text.secondary">
-                  {editable ? "+ add" : "—"}
+                  {editable ? t("pages.teams.addCrossPass") : "—"}
                 </Typography>
               )}
             </Box>

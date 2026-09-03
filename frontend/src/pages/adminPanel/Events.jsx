@@ -1,22 +1,21 @@
 import React from "react";
-import { Box, IconButton, List, ListItem, ListItemButton } from "@mui/material";
-import CenteredContent from "../../components/CenteredContent";
+import { Box, Card, IconButton, Typography, alpha, useTheme } from "@mui/material";
 import AddFab, { FAB_CONTENT_CLEARANCE } from "../../components/AddFab";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EventForm from "../forms/EventForm";
 import { useFormHelpers } from "../../hooks/useFormHelpers";
-import { useAppContext } from "../../hooks/useAppContext";
 import { useConfirmModal } from "../../hooks/useConfirmModal";
 import { EventType } from "../../components/inputs/consts";
 import { getBackgroundColorBasedOnType } from "../../helpers/calendar";
-import { useSocketContext } from "../../hooks/useSocketContext";
+import { useEventsQuery, useDeleteEventMutation } from "../../queries/events";
 import { formatDate } from "../../helpers/dateHelpers";
 import EventTypeLegend from "../../components/EventTypeLegend";
 
 const Events = () => {
-  const { socket } = useSocketContext();
+  const theme = useTheme();
   const confirm = useConfirmModal();
-  const { events } = useAppContext();
+  const { data: events = [] } = useEventsQuery();
+  const deleteEventMutation = useDeleteEventMutation();
 
   const {
     formInitialData,
@@ -33,47 +32,60 @@ const Events = () => {
   });
 
   const onDeleteClick = async (id) => {
-    await confirm();
+    try {
+      await confirm();
+    } catch {
+      return;
+    }
 
-    socket.emit("delete_event", { _id: id });
+    deleteEventMutation.mutate(id);
   };
 
   return (
     <>
-      <CenteredContent sx={{ marginBottom: `${FAB_CONTENT_CLEARANCE}px` }}>
-        <Box sx={{ marginBottom: 1 }}>
-          <EventTypeLegend />
-        </Box>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 1,
+          marginBottom: `${FAB_CONTENT_CLEARANCE}px`,
+        }}
+      >
+        <EventTypeLegend />
 
-        <List>
-          {events.map(({ name, _id, date, type }) => (
-            <ListItem
-              sx={{ backgroundColor: getBackgroundColorBasedOnType(type) }}
-              divider
-              key={_id}
-              onClick={() =>
-                onEditClick({ name, date, type: type ?? EventType.TRAINING }, _id)
-              }
+        {events.map(({ name, _id, date, type }) => (
+          <Card
+            key={_id}
+            onClick={() =>
+              onEditClick({ name, date, type: type ?? EventType.TRAINING }, _id)
+            }
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: theme.spacing(1, 2),
+              cursor: "pointer",
+              backgroundColor: alpha(getBackgroundColorBasedOnType(type), 0.75),
+              backdropFilter: "blur(6px)",
+            }}
+          >
+            <Typography>
+              {name}: {formatDate(date, "dd/MM/yyyy HH:mm")}
+            </Typography>
+
+            <IconButton
+              color="error"
+              onClick={(event) => {
+                event.stopPropagation();
+
+                onDeleteClick(_id);
+              }}
             >
-              {/*TODO: do edit*/}
-              <ListItemButton>
-                {name}: {formatDate(date, "dd/MM/yyyy HH:mm")}
-              </ListItemButton>
-
-              <IconButton
-                color="error"
-                onClick={(event) => {
-                  event.stopPropagation();
-
-                  onDeleteClick(_id);
-                }}
-              >
-                <DeleteIcon />
-              </IconButton>
-            </ListItem>
-          ))}
-        </List>
-      </CenteredContent>
+              <DeleteIcon />
+            </IconButton>
+          </Card>
+        ))}
+      </Box>
 
       <AddFab onClick={() => setFormOpen(true)} />
 

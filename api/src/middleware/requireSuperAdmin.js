@@ -1,10 +1,10 @@
 const jwt = require("jsonwebtoken");
 const UserModel = require("../models/userModel");
 
-// Real server-side check (unlike the rest of the app, which only decodes
-// tokens without verifying them) - this middleware guards privileged,
-// cross-team access, so it verifies the signature and re-checks the role
-// against the DB on every request rather than trusting the client.
+// Every route now verifies the JWT signature (see decodeToken.js/stream.js),
+// but this one guards privileged, cross-team access specifically - it goes
+// one step further and re-checks the role against the DB on every request,
+// rather than trusting a `roles` claim baked into the token at login time.
 const requireSuperAdmin = async (req, res, next) => {
   const authHeader = req.headers.authorization || "";
   const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;

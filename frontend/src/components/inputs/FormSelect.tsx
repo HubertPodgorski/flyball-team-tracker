@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useId } from "react";
 import { Autocomplete, Box, Chip, FormControl, InputLabel, MenuItem, Select, TextField } from "@mui/material";
 import type { AnyFieldApi } from "@tanstack/react-form";
 import { FormFieldProps } from "./utils";
@@ -11,6 +11,11 @@ interface Props extends FormFieldProps {
 }
 
 const FormSelect = ({ form, name, options, label, multi = true }: Props) => {
+  // Was a copy-pasted "demo-simple-select-label" never wired to the Select
+  // via labelId - the Select had no accessible name at all (screen readers
+  // and role-based test locators alike had nothing to match on).
+  const labelId = useId();
+
   return (
     <form.Field name={name}>
       {(field: AnyFieldApi) => {
@@ -76,8 +81,9 @@ const FormSelect = ({ form, name, options, label, multi = true }: Props) => {
 
         return (
           <FormControl fullWidth>
-            <InputLabel id="demo-simple-select-label">{label}</InputLabel>
+            <InputLabel id={labelId}>{label}</InputLabel>
             <Select
+              labelId={labelId}
               onChange={(event) => field.handleChange(event.target.value)}
               onBlur={field.handleBlur}
               value={field.state.value}

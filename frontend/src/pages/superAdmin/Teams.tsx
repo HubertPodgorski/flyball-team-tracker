@@ -10,12 +10,13 @@ import {
   Typography,
 } from "@mui/material";
 import { useSnackbar } from "notistack";
+import { useTranslation } from "react-i18next";
 import TeamCard from "../../components/teams/TeamCard";
 import FormModal from "../../components/FormModal";
 import FormGrid from "../../components/FormGrid";
 import AddFab, { FAB_CONTENT_CLEARANCE } from "../../components/AddFab";
 import ClearableTextField from "../../components/inputs/ClearableTextField";
-import { TEAMS } from "../../helpers/teams";
+import { CLUBS } from "../../helpers/teams";
 import {
   createSuperAdminItem,
   deleteSuperAdminItem,
@@ -32,6 +33,7 @@ const SuperAdminTeams = () => {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [name, setName] = useState("");
   const { enqueueSnackbar } = useSnackbar();
+  const { t } = useTranslation();
 
   const load = async () => {
     if (!club) {
@@ -44,14 +46,14 @@ const SuperAdminTeams = () => {
 
     try {
       const [teamsData, dogsData] = await Promise.all([
-        fetchSuperAdminList("squads", club),
+        fetchSuperAdminList("teams", club),
         fetchSuperAdminList("dogs", club),
       ]);
 
       setTeams(teamsData);
       setDogs(dogsData);
     } catch {
-      enqueueSnackbar("Failed to load data", { variant: "error" });
+      enqueueSnackbar(t("pages.teams.loadFailed"), { variant: "error" });
     } finally {
       setLoading(false);
     }
@@ -66,14 +68,14 @@ const SuperAdminTeams = () => {
     if (!name.trim()) return;
 
     try {
-      await createSuperAdminItem("squads", {
+      await createSuperAdminItem("teams", {
         name: name.trim(),
         dogs: [],
         matchups: [],
         team: club,
       });
     } catch {
-      enqueueSnackbar("Failed to save", { variant: "error" });
+      enqueueSnackbar(t("pages.teams.saveFailed"), { variant: "error" });
       return;
     }
 
@@ -84,14 +86,14 @@ const SuperAdminTeams = () => {
 
   const onUpdate = async (team: Team, changes: Partial<Team>) => {
     try {
-      await updateSuperAdminItem("squads", {
+      await updateSuperAdminItem("teams", {
         ...team,
         ...changes,
         _id: team._id,
         team: club,
       });
     } catch {
-      enqueueSnackbar("Failed to save", { variant: "error" });
+      enqueueSnackbar(t("pages.teams.saveFailed"), { variant: "error" });
       return;
     }
 
@@ -100,9 +102,9 @@ const SuperAdminTeams = () => {
 
   const onDeleteTeam = async (team: Team) => {
     try {
-      await deleteSuperAdminItem("squads", team._id, club);
+      await deleteSuperAdminItem("teams", team._id, club);
     } catch {
-      enqueueSnackbar("Failed to save", { variant: "error" });
+      enqueueSnackbar(t("pages.teams.saveFailed"), { variant: "error" });
       return;
     }
 
@@ -112,14 +114,14 @@ const SuperAdminTeams = () => {
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
       <FormControl sx={{ minWidth: 220 }}>
-        <InputLabel id="super-admin-squads-team-label">Club</InputLabel>
+        <InputLabel id="super-admin-teams-club-label">{t("common.club")}</InputLabel>
         <Select
-          labelId="super-admin-squads-team-label"
-          label="Club"
+          labelId="super-admin-teams-club-label"
+          label={t("common.club")}
           value={club}
           onChange={(event) => setClub(event.target.value)}
         >
-          {TEAMS.map((clubOption) => (
+          {CLUBS.map((clubOption) => (
             <MenuItem key={clubOption} value={clubOption}>
               {clubOption}
             </MenuItem>
@@ -129,12 +131,12 @@ const SuperAdminTeams = () => {
 
       {!club && (
         <Typography color="text.secondary">
-          Pick a club to manage its teams
+          {t("pages.teams.pickClubHint")}
         </Typography>
       )}
 
       {club && !loading && teams.length === 0 && (
-        <Typography color="text.secondary">No teams yet</Typography>
+        <Typography color="text.secondary">{t("pages.teams.noTeamsYet")}</Typography>
       )}
 
       <Box
@@ -160,10 +162,14 @@ const SuperAdminTeams = () => {
 
       {club && <AddFab onClick={() => setIsAddOpen(true)} />}
 
-      <FormModal open={isAddOpen} onClose={() => setIsAddOpen(false)} title="New team">
+      <FormModal
+        open={isAddOpen}
+        onClose={() => setIsAddOpen(false)}
+        title={t("pages.teams.newTeam")}
+      >
         <FormGrid>
           <ClearableTextField
-            label="Team name"
+            label={t("pages.teams.teamName")}
             value={name}
             onChange={setName}
             autoFocus
@@ -171,11 +177,11 @@ const SuperAdminTeams = () => {
 
           <DialogActions sx={{ padding: 0 }}>
             <Button size="medium" variant="outlined" onClick={() => setIsAddOpen(false)}>
-              Cancel
+              {t("common.cancel")}
             </Button>
 
             <Button size="medium" variant="contained" onClick={onCreate}>
-              Create
+              {t("common.create")}
             </Button>
           </DialogActions>
         </FormGrid>

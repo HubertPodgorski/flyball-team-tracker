@@ -1,7 +1,8 @@
 import { Autocomplete, Box, Card, IconButton, TextField, Typography } from "@mui/material";
+import { useTranslation } from "react-i18next";
 import { useAuthContext } from "../../hooks/useAuthContext";
-import { useAppContext } from "../../hooks/useAppContext";
-import { useSocketContext } from "../../hooks/useSocketContext";
+import { useDogsQuery } from "../../queries/dogs";
+import { useCrossPassesQuery, useDeleteCrossPassMutation } from "../../queries/crossPasses";
 import { useConfirmModal } from "../../hooks/useConfirmModal";
 import { useIsSuperAdmin } from "../../hooks/useIsSuperAdmin";
 import React, { useEffect, useState } from "react";
@@ -15,9 +16,11 @@ import { CrossPass, Dog } from "../../helpers/types";
 import { DataGrid } from "@mui/x-data-grid";
 
 const MyDogs = () => {
+  const { t } = useTranslation();
   const { user } = useAuthContext();
-  const { dogs, crossPasses } = useAppContext();
-  const { socket } = useSocketContext();
+  const { data: dogs = [] } = useDogsQuery();
+  const { data: crossPasses = [] } = useCrossPassesQuery();
+  const deleteCrossPassMutation = useDeleteCrossPassMutation();
   const confirm = useConfirmModal();
   const isSuperAdmin = useIsSuperAdmin();
 
@@ -29,12 +32,15 @@ const MyDogs = () => {
     CrossPass | undefined
   >();
   const [userDogs, setUserDogs] = useState(user?.dogs || []);
-  const [pickedDog, setPickedDog] = useState<Dog | null>(null);
+  const [pickedDogIds, setPickedDogIds] = useState<string[]>([]);
 
-  // Super-admins have no dogs of their own - let them pick any dog instead.
-  const dogsToShow = isSuperAdmin
-    ? [pickedDog].filter((dog): dog is Dog => !!dog)
-    : userDogs;
+  // Derived fresh from the live query every render (not a snapshot taken at
+  // pick time) - otherwise a note/jump-height/sync edit wouldn't visibly
+  // show here until reload, since it'd be reading a stale copy.
+  const pickedDogs = dogs.filter(({ _id }) => pickedDogIds.includes(_id));
+
+  // Super-admins have no dogs of their own - let them pick any dogs instead.
+  const dogsToShow = isSuperAdmin ? pickedDogs : userDogs;
 
   useEffect(() => {
     const userDogIds = user!.dogs.map(({ _id }) => _id);
@@ -62,19 +68,20 @@ const MyDogs = () => {
       return;
     }
 
-    socket.emit("delete_cross_pass", { _id: crossPassId });
+    deleteCrossPassMutation.mutate(crossPassId);
   };
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
       {isSuperAdmin && (
         <Autocomplete
+          multiple
           options={dogs}
           getOptionLabel={(dog) => dog.name}
           isOptionEqualToValue={(option, value) => option._id === value._id}
-          value={pickedDog}
-          onChange={(_event, dog) => setPickedDog(dog)}
-          renderInput={(params) => <TextField {...params} label="Dog" />}
+          value={pickedDogs}
+          onChange={(_event, newDogs) => setPickedDogIds(newDogs.map(({ _id }) => _id))}
+          renderInput={(params) => <TextField {...params} label={t("pages.myDogs.dogLabel")} />}
         />
       )}
 
@@ -90,6 +97,12 @@ const MyDogs = () => {
         >
           <Typography variant="h6">{dog.name}</Typography>
 
+          {dog.jumpHeight !== undefined && (
+            <Typography variant="caption" color="text.secondary">
+              {t("pages.myDogs.jumpHeight", { height: dog.jumpHeight })}
+            </Typography>
+          )}
+
           <Box
             sx={{
               display: "flex",
@@ -98,9 +111,9 @@ const MyDogs = () => {
             }}
           >
             <Box sx={{ display: "flex", flexDirection: "column" }}>
-              <Typography variant="caption">Notes:</Typography>
+              <Typography variant="caption">{t("pages.myDogs.notes")}:</Typography>
 
-              <Typography>{dog.note || "Click button to add notes"}</Typography>
+              <Typography>{dog.note || t("pages.myDogs.noNotesPlaceholder")}</Typography>
             </Box>
 
             <IconButton onClick={() => setIsNoteModalOpen(dog)}>
@@ -109,36 +122,36 @@ const MyDogs = () => {
           </Box>
 
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-            <Typography variant="caption">Cross Passes</Typography>
+            <Typography variant="caption">{t("pages.myDogs.crossPasses")}</Typography>
 
             <DataGrid
               rows={getCrossPassesForDog(dog._id)}
               getRowId={(row) => row._id}
               columns={[
                 {
-                  headerName: "Running on",
+                  headerName: t("pages.myDogs.runningOn"),
                   field: "runningOnLights",
                   flex: 1,
                   valueGetter: (_, { runningOnLights, runningOnDog }) =>
-                    runningOnLights ? "Lights" : runningOnDog?.name,
+                    runningOnLights ? t("pages.teams.lights") : runningOnDog?.name,
                 },
                 {
-                  headerName: "Starting position",
+                  headerName: t("modals.crossPass.startingPosition"),
                   field: "startingPosition",
                   flex: 1,
                 },
                 {
-                  headerName: "Time (s)",
+                  headerName: t("modals.crossPass.time"),
                   field: "time",
                   flex: 1,
                 },
                 {
-                  headerName: "Notes",
+                  headerName: t("pages.myDogs.notes"),
                   field: "note",
                   flex: 1,
                 },
                 {
-                  headerName: "Actions",
+                  headerName: t("pages.myDogs.actions"),
                   field: "actions",
                   sortable: false,
                   renderCell: ({ row }) => (

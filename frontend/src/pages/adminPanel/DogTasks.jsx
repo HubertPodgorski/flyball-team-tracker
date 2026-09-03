@@ -1,17 +1,16 @@
 import React from "react";
-import { IconButton, List, ListItem, ListItemButton } from "@mui/material";
-import CenteredContent from "../../components/CenteredContent";
+import { Box, Card, IconButton, Typography, alpha, useTheme } from "@mui/material";
 import AddFab, { FAB_CONTENT_CLEARANCE } from "../../components/AddFab";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useFormHelpers } from "../../hooks/useFormHelpers";
-import { useAppContext } from "../../hooks/useAppContext";
 import { useConfirmModal } from "../../hooks/useConfirmModal";
 import DogTaskForm from "../forms/DogTaskForm";
-import { useSocketContext } from "../../hooks/useSocketContext";
+import { useDogTasksQuery, useDeleteDogTaskMutation } from "../../queries/dogTasks";
 
 const DogTasks = () => {
-  const { socket } = useSocketContext();
-  const { dogTasks } = useAppContext();
+  const theme = useTheme();
+  const { data: dogTasks = [] } = useDogTasksQuery();
+  const deleteDogTaskMutation = useDeleteDogTaskMutation();
   const confirm = useConfirmModal();
 
   const {
@@ -26,37 +25,54 @@ const DogTasks = () => {
   });
 
   const onDeleteClick = async (id) => {
-    await confirm();
+    try {
+      await confirm();
+    } catch {
+      return;
+    }
 
-    socket.emit("delete_dog_task", { _id: id });
+    deleteDogTaskMutation.mutate(id);
   };
 
   return (
     <>
-      <CenteredContent sx={{ marginBottom: `${FAB_CONTENT_CLEARANCE}px` }}>
-        <List>
-          {dogTasks.map(({ name, _id }) => (
-            <ListItem
-              divider
-              key={_id}
-              onClick={() => onEditClick({ name }, _id)}
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 1,
+          marginBottom: `${FAB_CONTENT_CLEARANCE}px`,
+        }}
+      >
+        {dogTasks.map(({ name, _id }) => (
+          <Card
+            key={_id}
+            onClick={() => onEditClick({ name }, _id)}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: theme.spacing(1, 2),
+              cursor: "pointer",
+              backgroundColor: alpha(theme.palette.background.paper, 0.75),
+              backdropFilter: "blur(6px)",
+            }}
+          >
+            <Typography>{name}</Typography>
+
+            <IconButton
+              color="error"
+              onClick={(event) => {
+                event.stopPropagation();
+
+                onDeleteClick(_id);
+              }}
             >
-              <ListItemButton>{name}</ListItemButton>
-
-              <IconButton
-                color="error"
-                onClick={(event) => {
-                  event.stopPropagation();
-
-                  onDeleteClick(_id);
-                }}
-              >
-                <DeleteIcon />
-              </IconButton>
-            </ListItem>
-          ))}
-        </List>
-      </CenteredContent>
+              <DeleteIcon />
+            </IconButton>
+          </Card>
+        ))}
+      </Box>
 
       <AddFab onClick={() => setFormOpen(true)} />
 

@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { Box, Button, DialogActions } from "@mui/material";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { useForm } from "@tanstack/react-form";
+import { useTranslation } from "react-i18next";
 import FormModal from "../FormModal";
 import FormGrid from "../FormGrid";
 import FormTextField from "../inputs/FormTextField";
@@ -14,7 +15,13 @@ interface FormData {
   note: string;
 }
 
-const initialData: FormData = { startingPosition: "", time: "", note: "" };
+// Same shape for both defaultValues and the reset effect below - see
+// CrossPassModal.tsx's getFormValues for why keeping these in sync matters.
+const getFormValues = (crossPass?: LineupCrossPass): FormData => ({
+  startingPosition: crossPass?.startingPosition ?? "",
+  time: crossPass?.time !== undefined ? String(crossPass.time) : "",
+  note: crossPass?.note ?? "",
+});
 
 export interface LineupCrossPassSaveData {
   startingPosition: string;
@@ -41,15 +48,16 @@ const LineupCrossPassModal = ({
   onSave,
   onDelete,
 }: Props) => {
+  const { t } = useTranslation();
   const isEdit = !!crossPass;
 
   const handleClose = () => {
-    form.reset();
+    form.reset(getFormValues(undefined));
     onClose();
   };
 
   const form = useForm({
-    defaultValues: initialData,
+    defaultValues: getFormValues(crossPass),
     onSubmit: ({ value }) => {
       onSave({
         startingPosition: value.startingPosition,
@@ -61,11 +69,7 @@ const LineupCrossPassModal = ({
   });
 
   useEffect(() => {
-    form.reset({
-      startingPosition: crossPass?.startingPosition ?? "",
-      time: crossPass?.time !== undefined ? String(crossPass.time) : "",
-      note: crossPass?.note ?? "",
-    });
+    form.reset(getFormValues(crossPass));
   }, [crossPass, form]);
 
   return (
@@ -76,16 +80,20 @@ const LineupCrossPassModal = ({
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           {runnerDog.name}
           <ArrowForwardIcon fontSize="inherit" color="disabled" />
-          {predecessorDog ? predecessorDog.name : "Lights"}
+          {predecessorDog ? predecessorDog.name : t("pages.teams.lights")}
         </Box>
       }
     >
       <FormGrid>
-        <FormStartingPositionField form={form} name="startingPosition" label="Starting position" />
+        <FormStartingPositionField
+          form={form}
+          name="startingPosition"
+          label={t("modals.crossPass.startingPosition")}
+        />
 
-        <FormTextField form={form} name="time" label="Time (s)" type="number" />
+        <FormTextField form={form} name="time" label={t("modals.crossPass.time")} type="number" />
 
-        <FormTextField form={form} name="note" label="Note" />
+        <FormTextField form={form} name="note" label={t("common.note")} />
 
         <DialogActions sx={{ padding: 0 }}>
           {isEdit && (
@@ -98,12 +106,12 @@ const LineupCrossPassModal = ({
               }}
               sx={{ marginRight: "auto" }}
             >
-              Delete
+              {t("common.delete")}
             </Button>
           )}
 
           <Button size="medium" variant="outlined" onClick={handleClose}>
-            Cancel
+            {t("common.cancel")}
           </Button>
 
           <Button
@@ -111,7 +119,7 @@ const LineupCrossPassModal = ({
             variant="contained"
             onClick={() => form.handleSubmit()}
           >
-            Save
+            {t("common.save")}
           </Button>
         </DialogActions>
       </FormGrid>

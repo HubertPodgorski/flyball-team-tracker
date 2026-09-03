@@ -1,0 +1,297 @@
+{
+  "common": {
+    "cancel": "Cancel",
+    "save": "Save",
+    "submit": "Submit",
+    "delete": "Delete",
+    "create": "Create",
+    "add": "Add",
+    "edit": "Edit",
+    "close": "Close",
+    "name": "Name",
+    "email": "Email",
+    "password": "Password",
+    "team": "Team",
+    "dogs": "Dogs",
+    "note": "Note",
+    "roles": "Roles",
+    "date": "Date",
+    "club": "Club",
+    "requiredField": "This field is required",
+    "clear": "Clear",
+    "copy": "Copy"
+  },
+  "authErrors": {
+    "allFieldsRequired": "Please fill in all fields.",
+    "incorrectEmail": "No account found with that email.",
+    "incorrectPassword": "Incorrect password.",
+    "emailInUse": "An account with that email already exists.",
+    "invalidClubCode": "That club code isn't recognized. Double-check it with your club.",
+    "networkError": "Can't reach the server. Check your connection and try again.",
+    "genericError": "Something went wrong. Please try again."
+  },
+  "inputs": {
+    "addOption": "Add \"{{value}}\"",
+    "startingPosition": {
+      "offset": "Offset",
+      "feet": "Feet",
+      "centimeters": "Centimeters",
+      "placeholder": "e.g. 16m - 25cm, or a custom note"
+    }
+  },
+  "nav": {
+    "tasks": "Tasks",
+    "calendar": "Calendar",
+    "myDogs": "My Dogs",
+    "teams": "Teams",
+    "settings": "Settings",
+    "logout": "Logout",
+    "trainerSection": "Trainer",
+    "dogs": "Dogs",
+    "dogTasks": "Dog tasks",
+    "events": "Events",
+    "users": "Users",
+    "superAdminSection": "Super Admin",
+    "clubSwitch": "Club switch",
+    "allUsers": "All users",
+    "allDogs": "All dogs",
+    "allDogTasks": "All dog tasks",
+    "allEvents": "All events",
+    "allTeams": "All teams",
+    "openDrawer": "open drawer"
+  },
+  "settings": {
+    "language": "Language",
+    "saveFailed": "Failed to save",
+    "crossPassSyncTitle": "Cross-pass syncing",
+    "crossPassSyncHint": "Two independent options per dog - turn on either or both.",
+    "crossPassSyncLineupsLabel": "Sync between lineups (same predecessor → same timing)",
+    "crossPassSyncMyDogsLabel": "Sync with My Dogs cross-passes",
+    "changePasswordTitle": "Change password",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "repeatNewPassword": "Repeat new password",
+    "passwordMismatch": "Passwords do not match",
+    "changePasswordSubmit": "Change password",
+    "changePasswordSuccess": "Password changed"
+  },
+  "forms": {
+    "login": {
+      "title": "Login",
+      "submit": "Login",
+      "signup": "Signup"
+    },
+    "signup": {
+      "title": "Signup",
+      "repeatPassword": "Repeat password",
+      "passwordMismatch": "Passwords does not match",
+      "clubCode": "Club code",
+      "invalidClubCode": "Invalid club invitation code",
+      "submit": "Signup",
+      "login": "Login"
+    },
+    "dog": {
+      "addTitle": "Adding a dog",
+      "editTitle": "Editing dog details",
+      "jumpHeight": "Jump height (cm)"
+    },
+    "dogTask": {
+      "addTitle": "Adding a dog task",
+      "editTitle": "Editing dog task",
+      "name": "Task name"
+    },
+    "event": {
+      "addTitle": "Adding an event",
+      "editTitle": "Editing event",
+      "type": "Event type"
+    },
+    "user": {
+      "addTitle": "Adding a user",
+      "editTitle": "Editing user",
+      "resetPassword": "Reset password",
+      "resetPasswordConfirm": "This immediately invalidates their current password. Continue?",
+      "resetPasswordFailed": "Failed to reset password"
+    },
+    "task": {
+      "addTitle": "Adding a task",
+      "editTitle": "Editing task",
+      "setDogsOrder": "Set dogs order",
+      "noTeams": "No teams yet",
+      "noLineups": "No lineups in this team",
+      "lineup": "Lineup",
+      "typeOrSelectDescription": "Type or select task description",
+      "pickDogsHint": "Pick dogs directly, or fill them from a team lineup",
+      "teamLineup": "Team lineup"
+    }
+  },
+  "modals": {
+    "note": {
+      "title": "{{name}}'s notes",
+      "fallbackName": "Dog",
+      "notes": "Notes",
+      "save": "Save notes"
+    },
+    "crossPass": {
+      "edit": "Edit cross pass",
+      "create": "Create cross pass",
+      "runningOnLights": "Running on lights",
+      "runningOnDog": "Running on dog",
+      "startingPosition": "Starting position",
+      "time": "Time (s)"
+    },
+    "temporaryPassword": {
+      "title": "New temporary password",
+      "hint": "Share this with them directly - it won't be shown again.",
+      "copied": "Copied to clipboard"
+    }
+  },
+  "pages": {
+    "teams": {
+      "noTeamsYet": "No teams yet",
+      "newTeam": "New team",
+      "teamName": "Team name",
+      "saveFailed": "Failed to save",
+      "loadFailed": "Failed to load data",
+      "pickClubHint": "Pick a club to manage its teams",
+      "deleteFailed": "Failed to delete",
+      "dogsCount": "{{count}}/6 dogs",
+      "lineups": "Lineups",
+      "noLineupsYet": "No lineups yet",
+      "addLineup": "Add lineup",
+      "deleteTeam": "Delete team",
+      "removeLineupConfirm": "Remove this lineup?",
+      "newLineup": "New lineup",
+      "lineupNameOptional": "Lineup name (optional)",
+      "pickDogsRange": "Pick {{min}}-{{max}} dogs ({{count}}/{{max}})",
+      "lineupFallback": "Lineup",
+      "lights": "Lights",
+      "addCrossPass": "+ add",
+      "lineupName": "Lineup name",
+      "noDogsYet": "No dogs yet",
+      "addDog": "Add dog",
+      "teamFull": "Team is full ({{max}} dogs max)"
+    },
+    "events": {
+      "hideDetails": "Hide details",
+      "showDetails": "Show details",
+      "selectAnyDogAttendance": "Select any dog's attendance",
+      "selectDogAttendance_one": "Select dog attendance",
+      "selectDogAttendance_other": "Select dogs attendance",
+      "selectAnyoneAttendance": "Select anyone's attendance",
+      "selectMyAttendance": "Select my attendance"
+    },
+    "clubSwitch": {
+      "title": "Club switch",
+      "currentlyActingAs": "Currently acting as"
+    },
+    "superAdmin": {
+      "allClubs": "All clubs",
+      "dogsTitle": "Dogs",
+      "dogTasksTitle": "Dog tasks",
+      "eventsTitle": "Events",
+      "usersTitle": "Users",
+      "typeColumn": "Type"
+    },
+    "calendar": {
+      "from": "From",
+      "to": "To",
+      "nextEvent": "Next event",
+      "noEventsInRange": "No events in this range"
+    },
+    "myDogs": {
+      "dogLabel": "Dog",
+      "notes": "Notes",
+      "noNotesPlaceholder": "Click button to add notes",
+      "crossPasses": "Cross Passes",
+      "runningOn": "Running on",
+      "actions": "Actions",
+      "jumpHeight": "Jump height: {{height}}cm"
+    }
+  },
+  "eventTypes": {
+    "competition": "Competition",
+    "seminary": "Seminary",
+    "training": "Training",
+    "meeting": "Meeting"
+  },
+  "legends": {
+    "regularTask": "Regular task",
+    "lineupTask": "Lineup task",
+    "legend": "Legend",
+    "presentPlanned": "Present & planned",
+    "presentNotPlanned": "Present, not planned yet",
+    "plannedNotPresent": "Planned, not present"
+  },
+  "tasksGrid": {
+    "addTaskHere": "Add task here",
+    "removeRowConfirm": "Remove all tasks in this row?",
+    "noDogsSelected": "No dogs selected",
+    "eventLabel": "Event",
+    "noneOption": "None"
+  },
+  "confirm": {
+    "title": "Are you sure?",
+    "permanentWarning": "This action is permanent!",
+    "deleteForever": "Delete forever",
+    "noThanks": "No thanks",
+    "remove": "Remove"
+  },
+  "about": {
+    "navLabel": "About",
+    "title": "About & how to use",
+    "intro": "Flyball Team Tracker helps your club plan trainings and competitions: who's coming, which dogs run which tasks, and how your race lineups are built.",
+    "sections": {
+      "tasks": {
+        "title": "Tasks",
+        "items": [
+          "Tasks are laid out on a grid of rows and columns - drag a card to reorder it, or move it into a different cell.",
+          "Pick an event at the top to see which dogs are marked present, and to plan tasks against that event's attendance.",
+          "A task can list dogs directly, or link to a team lineup instead - tap a linked task to see (and edit) that lineup's cross-pass timing.",
+          "Tap a dog's name on a task to add a note, or to open the linked lineup's cross-pass details."
+        ]
+      },
+      "calendar": {
+        "title": "Calendar",
+        "items": [
+          "Every event your club has scheduled - trainings, competitions, seminars, meetings - shows up here, newest first, with the soonest upcoming one pinned at the top so it's never buried further down.",
+          "Narrow the list to a date range with the From/To filters, and page through it once there are more events than fit on one screen.",
+          "Expand an event's details to mark your own (or your dogs') attendance: tap a name to cycle it through present, absent, and unset."
+        ]
+      },
+      "myDogs": {
+        "title": "My Dogs",
+        "items": [
+          "Each of your dogs gets a card here - add general notes, and manage its cross passes (who it runs on, its starting position, and timing).",
+          "Cross passes recorded here are your own record, separate from the cross passes set inside your team's lineups - unless you turn on syncing for a dog in Settings, which keeps the two in step.",
+          "If your trainer has set a jump height for a dog, it shows on its card here."
+        ]
+      },
+      "teams": {
+        "title": "Teams",
+        "items": [
+          "A team is a pool of up to 6 dogs your club can build race lineups from.",
+          "Each team can have several lineups - a lineup is an ordered set of dogs for a race, with cross-pass timing between each dog.",
+          "A lineup's name shows its jump height in brackets, e.g. \"Super lineup (25cm)\" - automatically the lowest jump height among its dogs (a dog with no height set counts as 35cm)."
+        ]
+      },
+      "settings": {
+        "title": "Settings",
+        "items": [
+          "Switch the app's language between Polish and English at any time - your choice is saved to your account.",
+          "Change your own password here at any time, with your current password to confirm it's really you.",
+          "For each of your own dogs, there are two independent cross-pass syncing options: keep its timing in sync across every lineup it runs in after the same dog, and/or keep it in sync with its standalone My Dogs cross-passes."
+        ]
+      }
+    },
+    "trainerSection": {
+      "title": "Trainer tools",
+      "intro": "As a trainer, you also get a dedicated panel for managing your club's data:",
+      "items": [
+        "Tasks - the same drag-and-drop board, plus the ability to create, edit, and delete tasks.",
+        "Dogs, Dog tasks, Users - manage your club's dogs (including each dog's jump height), the task types they can be assigned, and your club's members. Open a member's card to reset their password if they're locked out - you'll get a one-time temporary password to pass along to them.",
+        "Events - create trainings, competitions, seminars, and meetings for your club.",
+        "Teams - build and edit teams and their lineups for your whole club, not just your own dogs."
+      ]
+    }
+  }
+}

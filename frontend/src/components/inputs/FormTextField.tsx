@@ -1,5 +1,6 @@
 import React from "react";
 import type { AnyFieldApi } from "@tanstack/react-form";
+import { useTranslation } from "react-i18next";
 import { FormFieldProps, getFieldErrorMessage } from "./utils";
 import ClearableTextField from "./ClearableTextField";
 
@@ -19,12 +20,15 @@ const FormTextField = ({
   type,
   validate,
   rows = 1,
-}: Props) => (
+}: Props) => {
+  const { t } = useTranslation();
+
+  return (
   <form.Field
     name={name}
     validators={{
       onChange: ({ value }: { value: string }) => {
-        if (required && !value) return "This field is required";
+        if (required && !value) return t("common.requiredField");
 
         return validate?.(value);
       },
@@ -45,6 +49,7 @@ const FormTextField = ({
       />
     )}
   </form.Field>
-);
+  );
+};
 
 export default FormTextField;

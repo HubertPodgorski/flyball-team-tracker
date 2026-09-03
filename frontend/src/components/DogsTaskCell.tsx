@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Box, Chip, Typography } from "@mui/material";
+import { useTranslation } from "react-i18next";
 import TaskCell from "./tasksGrid/TaskCell";
 import { useAuthContext } from "../hooks/useAuthContext";
 import { isMyDog } from "../helpers/tasks";
@@ -18,6 +19,7 @@ interface Props {
 
 const DogsTaskCell = ({ item, index }: Props) => {
   const { _id, dogs, description } = item;
+  const { t } = useTranslation();
   const [isNoteModalOpen, setIsNoteModalOpen] = useState<Dog | undefined>();
   const [isLineupModalOpen, setIsLineupModalOpen] = useState(false);
 
@@ -45,9 +47,11 @@ const DogsTaskCell = ({ item, index }: Props) => {
         lineupLinked={!!linked}
         onClick={linked ? () => setIsLineupModalOpen(true) : undefined}
       >
-        <Typography variant={isMobile ? "body2" : "h5"}>
-          {description}
-        </Typography>
+        {description && (
+          <Typography variant={isMobile ? "body2" : "h5"}>
+            {description}
+          </Typography>
+        )}
 
         {dogs.length > 0 && (
           <Box sx={{ display: "flex", flexDirection: "column", gap: "4px" }}>
@@ -67,7 +71,7 @@ const DogsTaskCell = ({ item, index }: Props) => {
           </Box>
         )}
 
-        {dogs.length === 0 && <Typography>No dogs selected</Typography>}
+        {dogs.length === 0 && <Typography>{t("tasksGrid.noDogsSelected")}</Typography>}
       </TaskCell>
 
       <NoteModal

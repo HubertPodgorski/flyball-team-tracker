@@ -1,6 +1,7 @@
 import { useAuthContext } from "./useAuthContext";
 import { useState } from "react";
 import axios from "axios";
+import { useTranslation } from "react-i18next";
 import { userPaths } from "../helpers/routesAndPaths";
 import { useNavigate } from "@tanstack/react-router";
 import { apiSuffix } from "../helpers/apiCall";
@@ -10,6 +11,7 @@ export const useSignup = () => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const { login } = useAuthContext();
 
@@ -34,7 +36,7 @@ export const useSignup = () => {
       login(responseData.user);
       navigate({ to: userPaths.root });
     } catch (signupError) {
-      setError(getAuthErrorMessage(signupError));
+      setError(getAuthErrorMessage(signupError, t));
     } finally {
       setLoading(false);
     }

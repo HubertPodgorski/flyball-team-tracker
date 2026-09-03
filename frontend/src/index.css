@@ -123,6 +123,15 @@ table {
   border-spacing: 0;
 }
 
+/* App-shell layout: the page itself never scrolls - only __root.tsx's
+   content region does, so the fixed bottom nav bar never drifts with it. */
+html,
+body,
+#root {
+  height: 100%;
+  overflow: hidden;
+}
+
 /* SortableJS's forceFallback mode (used throughout the app's drag-and-drop -
    see TasksDragNDrop.tsx and TaskForm.tsx) leaves the original dragged
    element fully visible in its slot while a separate floating clone follows

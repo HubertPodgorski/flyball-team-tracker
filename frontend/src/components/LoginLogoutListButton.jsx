@@ -1,5 +1,6 @@
 import React from "react";
 import { ListItemButton, ListItemText, styled } from "@mui/material";
+import { useTranslation } from "react-i18next";
 import { useAuthContext } from "../hooks/useAuthContext";
 import { useNavigate } from "@tanstack/react-router";
 import { notAuthenticatedRoutes } from "../helpers/routesAndPaths";
@@ -15,6 +16,7 @@ const MenuListItemStyled = styled(ListItemButton)(({ theme }) => ({
 const LoginLogoutListButton = () => {
   const navigate = useNavigate();
   const { logout } = useAuthContext();
+  const { t } = useTranslation();
 
   return (
     <MenuListItemStyled
@@ -23,7 +25,7 @@ const LoginLogoutListButton = () => {
         navigate({ to: notAuthenticatedRoutes.login });
       }}
     >
-      <LogoutRoundedIcon /> <ListItemText primary="Logout" />
+      <LogoutRoundedIcon /> <ListItemText primary={t("nav.logout")} />
     </MenuListItemStyled>
   );
 };

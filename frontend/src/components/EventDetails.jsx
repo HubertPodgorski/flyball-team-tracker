@@ -9,25 +9,30 @@ import {
   Typography,
   useTheme,
 } from "@mui/material";
+import { useTranslation } from "react-i18next";
 import ChipsGrid from "./ChipsGrid";
 import ButtonsGrid from "./ButtonsGrid";
-import { useAppContext } from "../hooks/useAppContext";
+import { useDogsQuery } from "../queries/dogs";
+import { useUsersQuery } from "../queries/users";
+import { useToggleEventDogMutation, useToggleEventUserMutation } from "../queries/events";
 import { useAuthContext } from "../hooks/useAuthContext";
 import { useIsMobile } from "../hooks/useIsMobile";
 import { useIsSuperAdmin } from "../hooks/useIsSuperAdmin";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { getColorsByStatus, sortByAttendance } from "../helpers/calendar";
-import { useSocketContext } from "../hooks/useSocketContext";
 import DogAttendanceChips from "./DogAttendanceChips";
 
 const EventDetails = ({ users, dogs, id }) => {
   const theme = useTheme();
+  const { t } = useTranslation();
 
   const [detailsOpen, setDetailsOpen] = useState(false);
 
-  const { dogs: allDogs, users: allUsers } = useAppContext();
+  const { data: allDogs = [] } = useDogsQuery();
+  const { data: allUsers = [] } = useUsersQuery();
   const { user } = useAuthContext();
-  const { socket } = useSocketContext();
+  const toggleEventDogMutation = useToggleEventDogMutation();
+  const toggleEventUserMutation = useToggleEventUserMutation();
   const isSuperAdmin = useIsSuperAdmin();
 
   const isMobile = useIsMobile();
@@ -57,11 +62,11 @@ const EventDetails = ({ users, dogs, id }) => {
   });
 
   const onDogPresenceUpdateClick = (dogId) => {
-    socket.emit("toggle_event_dog", { dogId, _id: id });
+    toggleEventDogMutation.mutate({ id, dogId });
   };
 
   const onUserPresenceUpdateClick = (userId) => {
-    socket.emit("toggle_event_user", { userId, _id: id });
+    toggleEventUserMutation.mutate({ id, userId });
   };
 
   const onDetailsOpenChange = () => {
@@ -124,7 +129,9 @@ const EventDetails = ({ users, dogs, id }) => {
       }}
     >
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-        <Typography>{detailsOpen ? "Hide" : "Show"} details</Typography>
+        <Typography>
+          {detailsOpen ? t("pages.events.hideDetails") : t("pages.events.showDetails")}
+        </Typography>
       </AccordionSummary>
 
       <AccordionDetails
@@ -159,8 +166,8 @@ const EventDetails = ({ users, dogs, id }) => {
 
         <Typography variant={isMobile ? "body2" : "body1"}>
           {isSuperAdmin
-            ? "Select any dog's attendance"
-            : `Select dog${selectableDogs.length > 1 ? "s" : ""} attendance`}
+            ? t("pages.events.selectAnyDogAttendance")
+            : t("pages.events.selectDogAttendance", { count: selectableDogs.length })}
         </Typography>
 
         {selectableDogs.length > 0 && (
@@ -180,7 +187,9 @@ const EventDetails = ({ users, dogs, id }) => {
         )}
 
         <Typography variant={isMobile ? "body2" : "body1"}>
-          {isSuperAdmin ? "Select anyone's attendance" : "Select my attendance"}
+          {isSuperAdmin
+            ? t("pages.events.selectAnyoneAttendance")
+            : t("pages.events.selectMyAttendance")}
         </Typography>
 
         <ButtonsGrid sx={{ justifyContent: "flex-start" }}>

@@ -17,7 +17,7 @@ export const teamsQueryOptions = (club = getCurrentClub()) =>
 
 export const useTeamsQuery = () => useQuery(teamsQueryOptions());
 
-// No cache update on success - squads_updated (SSE) is the source of truth.
+// No cache update on success - teams_updated (SSE) is the source of truth.
 export const useCreateTeamMutation = () =>
   useMutation({ mutationFn: createTeam });
 

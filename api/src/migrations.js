@@ -5,7 +5,6 @@ const mongoose = require("mongoose");
 const DogModel = require("./models/dogModel");
 const DogTaskModel = require("./models/dogTaskModel");
 const EventModel = require("./models/eventModel");
-const EventTemplateModel = require("./models/eventTemplateModel");
 const runMigrations = async () => {
   await mongoose.connect(process.env.MONGO_URL);
 

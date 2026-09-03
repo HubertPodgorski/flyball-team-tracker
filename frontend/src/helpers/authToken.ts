@@ -9,4 +9,4 @@ export const getAuthToken = (): string => {
 
 // Differs from a super-admin's own `team` while impersonating.
 export const getCurrentClub = (): string | undefined =>
-  decodeJwtPayload(getAuthToken())?.team;
+  decodeJwtPayload(getAuthToken())?.club;

@@ -10,25 +10,31 @@ import {
   useTheme,
 } from "@mui/material";
 import { useForm } from "@tanstack/react-form";
+import { useTranslation } from "react-i18next";
 import FormTextField from "../../components/inputs/FormTextField";
 import FormGrid from "../../components/FormGrid";
 import { useNavigate } from "@tanstack/react-router";
 import { notAuthenticatedRoutes } from "../../helpers/routesAndPaths";
 import { useSignup } from "../../hooks/useSignup";
-
-const validTeamCodes = [
-  "DZIKIEGZIKI",
-  "TEST",
-  "DZIKIE_GZIKI_NABOR",
-  "WEST_SIDE_DOGZ",
-  "FLYVENGERS",
-];
+import { useClubCodesQuery } from "../../queries/clubCodes";
 
 const SignupForm = () => {
   const theme = useTheme();
+  const { t } = useTranslation();
 
   const navigate = useNavigate();
   const { signup, loading, error } = useSignup();
+  // Single source of truth is the backend's own teamCodeMap (see
+  // userModel.js) - fetched instead of duplicated here, so the two can't
+  // silently drift out of sync across two independent deployments (frontend
+  // on Vercel, backend on Heroku, no shared build step between them).
+  // Skip this field's own validation unless the list has actually loaded
+  // successfully - while it's still loading OR if the fetch fails outright,
+  // `validTeamCodes` is undefined, and `!undefined?.includes(...)` is always
+  // true, which would otherwise flag every code (including correct ones) as
+  // invalid and block signup entirely over what should be a non-blocking
+  // convenience check. The backend is the real authority on submit either way.
+  const { data: validTeamCodes, isSuccess: clubCodesLoaded } = useClubCodesQuery();
 
   const form = useForm({
     defaultValues: {
@@ -47,6 +53,7 @@ const SignupForm = () => {
     <Card
       sx={{
         minWidth: 300,
+        maxWidth: 400,
         margin: "20px auto",
         backgroundColor: alpha(theme.palette.background.paper, 0.75),
         backdropFilter: "blur(6px)",
@@ -54,18 +61,28 @@ const SignupForm = () => {
     >
       <CardContent>
         <FormGrid>
-          <Typography variant="h4">Signup</Typography>
+          <Typography variant="h4">{t("forms.signup.title")}</Typography>
 
           {error && <Alert severity="error">{error}</Alert>}
 
-          <FormTextField form={form} name="name" label="Name" required />
+          <FormTextField
+            form={form}
+            name="name"
+            label={t("common.name")}
+            required
+          />
 
-          <FormTextField form={form} name="email" label="Email" required />
+          <FormTextField
+            form={form}
+            name="email"
+            label={t("common.email")}
+            required
+          />
 
           <FormTextField
             form={form}
             name="password"
-            label="Password"
+            label={t("common.password")}
             type="password"
             required
           />
@@ -73,11 +90,11 @@ const SignupForm = () => {
           <FormTextField
             form={form}
             name="repeatPassword"
-            label="Repeat password"
+            label={t("forms.signup.repeatPassword")}
             type="password"
             validate={(currentValue) => {
               if (form.getFieldValue("password") !== currentValue) {
-                return "Passwords does not match";
+                return t("forms.signup.passwordMismatch");
               }
             }}
             required
@@ -86,10 +103,12 @@ const SignupForm = () => {
           <FormTextField
             form={form}
             name="teamCode"
-            label="Club code"
+            label={t("forms.signup.clubCode")}
             validate={(currentValue) => {
-              if (!validTeamCodes.includes(currentValue)) {
-                return "Invalid club invitation code";
+              if (!clubCodesLoaded) return;
+
+              if (!validTeamCodes?.includes(currentValue)) {
+                return t("forms.signup.invalidClubCode");
               }
             }}
             required
@@ -102,7 +121,7 @@ const SignupForm = () => {
               variant="contained"
               onClick={() => form.handleSubmit()}
             >
-              Signup
+              {t("forms.signup.submit")}
             </Button>
 
             <Button
@@ -110,7 +129,7 @@ const SignupForm = () => {
               variant="text"
               onClick={() => navigate({ to: notAuthenticatedRoutes.login })}
             >
-              Login
+              {t("forms.signup.login")}
             </Button>
           </Box>
         </FormGrid>

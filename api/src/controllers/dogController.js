@@ -1,138 +1,57 @@
 const DogModel = require("../models/dogModel");
+const { broadcast } = require("../sse");
+const { replaceDogEverywhere, broadcastDogCascade } = require("../helpers/dogCascade");
 
-const mongoose = require("mongoose");
-const jwt = require("jsonwebtoken");
-const TaskModel = require("../models/taskModel");
+const findClubDogs = (club) =>
+  DogModel.find({ team: club }).sort({ createdAt: -1 });
 
-// get all dogs
-const getAllDogs = async (callback, userToken) => {
-  const { team } = jwt.decode(userToken);
+const getDogs = async (req, res) => {
+  const dogs = await findClubDogs(req.club);
 
-  const dogs = await DogModel.find({ team }).sort({ createdAt: -1 });
-
-  callback(dogs);
+  res.status(200).json(dogs);
 };
 
-// get single dog
-const getDogById = async (received, callback) => {
-  const { _id } = received;
+const createDog = async (req, res) => {
+  const dog = await DogModel.create({ ...req.body, team: req.club });
 
-  // if (!mongoose.Types.ObjectId.isValid(_id)) {
-  //   return res.status(404).json({ error: "DOG_NOT_FOUND" });
-  // }
-
-  const dog = await DogModel.findById(_id);
-
-  callback(dog);
+  res.status(200).json(dog);
+  broadcast(req.club, "dogs_updated", await findClubDogs(req.club));
 };
 
-// create new dog
-const createDog = async (received, callback, io, userToken) => {
-  const { team } = jwt.decode(userToken);
-
-  const { name } = received;
-
-  const dog = await DogModel.create({ name, team });
-
-  const allDogs = await DogModel.find({ team });
-
-  callback("create_dog", dog);
-
-  io.to(team).emit("dogs_updated", allDogs);
-};
-
-// delete dog
-const deleteDogById = async (received, io, userToken) => {
-  const { team } = jwt.decode(userToken);
-
-  const { _id } = received;
-
-  // TODO: WS handler for dog not found
-  // if (!mongoose.Types.ObjectId.isValid(_id)) {
-  //   return res.status(404).json({ error: "DOG_NOT_FOUND" });
-  // }
-
-  await DogModel.findOneAndDelete({ _id });
-
-  // TODO: WS handler for dog not found
-
-  const allDogs = await DogModel.find({ team });
-
-  io.to(team).emit("dogs_updated", allDogs);
-};
-
-// update dog
-const updateDogById = async (received, callback, io, userToken) => {
-  const { team } = jwt.decode(userToken);
-
-  const { _id } = received;
-
-  // TODO: WS handler for dog not found
-  // if (!mongoose.Types.ObjectId.isValid(id)) {
-  //   return res.status(404).json({ error: "DOG_NOT_FOUND" });
-  // }
+const updateDog = async (req, res) => {
+  const { _id, ...data } = req.body;
 
   const dog = await DogModel.findOneAndUpdate(
-    { _id: _id },
-    { ...received, team },
-    {
-      returnDocument: "after",
-    }
+    { _id, team: req.club },
+    { ...data, team: req.club },
+    { returnDocument: "after" }
   );
 
-  // TODO: WS handler for dog not found
-  // if (!dog) {
-  //   return res.status(404).json({ error: "DOG_NOT_FOUND" });
-  // }
-
-  const allTasks = await TaskModel.find({ team });
-
-  // {_id, dogs: [...DogModel]}
-  const tasksToUpdate = allTasks.reduce((taskToUpdateList, task) => {
-    const hasUpdatedDog = task.dogs.some((dog) => dog._id.toString() === _id);
-
-    if (!hasUpdatedDog) {
-      return taskToUpdateList;
-    }
-
-    const newDogList = task.dogs.map((_dog) => {
-      if (_dog._id.toString() === _id) {
-        return dog;
-      }
-
-      return _dog;
-    });
-
-    return [
-      ...taskToUpdateList,
-      { _id: task._id.toString(), dogs: newDogList },
-    ];
-  }, []);
-
-  for (const taskToUpdate of tasksToUpdate) {
-    const updatedTask = await TaskModel.findOneAndUpdate(
-      { _id: taskToUpdate._id },
-      { $set: { dogs: taskToUpdate.dogs } },
-      {
-        returnDocument: "after",
-      }
-    );
+  if (!dog) {
+    return res.status(404).json({ error: "NOT_FOUND" });
   }
 
-  const allDogs = await DogModel.find({ team });
+  const cascade = await replaceDogEverywhere(req.club, _id, dog);
 
-  callback(dog);
-  io.to(team).emit("dogs_updated", allDogs);
+  res.status(200).json(dog);
+  broadcast(req.club, "dogs_updated", await findClubDogs(req.club));
 
-  const updatedAllTasks = await TaskModel.find({ team });
-
-  io.to(team).emit("tasks_updated", updatedAllTasks);
+  await broadcastDogCascade(req.club, cascade);
 };
 
-module.exports = {
-  createDog,
-  getAllDogs,
-  getDogById,
-  deleteDogById,
-  updateDogById,
+// Cascades the removal everywhere the dog is embedded - otherwise every
+// Task/Team/User/CrossPass that referenced it keeps a dangling copy forever.
+const deleteDog = async (req, res) => {
+  const { id } = req.params;
+
+  await DogModel.findOneAndDelete({ _id: id, team: req.club });
+
+  const cascade = await replaceDogEverywhere(req.club, id, null);
+
+  res.status(200).json({ ok: true });
+  broadcast(req.club, "dogs_updated", await findClubDogs(req.club));
+
+  await broadcastDogCascade(req.club, cascade);
 };
+
+module.exports = { getDogs, createDog, updateDog, deleteDog };

@@ -1,5 +1,5 @@
 import { useAppContext } from "./useAppContext";
-import { useSocketContext } from "./useSocketContext";
+import { useReorderTasksMutation } from "../queries/tasks";
 
 const mapTasksToNewRowIndex = (oldRowIndex, newRowIndex, tasks) =>
   tasks.reduce((oldTasks, currentTask) => {
@@ -17,7 +17,7 @@ const mapTasksToNewRowIndex = (oldRowIndex, newRowIndex, tasks) =>
   }, []);
 
 export const useMoveTasksRow = () => {
-  const { socket } = useSocketContext();
+  const reorderTasksMutation = useReorderTasksMutation();
   const { tasks, setTasks } = useAppContext();
 
   return (result) => {
@@ -67,6 +67,6 @@ export const useMoveTasksRow = () => {
 
     setTasks(updatedTasksListWithChanges);
 
-    socket.emit("update_tasks_order", { tasks: changedTasks });
+    reorderTasksMutation.mutate(changedTasks);
   };
 };

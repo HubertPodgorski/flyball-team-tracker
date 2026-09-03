@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../helpers/fixtures";
 import { uniqueEmail } from "../helpers/testData";
 import { promoteToTrainer, promoteToSuperAdmin } from "../helpers/db";
 import { addDog, login, logout, signupAndLoginAsTrainer } from "../helpers/auth";
@@ -50,7 +50,7 @@ test("a super-admin can switch teams, act as them, and stays out of their user l
   await login(page, superAdminEmail);
 
   await page.getByRole("button", { name: "open drawer" }).click();
-  await page.getByText("Team switch", { exact: true }).click();
+  await page.getByText("Club switch", { exact: true }).click();
   await expect(page.getByText("Currently acting as TEST_TEAM")).toBeVisible();
   await page.getByText("WEST_SIDE_DOGZ", { exact: true }).click();
 
@@ -63,7 +63,7 @@ test("a super-admin can switch teams, act as them, and stays out of their user l
   await expect(page.getByText(superAdminName)).not.toBeVisible();
 
   // Switching back to their home team flips the visible data again.
-  await page.goto("/team-switch");
+  await page.goto("/club-switch");
   await expect(page.getByText("Currently acting as WEST_SIDE_DOGZ")).toBeVisible();
   await page.getByText("TEST_TEAM", { exact: true }).click();
 

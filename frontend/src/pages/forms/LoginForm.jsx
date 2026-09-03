@@ -10,6 +10,7 @@ import {
   useTheme,
 } from "@mui/material";
 import { useForm } from "@tanstack/react-form";
+import { useTranslation } from "react-i18next";
 import FormTextField from "../../components/inputs/FormTextField";
 import FormGrid from "../../components/FormGrid";
 import { useAuthContext } from "../../hooks/useAuthContext";
@@ -26,6 +27,7 @@ const isAuthPath = (pathname) =>
 
 const LoginForm = () => {
   const theme = useTheme();
+  const { t } = useTranslation();
 
   const { user } = useAuthContext();
   const navigate = useNavigate();
@@ -59,6 +61,7 @@ const LoginForm = () => {
     <Card
       sx={{
         minWidth: 300,
+        maxWidth: 400,
         margin: "20px auto",
         backgroundColor: alpha(theme.palette.background.paper, 0.75),
         backdropFilter: "blur(6px)",
@@ -66,16 +69,21 @@ const LoginForm = () => {
     >
       <CardContent>
         <FormGrid>
-          <Typography variant="h4">Login</Typography>
+          <Typography variant="h4">{t("forms.login.title")}</Typography>
 
           {error && <Alert severity="error">{error}</Alert>}
 
-          <FormTextField form={form} name="email" label="Email" required />
+          <FormTextField
+            form={form}
+            name="email"
+            label={t("common.email")}
+            required
+          />
 
           <FormTextField
             form={form}
             name="password"
-            label="Password"
+            label={t("common.password")}
             type="password"
             required
           />
@@ -87,7 +95,7 @@ const LoginForm = () => {
               variant="contained"
               onClick={() => form.handleSubmit()}
             >
-              Login
+              {t("forms.login.submit")}
             </Button>
 
             <Button
@@ -97,7 +105,7 @@ const LoginForm = () => {
                 navigate({ to: notAuthenticatedRoutes.signup });
               }}
             >
-              Signup
+              {t("forms.login.signup")}
             </Button>
           </Box>
         </FormGrid>

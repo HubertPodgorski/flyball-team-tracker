@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { ReactSortable, type ItemInterface } from "react-sortablejs";
 import { Box, Card, Chip, IconButton, Typography, alpha, styled } from "@mui/material";
+import { useTranslation } from "react-i18next";
 import DeleteIcon from "@mui/icons-material/Delete";
 import OpenWithIcon from "@mui/icons-material/OpenWith";
 import AddTaskHereButton from "../../components/AddTaskHereButton";
@@ -135,6 +136,7 @@ const TasksDragNDrop = ({
   onDragStart,
   onDragEnd,
 }: Props) => {
+  const { t } = useTranslation();
   const moveTasksRow = useMoveTasksRow();
   const moveTasksCell = useMoveTasksCell();
   const deleteTasksRow = useDeleteTasksRow();
@@ -160,7 +162,7 @@ const TasksDragNDrop = ({
   };
 
   const onDeleteRowClick = async (rowIndex: string) => {
-    await confirmSoft("Remove all tasks in this row?");
+    await confirmSoft(t("tasksGrid.removeRowConfirm"));
     deleteTasksRow(+rowIndex);
   };
 
@@ -170,7 +172,7 @@ const TasksDragNDrop = ({
     await onTaskEditClick({ position, description, dogs, matchupRef }, _id);
   };
 
-  const sortableTree = (
+  return (
     <ReactSortable
       list={rowList}
       setList={setRowList}
@@ -178,6 +180,11 @@ const TasksDragNDrop = ({
       animation={150}
       // Pointer-based drag, not native HTML5 DnD.
       forceFallback
+      // Escapes any blurred/transformed ancestor Card - otherwise the fixed-
+      // position drag clone renders offset from the cursor (containing block
+      // rules: backdrop-filter/transform/filter on an ancestor become the
+      // containing block for position:fixed descendants).
+      fallbackOnBody
       // No dropping past the trailing empty row.
       onMove={(evt) => {
         // Must return `true` to allow - `undefined` reads as cancel.
@@ -258,6 +265,7 @@ const TasksDragNDrop = ({
                       group="tasks-cells"
                       animation={150}
                       forceFallback
+                      fallbackOnBody
                       style={{
                         display: "flex",
                         flexDirection: "column",
@@ -304,68 +312,70 @@ const TasksDragNDrop = ({
                         const isLineupLinked = !!findLinkedLineup(task, teams);
 
                         return (
-                        <CardStyled
-                          key={task._id}
-                          data-task-id={task._id}
-                          lineupLinked={isLineupLinked}
-                        >
-                          <CardContentStyled
-                            onClick={() => {
-                              onCardClick(task);
-                            }}
+                          <CardStyled
+                            key={task._id}
+                            data-task-id={task._id}
+                            lineupLinked={isLineupLinked}
                           >
-                            <Typography variant={isMobile ? "body2" : "h5"}>
-                              {task.description}
-                            </Typography>
-
-                            {task.dogs.length > 0 && (
-                              <Box
-                                sx={{
-                                  display: "flex",
-                                  flexDirection: "column",
-                                  gap: "4px",
-                                }}
-                              >
-                                {task.dogs.map(({ name, _id }) => {
-                                  const attendance = dogsWithAttendance.find(
-                                    ({ _id: dogId }) => dogId === _id
-                                  );
-                                  // "Shouldn't be planned" flag only.
-                                  const isMisplanned =
-                                    !!attendance &&
-                                    getDogPlanningColor(
-                                      attendance.isPlanned,
-                                      attendance.status
-                                    ) === "error";
-
-                                  return (
-                                    <Chip
-                                      label={name}
-                                      key={_id}
-                                      color={isMisplanned ? "error" : "default"}
-                                      sx={{ alignSelf: "flex-start" }}
-                                    />
-                                  );
-                                })}
-                              </Box>
-                            )}
-
-                            {task.dogs.length === 0 && (
-                              <Typography>No dogs selected</Typography>
-                            )}
-
-                            <IconButton
-                              sx={{ position: "absolute", top: 2, right: 2 }}
-                              color="error"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                onDelete(task._id);
+                            <CardContentStyled
+                              onClick={() => {
+                                onCardClick(task);
                               }}
                             >
-                              <DeleteIcon />
-                            </IconButton>
-                          </CardContentStyled>
-                        </CardStyled>
+                              {task.description && (
+                                <Typography variant={isMobile ? "body2" : "h5"}>
+                                  {task.description}
+                                </Typography>
+                              )}
+
+                              {task.dogs.length > 0 && (
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: "4px",
+                                  }}
+                                >
+                                  {task.dogs.map(({ name, _id }) => {
+                                    const attendance = dogsWithAttendance.find(
+                                      ({ _id: dogId }) => dogId === _id
+                                    );
+                                    // "Shouldn't be planned" flag only.
+                                    const isMisplanned =
+                                      !!attendance &&
+                                      getDogPlanningColor(
+                                        attendance.isPlanned,
+                                        attendance.status
+                                      ) === "error";
+
+                                    return (
+                                      <Chip
+                                        label={name}
+                                        key={_id}
+                                        color={isMisplanned ? "error" : "default"}
+                                        sx={{ alignSelf: "flex-start" }}
+                                      />
+                                    );
+                                  })}
+                                </Box>
+                              )}
+
+                              {task.dogs.length === 0 && (
+                                <Typography>{t("tasksGrid.noDogsSelected")}</Typography>
+                              )}
+
+                              <IconButton
+                                sx={{ position: "absolute", top: 2, right: 2 }}
+                                color="error"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  onDelete(task._id);
+                                }}
+                              >
+                                <DeleteIcon />
+                              </IconButton>
+                            </CardContentStyled>
+                          </CardStyled>
                         );
                       })}
                     </ReactSortable>
@@ -386,8 +396,6 @@ const TasksDragNDrop = ({
       })}
     </ReactSortable>
   );
-
-  return sortableTree;
 };
 
 export default TasksDragNDrop;

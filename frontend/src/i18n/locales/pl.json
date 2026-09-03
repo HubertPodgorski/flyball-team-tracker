@@ -1,0 +1,297 @@
+{
+  "common": {
+    "cancel": "Anuluj",
+    "save": "Zapisz",
+    "submit": "Zatwierdź",
+    "delete": "Usuń",
+    "create": "Utwórz",
+    "add": "Dodaj",
+    "edit": "Edytuj",
+    "close": "Zamknij",
+    "name": "Nazwa",
+    "email": "Email",
+    "password": "Hasło",
+    "team": "Drużyna",
+    "dogs": "Psy",
+    "note": "Notatka",
+    "roles": "Role",
+    "date": "Data",
+    "club": "Klub",
+    "requiredField": "To pole jest wymagane",
+    "clear": "Wyczyść",
+    "copy": "Kopiuj"
+  },
+  "authErrors": {
+    "allFieldsRequired": "Wypełnij wszystkie pola.",
+    "incorrectEmail": "Nie znaleziono konta z tym adresem email.",
+    "incorrectPassword": "Nieprawidłowe hasło.",
+    "emailInUse": "Konto z tym adresem email już istnieje.",
+    "invalidClubCode": "Nie rozpoznano tego kodu klubu. Sprawdź go w swoim klubie.",
+    "networkError": "Nie można połączyć się z serwerem. Sprawdź połączenie i spróbuj ponownie.",
+    "genericError": "Coś poszło nie tak. Spróbuj ponownie."
+  },
+  "inputs": {
+    "addOption": "Dodaj \"{{value}}\"",
+    "startingPosition": {
+      "offset": "Przesunięcie",
+      "feet": "Stopy",
+      "centimeters": "Centymetry",
+      "placeholder": "np. 16m - 25cm lub własna notatka"
+    }
+  },
+  "nav": {
+    "tasks": "Zadania",
+    "calendar": "Kalendarz",
+    "myDogs": "Moje psy",
+    "teams": "Drużyny",
+    "settings": "Ustawienia",
+    "logout": "Wyloguj",
+    "trainerSection": "Trener",
+    "dogs": "Psy",
+    "dogTasks": "Zadania psów",
+    "events": "Wydarzenia",
+    "users": "Użytkownicy",
+    "superAdminSection": "Super Admin",
+    "clubSwitch": "Zmiana klubu",
+    "allUsers": "Wszyscy użytkownicy",
+    "allDogs": "Wszystkie psy",
+    "allDogTasks": "Wszystkie zadania psów",
+    "allEvents": "Wszystkie wydarzenia",
+    "allTeams": "Wszystkie drużyny",
+    "openDrawer": "otwórz menu"
+  },
+  "settings": {
+    "language": "Język",
+    "saveFailed": "Nie udało się zapisać",
+    "crossPassSyncTitle": "Synchronizacja crossów",
+    "crossPassSyncHint": "Dwie niezależne opcje dla każdego psa - włącz jedną lub obie.",
+    "crossPassSyncLineupsLabel": "Synchronizuj między składami (ten sam poprzednik → ten sam czas)",
+    "crossPassSyncMyDogsLabel": "Synchronizuj z crossami w Moje psy",
+    "changePasswordTitle": "Zmiana hasła",
+    "currentPassword": "Obecne hasło",
+    "newPassword": "Nowe hasło",
+    "repeatNewPassword": "Powtórz nowe hasło",
+    "passwordMismatch": "Hasła nie są takie same",
+    "changePasswordSubmit": "Zmień hasło",
+    "changePasswordSuccess": "Hasło zostało zmienione"
+  },
+  "forms": {
+    "login": {
+      "title": "Logowanie",
+      "submit": "Zaloguj",
+      "signup": "Zarejestruj się"
+    },
+    "signup": {
+      "title": "Rejestracja",
+      "repeatPassword": "Powtórz hasło",
+      "passwordMismatch": "Hasła nie są takie same",
+      "clubCode": "Kod klubu",
+      "invalidClubCode": "Nieprawidłowy kod zaproszenia do klubu",
+      "submit": "Zarejestruj się",
+      "login": "Zaloguj się"
+    },
+    "dog": {
+      "addTitle": "Dodawanie psa",
+      "editTitle": "Edycja danych psa",
+      "jumpHeight": "Wysokość hopek (cm)"
+    },
+    "dogTask": {
+      "addTitle": "Dodawanie zadania psa",
+      "editTitle": "Edycja zadania psa",
+      "name": "Nazwa zadania"
+    },
+    "event": {
+      "addTitle": "Dodawanie wydarzenia",
+      "editTitle": "Edycja wydarzenia",
+      "type": "Typ wydarzenia"
+    },
+    "user": {
+      "addTitle": "Dodawanie użytkownika",
+      "editTitle": "Edycja użytkownika",
+      "resetPassword": "Zresetuj hasło",
+      "resetPasswordConfirm": "To natychmiast unieważni obecne hasło tej osoby. Kontynuować?",
+      "resetPasswordFailed": "Nie udało się zresetować hasła"
+    },
+    "task": {
+      "addTitle": "Dodawanie zadania",
+      "editTitle": "Edycja zadania",
+      "setDogsOrder": "Ustaw kolejność psów",
+      "noTeams": "Brak drużyn",
+      "noLineups": "Brak składów w tej drużynie",
+      "lineup": "Skład",
+      "typeOrSelectDescription": "Wpisz lub wybierz opis zadania",
+      "pickDogsHint": "Wybierz psy bezpośrednio lub uzupełnij ze składu drużyny",
+      "teamLineup": "Skład drużyny"
+    }
+  },
+  "modals": {
+    "note": {
+      "title": "Notatki – {{name}}",
+      "fallbackName": "Pies",
+      "notes": "Notatki",
+      "save": "Zapisz notatki"
+    },
+    "crossPass": {
+      "edit": "Edytuj cross",
+      "create": "Utwórz cross",
+      "runningOnLights": "Bieg na światłach",
+      "runningOnDog": "Bieg na psie",
+      "startingPosition": "Pozycja startowa",
+      "time": "Czas (s)"
+    },
+    "temporaryPassword": {
+      "title": "Nowe tymczasowe hasło",
+      "hint": "Przekaż je tej osobie bezpośrednio - nie pojawi się ponownie.",
+      "copied": "Skopiowano do schowka"
+    }
+  },
+  "pages": {
+    "teams": {
+      "noTeamsYet": "Brak drużyn",
+      "newTeam": "Nowa drużyna",
+      "teamName": "Nazwa drużyny",
+      "saveFailed": "Nie udało się zapisać",
+      "loadFailed": "Nie udało się wczytać danych",
+      "pickClubHint": "Wybierz klub, aby zarządzać jego drużynami",
+      "deleteFailed": "Nie udało się usunąć",
+      "dogsCount": "{{count}}/6 psów",
+      "lineups": "Składy",
+      "noLineupsYet": "Brak składów",
+      "addLineup": "Dodaj skład",
+      "deleteTeam": "Usuń drużynę",
+      "removeLineupConfirm": "Usunąć ten skład?",
+      "newLineup": "Nowy skład",
+      "lineupNameOptional": "Nazwa składu (opcjonalnie)",
+      "pickDogsRange": "Wybierz {{min}}-{{max}} psów ({{count}}/{{max}})",
+      "lineupFallback": "Skład",
+      "lights": "Światła",
+      "addCrossPass": "+ dodaj",
+      "lineupName": "Nazwa składu",
+      "noDogsYet": "Brak psów",
+      "addDog": "Dodaj psa",
+      "teamFull": "Drużyna jest pełna (maks. {{max}} psów)"
+    },
+    "events": {
+      "hideDetails": "Ukryj szczegóły",
+      "showDetails": "Pokaż szczegóły",
+      "selectAnyDogAttendance": "Zaznacz obecność dowolnego psa",
+      "selectDogAttendance_one": "Zaznacz obecność psa",
+      "selectDogAttendance_other": "Zaznacz obecność psów",
+      "selectAnyoneAttendance": "Zaznacz obecność dowolnej osoby",
+      "selectMyAttendance": "Zaznacz moją obecność"
+    },
+    "clubSwitch": {
+      "title": "Zmiana klubu",
+      "currentlyActingAs": "Obecnie działasz jako"
+    },
+    "superAdmin": {
+      "allClubs": "Wszystkie kluby",
+      "dogsTitle": "Psy",
+      "dogTasksTitle": "Zadania psów",
+      "eventsTitle": "Wydarzenia",
+      "usersTitle": "Użytkownicy",
+      "typeColumn": "Typ"
+    },
+    "calendar": {
+      "from": "Od",
+      "to": "Do",
+      "nextEvent": "Najbliższe wydarzenie",
+      "noEventsInRange": "Brak wydarzeń w tym zakresie"
+    },
+    "myDogs": {
+      "dogLabel": "Pies",
+      "notes": "Notatki",
+      "noNotesPlaceholder": "Kliknij przycisk, aby dodać notatki",
+      "crossPasses": "Crossy",
+      "runningOn": "Bieg na",
+      "actions": "Akcje",
+      "jumpHeight": "Wysokość hopek: {{height}}cm"
+    }
+  },
+  "eventTypes": {
+    "competition": "Zawody",
+    "seminary": "Seminarium",
+    "training": "Trening",
+    "meeting": "Zebranie"
+  },
+  "legends": {
+    "regularTask": "Zwykłe zadanie",
+    "lineupTask": "Zadanie ze składu",
+    "legend": "Legenda",
+    "presentPlanned": "Obecny i zaplanowany",
+    "presentNotPlanned": "Obecny, jeszcze nie zaplanowany",
+    "plannedNotPresent": "Zaplanowany, nieobecny"
+  },
+  "tasksGrid": {
+    "addTaskHere": "Dodaj zadanie tutaj",
+    "removeRowConfirm": "Usunąć wszystkie zadania w tym wierszu?",
+    "noDogsSelected": "Nie wybrano psów",
+    "eventLabel": "Wydarzenie",
+    "noneOption": "Brak"
+  },
+  "confirm": {
+    "title": "Czy na pewno?",
+    "permanentWarning": "Ta operacja jest nieodwracalna!",
+    "deleteForever": "Usuń na zawsze",
+    "noThanks": "Nie, dziękuję",
+    "remove": "Usuń"
+  },
+  "about": {
+    "navLabel": "O aplikacji",
+    "title": "O aplikacji i jak korzystać",
+    "intro": "Flyball Team Tracker pomaga klubowi planować treningi i zawody: kto przychodzi, które psy biegają które zadania i jak układane są składy startowe.",
+    "sections": {
+      "tasks": {
+        "title": "Zadania",
+        "items": [
+          "Zadania są ułożone na siatce wierszy i kolumn - przeciągnij kartę, aby zmienić jej kolejność, albo przenieś ją do innej komórki.",
+          "Wybierz wydarzenie u góry, aby zobaczyć, które psy są zaznaczone jako obecne, i planować zadania na podstawie tej obecności.",
+          "Zadanie może zawierać psy bezpośrednio albo być powiązane ze składem drużyny - dotknij powiązanego zadania, aby zobaczyć (i edytować) czasy crossów tego składu.",
+          "Dotknij imienia psa w zadaniu, aby dodać notatkę albo otworzyć szczegóły crossów powiązanego składu."
+        ]
+      },
+      "calendar": {
+        "title": "Kalendarz",
+        "items": [
+          "Wszystkie zaplanowane wydarzenia klubu - treningi, zawody, seminaria, zebrania - pojawiają się tutaj, od najnowszych, z najbliższym nadchodzącym przypiętym na górze, żeby nie zgubiło się niżej na liście.",
+          "Zawęź listę do zakresu dat filtrami Od/Do i przeglądaj ją stronami, gdy wydarzeń jest więcej niż mieści się na jednym ekranie.",
+          "Rozwiń szczegóły wydarzenia, aby zaznaczyć swoją obecność (lub obecność swoich psów): dotknij imienia, aby przełączać między obecny, nieobecny i nieustawiony."
+        ]
+      },
+      "myDogs": {
+        "title": "Moje psy",
+        "items": [
+          "Każdy Twój pies ma tutaj swoją kartę - dodawaj ogólne notatki i zarządzaj jego crossami (na kogo biegnie, jego pozycją startową i czasem).",
+          "Crossy zapisane tutaj to Twój własny zapis, niezależny od crossów ustawionych w składach drużyny - chyba że włączysz synchronizację dla psa w Ustawieniach, co utrzymuje oba w zgodzie.",
+          "Jeśli trener ustawił wysokość hopek dla psa, zobaczysz ją na jego karcie tutaj."
+        ]
+      },
+      "teams": {
+        "title": "Drużyny",
+        "items": [
+          "Drużyna to pula do 6 psów, z których klub może budować składy startowe.",
+          "Każda drużyna może mieć kilka składów - skład to uporządkowany zestaw psów do biegu, wraz z czasami crossów między kolejnymi psami.",
+          "Nazwa składu pokazuje jego wysokość hopek w nawiasie, np. \"Super skład (25cm)\" - automatycznie najniższą wysokość spośród jego psów (pies bez ustawionej wysokości liczy się jako 35cm)."
+        ]
+      },
+      "settings": {
+        "title": "Ustawienia",
+        "items": [
+          "W każdej chwili możesz przełączyć język aplikacji między polskim a angielskim - wybór jest zapisywany na Twoim koncie.",
+          "Tutaj w dowolnej chwili zmienisz swoje hasło, podając obecne hasło jako potwierdzenie.",
+          "Dla każdego ze swoich psów są dwie niezależne opcje synchronizacji crossów: utrzymuj jego czas zsynchronizowany między wszystkimi składami, w których biegnie na tego samego psa, i/lub utrzymuj go zsynchronizowanego z jego crossami w Moje psy."
+        ]
+      }
+    },
+    "trainerSection": {
+      "title": "Narzędzia trenera",
+      "intro": "Jako trener masz dostęp do osobnego panelu do zarządzania danymi klubu:",
+      "items": [
+        "Zadania - ta sama tablica z przeciąganiem, plus możliwość tworzenia, edycji i usuwania zadań.",
+        "Psy, Zadania psów, Użytkownicy - zarządzaj psami klubu (w tym wysokością hopek każdego psa), rodzajami zadań, które można im przypisać, oraz członkami klubu. Otwórz kartę członka, aby zresetować jego hasło, jeśli nie może się zalogować - otrzymasz jednorazowe tymczasowe hasło do przekazania mu.",
+        "Wydarzenia - twórz treningi, zawody, seminaria i zebrania dla klubu.",
+        "Drużyny - buduj i edytuj drużyny oraz ich składy dla całego klubu, nie tylko dla własnych psów."
+      ]
+    }
+  }
+}

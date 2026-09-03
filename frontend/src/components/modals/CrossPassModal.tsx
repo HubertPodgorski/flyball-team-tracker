@@ -1,16 +1,21 @@
 import React, { useEffect } from "react";
 import { Button, DialogActions } from "@mui/material";
-import { useSocketContext } from "../../hooks/useSocketContext";
+import {
+  useCreateCrossPassMutation,
+  useUpdateCrossPassMutation,
+} from "../../queries/crossPasses";
 import { useForm, useStore } from "@tanstack/react-form";
+import { useTranslation } from "react-i18next";
 import FormModal from "../FormModal.jsx";
 import FormGrid from "../FormGrid.jsx";
-import { useAppContext } from "../../hooks/useAppContext";
+import { useDogsQuery } from "../../queries/dogs";
 import { CrossPass, Dog } from "../../helpers/types";
 import FormSwitch from "../inputs/FormSwitch";
 import FormSelect from "../inputs/FormSelect";
 import FormTextSelect from "../inputs/FormTextSelect";
 import FormTextField from "../inputs/FormTextField";
 import FormStartingPositionField from "../inputs/FormStartingPositionField";
+import { useSubmitGuard } from "../../hooks/useSubmitGuard";
 
 interface FormData {
   runningOnDogId?: string;
@@ -57,13 +62,20 @@ const getSubmitData = (
   };
 };
 
-const initialData: FormData = {
-  note: "",
-  runningOnDogId: "",
-  runningOnLights: false,
-  startingPosition: "",
-  time: "",
-};
+// Single source for both useForm's defaultValues and the reset effect below
+// - a frozen empty defaultValues constant used to disagree with the real
+// reset target, and TanStack Form's own internal resync-to-defaultValues
+// effect fought it, most visibly for runningOnLights (its mount/unmount of
+// the "running on dog" field was enough to trigger the resync and blank the
+// whole form on edit). Keeping both derived from the same function closes
+// the gap.
+const getFormValues = (crossPass?: CrossPass): FormData => ({
+  note: crossPass?.note || "",
+  runningOnDogId: crossPass?.runningOnDog?._id || "",
+  runningOnLights: crossPass?.runningOnLights || false,
+  startingPosition: crossPass?.startingPosition || "",
+  time: crossPass?.time !== undefined ? String(crossPass.time) : "",
+});
 
 const CrossPassModal = ({
   crossPass,
@@ -71,35 +83,35 @@ const CrossPassModal = ({
   onClose: handleClose,
   open,
 }: Props) => {
-  const { dogs } = useAppContext();
-  const { socket } = useSocketContext();
+  const { t } = useTranslation();
+  const { data: dogs = [] } = useDogsQuery();
+  const createCrossPassMutation = useCreateCrossPassMutation();
+  const updateCrossPassMutation = useUpdateCrossPassMutation();
+  const submitGuard = useSubmitGuard();
 
   const isEdit = !!crossPass?._id;
 
   const onClose = () => {
-    form.reset(initialData);
+    form.reset(getFormValues(undefined));
 
     handleClose();
   };
 
   const form = useForm({
-    defaultValues: initialData,
+    defaultValues: getFormValues(crossPass),
     onSubmit: ({ value: formData }) => {
       if (isEdit) {
-        socket.emit(
-          "update_cross_pass",
+        updateCrossPassMutation.mutate(
           {
             _id: crossPass!._id,
             ...getSubmitData(formData, dogs, dogId),
           },
-          () => onClose()
+          { onSuccess: onClose }
         );
       } else {
-        socket.emit(
-          "create_cross_pass",
-          getSubmitData(formData, dogs, dogId),
-          () => onClose()
-        );
+        createCrossPassMutation.mutate(getSubmitData(formData, dogs, dogId), {
+          onSuccess: onClose,
+        });
       }
     },
   });
@@ -107,13 +119,7 @@ const CrossPassModal = ({
   useEffect(() => {
     if (!crossPass) return;
 
-    form.reset({
-      note: crossPass?.note || "",
-      runningOnDogId: crossPass?.runningOnDog?._id || "",
-      runningOnLights: crossPass?.runningOnLights || false,
-      startingPosition: crossPass?.startingPosition || "",
-      time: crossPass?.time !== undefined ? String(crossPass.time) : "",
-    });
+    form.reset(getFormValues(crossPass));
   }, [crossPass, form, dogId]);
 
   const runningOnLights = useStore(
@@ -125,10 +131,14 @@ const CrossPassModal = ({
     <FormModal
       open={open}
       onClose={onClose}
-      title={`${isEdit ? "Edit" : "Create"} cross pass`}
+      title={isEdit ? t("modals.crossPass.edit") : t("modals.crossPass.create")}
     >
       <FormGrid>
-        <FormSwitch form={form} name="runningOnLights" label="Running on lights" />
+        <FormSwitch
+          form={form}
+          name="runningOnLights"
+          label={t("modals.crossPass.runningOnLights")}
+        />
 
         {!runningOnLights && (
           <FormSelect
@@ -139,27 +149,37 @@ const CrossPassModal = ({
             }))}
             multi={false}
             name="runningOnDogId"
-            label="Running on dog"
+            label={t("modals.crossPass.runningOnDog")}
           />
         )}
 
-        <FormStartingPositionField form={form} name="startingPosition" label="Starting position" />
+        <FormStartingPositionField
+          form={form}
+          name="startingPosition"
+          label={t("modals.crossPass.startingPosition")}
+        />
 
-        <FormTextField form={form} name="time" label="Time (s)" type="number" />
+        <FormTextField
+          form={form}
+          name="time"
+          label={t("modals.crossPass.time")}
+          type="number"
+        />
 
-        <FormTextSelect form={form} name="note" label="Note" options={[]} />
+        <FormTextSelect form={form} name="note" label={t("common.note")} options={[]} />
 
         <DialogActions sx={{ padding: 0 }}>
           <Button size="medium" variant="outlined" onClick={onClose}>
-            Cancel
+            {t("common.cancel")}
           </Button>
 
           <Button
             size="medium"
             variant="contained"
-            onClick={() => form.handleSubmit()}
+            disabled={createCrossPassMutation.isPending || updateCrossPassMutation.isPending}
+            onClick={() => submitGuard(() => form.handleSubmit())}
           >
-            Save
+            {t("common.save")}
           </Button>
         </DialogActions>
       </FormGrid>

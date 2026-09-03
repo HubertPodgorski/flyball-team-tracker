@@ -15,22 +15,26 @@ import {
 import { ReactSortable, type ItemInterface } from "react-sortablejs";
 import OpenWithIcon from "@mui/icons-material/OpenWith";
 import { useForm, useStore } from "@tanstack/react-form";
+import { useTranslation } from "react-i18next";
 import type { AnyFieldApi } from "@tanstack/react-form";
 import FormModal from "../../components/FormModal";
 import FormGrid from "../../components/FormGrid";
 import FormSelect from "../../components/inputs/FormSelect";
 import type { AnyReactFormApi } from "../../components/inputs/utils";
-import { useAppContext } from "../../hooks/useAppContext";
+import { useDogsQuery } from "../../queries/dogs";
 import { CreateEditTaskFormType, CreateEditTaskRequestType } from "./types";
 import { LineupCrossPass, LineupRef, Position, Task } from "../../helpers/types";
 import FormTextSelect from "../../components/inputs/FormTextSelect";
-import { useSocketContext } from "../../hooks/useSocketContext";
+import { useCreateTaskMutation, useUpdateTaskMutation } from "../../queries/tasks";
+import { useSubmitGuard } from "../../hooks/useSubmitGuard";
 import { useDogsWithAttendance } from "../../hooks/useDogsWithAttendance";
 import { useTaskPlanningContext } from "../../hooks/useTaskPlanningContext";
 import { getDogPlanningColor } from "../../helpers/calendar";
 import { resolveDogsByIds } from "../../helpers/dogs";
 import { useTeamsQuery, useUpdateTeamMutation } from "../../queries/teams";
+import { useDogTasksQuery } from "../../queries/dogTasks";
 import { withLineupCrossPasses } from "../../helpers/lineupLink";
+import { getLineupJumpHeight } from "../../helpers/lineup";
 import DogChain from "../../components/teams/DogChain";
 import LineupCrossPasses from "../../components/teams/LineupCrossPasses";
 
@@ -50,7 +54,8 @@ const DogOrderRowStyled = styled(Box)(({ theme }) => ({
 
 // Reorders the same `dogs` field FormSelect writes to - doesn't pick dogs.
 const DogsOrderField = ({ form }: { form: AnyReactFormApi }) => {
-  const { dogs } = useAppContext();
+  const { t } = useTranslation();
+  const { data: dogs = [] } = useDogsQuery();
 
   return (
     <form.Field name="dogs">
@@ -67,7 +72,7 @@ const DogsOrderField = ({ form }: { form: AnyReactFormApi }) => {
         return (
           <Box>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-              Set dogs order
+              {t("forms.task.setDogsOrder")}
             </Typography>
 
             <ReactSortable
@@ -77,6 +82,7 @@ const DogsOrderField = ({ form }: { form: AnyReactFormApi }) => {
               }
               animation={150}
               forceFallback
+              fallbackOnBody
               style={{ display: "flex", flexDirection: "column", gap: "4px" }}
             >
               {items.map((item) => (
@@ -95,6 +101,7 @@ const DogsOrderField = ({ form }: { form: AnyReactFormApi }) => {
 
 // Independent of the Dogs field - see resolveSubmitDogs.
 const TeamLineupPicker = ({ form, matchupRef }: { form: AnyReactFormApi; matchupRef?: LineupRef }) => {
+  const { t } = useTranslation();
   const { data: teams = [] } = useTeamsQuery();
   const updateTeamMutation = useUpdateTeamMutation();
   const [teamId, setTeamId] = useState(matchupRef?.squadId ?? "");
@@ -102,7 +109,7 @@ const TeamLineupPicker = ({ form, matchupRef }: { form: AnyReactFormApi; matchup
   if (teams.length === 0) {
     return (
       <Typography variant="caption" color="text.secondary">
-        No teams yet
+        {t("forms.task.noTeams")}
       </Typography>
     );
   }
@@ -133,16 +140,16 @@ const TeamLineupPicker = ({ form, matchupRef }: { form: AnyReactFormApi; matchup
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
       <FormControl fullWidth>
-        <InputLabel id="task-team-label">Team</InputLabel>
+        <InputLabel id="task-team-label">{t("common.team")}</InputLabel>
         <Select
           labelId="task-team-label"
-          label="Team"
+          label={t("common.team")}
           value={teamId}
           onChange={(event) => onTeamChange(event.target.value)}
         >
-          {teams.map((t) => (
-            <MenuItem key={t._id} value={t._id}>
-              {t.name}
+          {teams.map((teamOption) => (
+            <MenuItem key={teamOption._id} value={teamOption._id}>
+              {teamOption.name}
             </MenuItem>
           ))}
         </Select>
@@ -150,24 +157,29 @@ const TeamLineupPicker = ({ form, matchupRef }: { form: AnyReactFormApi; matchup
 
       {team && team.matchups.length === 0 && (
         <Typography variant="caption" color="text.secondary">
-          No lineups in this team
+          {t("forms.task.noLineups")}
         </Typography>
       )}
 
       {team && team.matchups.length > 0 && (
         <FormControl fullWidth>
-          <InputLabel id="task-lineup-label">Lineup</InputLabel>
+          <InputLabel id="task-lineup-label">{t("forms.task.lineup")}</InputLabel>
           <Select
             labelId="task-lineup-label"
-            label="Lineup"
+            label={t("forms.task.lineup")}
             value={lineup?._id ?? ""}
             onChange={(event) => onLineupChange(event.target.value)}
           >
-            {team.matchups.map((m) => (
-              <MenuItem key={m._id} value={m._id}>
-                {m.name || m.dogs.map(({ name }) => name).join(", ")}
-              </MenuItem>
-            ))}
+            {team.matchups.map((m) => {
+              const label = m.name || m.dogs.map(({ name }) => name).join(", ");
+              const jumpHeight = getLineupJumpHeight(m.dogs);
+
+              return (
+                <MenuItem key={m._id} value={m._id}>
+                  {jumpHeight === undefined ? label : `${label} (${jumpHeight}cm)`}
+                </MenuItem>
+              );
+            })}
           </Select>
         </FormControl>
       )}
@@ -209,8 +221,12 @@ const TaskForm = ({
   editingId,
   maxRowIndex,
 }: Props) => {
-  const { dogs, dogTasks } = useAppContext();
-  const { socket } = useSocketContext();
+  const { t } = useTranslation();
+  const { data: dogs = [] } = useDogsQuery();
+  const { data: dogTasks = [] } = useDogTasksQuery();
+  const createTaskMutation = useCreateTaskMutation();
+  const updateTaskMutation = useUpdateTaskMutation();
+  const submitGuard = useSubmitGuard();
   const { selectedEventId } = useTaskPlanningContext();
   const dogsWithAttendance = useDogsWithAttendance(selectedEventId);
   const { data: teams = [] } = useTeamsQuery();
@@ -263,16 +279,13 @@ const TaskForm = ({
       };
 
       if (editingId) {
-        socket.emit("update_task", { ...data, _id: editingId }, () => {
-          handleClose();
-        });
+        updateTaskMutation.mutate(
+          { ...data, _id: editingId },
+          { onSuccess: handleClose }
+        );
       } else {
-        socket.emit("add_task", data, () => {
-          handleClose();
-        });
+        createTaskMutation.mutate(data, { onSuccess: handleClose });
       }
-
-      // TODO: error handling eventually?
     },
   });
 
@@ -302,17 +315,21 @@ const TaskForm = ({
   const matchupRef = useStore(form.store, (state) => state.values.matchupRef);
 
   return (
-    <FormModal onClose={handleClose} open={open} title="Task">
+    <FormModal
+      onClose={handleClose}
+      open={open}
+      title={editingId ? t("forms.task.editTitle") : t("forms.task.addTitle")}
+    >
       <FormGrid>
         <FormTextSelect
           form={form}
-          label="Type or select task description"
+          label={t("forms.task.typeOrSelectDescription")}
           options={dogTaskOptions}
           name="description"
         />
 
         <Typography variant="body2" color="text.secondary">
-          Pick dogs directly, or fill them from a team lineup
+          {t("forms.task.pickDogsHint")}
         </Typography>
 
         <ToggleButtonGroup
@@ -323,13 +340,13 @@ const TaskForm = ({
             if (newMode) setMode(newMode);
           }}
         >
-          <ToggleButton value="dogs">Dogs</ToggleButton>
-          <ToggleButton value="team">Team lineup</ToggleButton>
+          <ToggleButton value="dogs">{t("common.dogs")}</ToggleButton>
+          <ToggleButton value="team">{t("forms.task.teamLineup")}</ToggleButton>
         </ToggleButtonGroup>
 
         {mode === "dogs" && (
           <>
-            <FormSelect form={form} name="dogs" label="Dogs" options={dogOptions} />
+            <FormSelect form={form} name="dogs" label={t("common.dogs")} options={dogOptions} />
 
             <DogsOrderField form={form} />
           </>
@@ -339,15 +356,16 @@ const TaskForm = ({
 
         <DialogActions sx={{ padding: 0 }}>
           <Button size="medium" variant="outlined" onClick={handleClose}>
-            Cancel
+            {t("common.cancel")}
           </Button>
 
           <Button
             size="medium"
             variant="contained"
-            onClick={() => form.handleSubmit()}
+            disabled={createTaskMutation.isPending || updateTaskMutation.isPending}
+            onClick={() => submitGuard(() => form.handleSubmit())}
           >
-            Submit
+            {t("common.submit")}
           </Button>
         </DialogActions>
       </FormGrid>

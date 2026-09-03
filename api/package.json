@@ -4,14 +4,17 @@
   "description": "",
   "main": "src/server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "start": "node src/server.js",
-    "dev": "nodemon src/server.js",
-    "gen_vapid_keys": " web-push generate-vapid-keys [--json]"
+    "dev": "nodemon src/server.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "engines": {
+    "node": "24.x"
+  },
   "packageManager": "yarn@4.18.0+sha512.fcb8716fe7cd0eece141ffc18b92193a9df9204c1ba83189c288835223fc0bbe64af473bab0d5e9927a7daeb5caf2bb07eb2787cc9338ca040ea125f2a1f2f7e",
   "dependencies": {
     "bcrypt": "^6.0.0",
@@ -19,11 +22,11 @@
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
-    "mongoose": "^9.9.4",
-    "socket.io": "^4.8.3",
-    "web-push": "^3.6.1"
+    "mongoose": "^9.9.4"
   },
   "devDependencies": {
-    "nodemon": "^3.1.14"
+    "mongodb-memory-server": "^11.2.0",
+    "nodemon": "^3.1.14",
+    "vitest": "^4.1.11"
   }
 }

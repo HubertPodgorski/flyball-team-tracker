@@ -3,6 +3,7 @@ import { ReactSortable, type ItemInterface } from "react-sortablejs";
 import { Box, Typography, styled } from "@mui/material";
 import OpenWithIcon from "@mui/icons-material/OpenWith";
 import { Dog } from "../../helpers/types";
+import { matchSortableDogs } from "../../helpers/sortableDogs";
 
 // Info color, distinct from the cross-pass table's orange.
 const DogRowStyled = styled(Box)(({ theme }) => ({
@@ -48,22 +49,17 @@ const LineupDogsOrder = ({ dogs, editable, onChange }: Props) => {
       }}
       animation={150}
       forceFallback
+      fallbackOnBody
       style={{ display: "flex", flexDirection: "column", gap: "4px" }}
     >
-      {items.map((item, index) => {
-        const dog = dogs.find(({ _id }) => _id === item.id);
-
-        if (!dog) return null;
-
-        return (
-          <DogRowStyled key={dog._id}>
-            <OpenWithIcon fontSize="small" />
-            <Typography>
-              {index + 1}. {dog.name}
-            </Typography>
-          </DogRowStyled>
-        );
-      })}
+      {matchSortableDogs(items, dogs).map(({ dog, index }) => (
+        <DogRowStyled key={dog._id}>
+          <OpenWithIcon fontSize="small" />
+          <Typography>
+            {index + 1}. {dog.name}
+          </Typography>
+        </DogRowStyled>
+      ))}
     </ReactSortable>
   );
 };

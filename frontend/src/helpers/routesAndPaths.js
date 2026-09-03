@@ -8,6 +8,8 @@ export const userRoutes = {
   calendar: "/user-panel/calendar",
   myDogs: "/user-panel/my-dogs",
   teams: "/user-panel/teams",
+  settings: "/user-panel/settings",
+  about: "/user-panel/about",
 };
 
 export const userPaths = {
@@ -16,6 +18,8 @@ export const userPaths = {
   calendar: "calendar",
   myDogs: "my-dogs",
   teams: "teams",
+  settings: "settings",
+  about: "about",
 };
 
 export const trainerRoutes = {
@@ -24,7 +28,6 @@ export const trainerRoutes = {
   dogs: "/trainer-panel/dogs",
   users: "/trainer-panel/users",
   dogTasks: "/trainer-panel/dog-tasks",
-  eventTemplates: "/trainer-panel/event-templates",
   teams: "/trainer-panel/teams",
 };
 
@@ -35,6 +38,5 @@ export const trainerPaths = {
   dogs: "dogs",
   users: "users",
   dogTasks: "dog-tasks",
-  eventTemplates: "event-templates",
   teams: "teams",
 };

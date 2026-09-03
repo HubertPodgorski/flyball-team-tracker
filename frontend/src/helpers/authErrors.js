@@ -1,20 +1,21 @@
-const authErrorMessages = {
-  ALL_FIELDS_MUST_BE_FILLED: "Please fill in all fields.",
-  INCORRECT_EMAIL: "No account found with that email.",
-  INCORRECT_PASSWORD: "Incorrect password.",
-  EMAIL_ALREADY_IN_USE: "An account with that email already exists.",
+const authErrorKeys = {
+  ALL_FIELDS_MUST_BE_FILLED: "authErrors.allFieldsRequired",
+  INCORRECT_EMAIL: "authErrors.incorrectEmail",
+  INCORRECT_PASSWORD: "authErrors.incorrectPassword",
+  EMAIL_ALREADY_IN_USE: "authErrors.emailInUse",
+  INVALID_CLUB_CODE: "authErrors.invalidClubCode",
 };
 
-export const getAuthErrorMessage = (error) => {
+export const getAuthErrorMessage = (error, t) => {
   const code = error?.response?.data?.error;
 
-  if (code && authErrorMessages[code]) {
-    return authErrorMessages[code];
+  if (code && authErrorKeys[code]) {
+    return t(authErrorKeys[code]);
   }
 
   if (!error?.response) {
-    return "Can't reach the server. Check your connection and try again.";
+    return t("authErrors.networkError");
   }
 
-  return "Something went wrong. Please try again.";
+  return t("authErrors.genericError");
 };
