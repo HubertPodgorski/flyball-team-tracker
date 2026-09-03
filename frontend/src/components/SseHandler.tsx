@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuthContext } from "../hooks/useAuthContext";
+import { useCurrentClub } from "../hooks/useCurrentClub";
 import { apiSuffix } from "../helpers/apiCall";
 import { getAuthToken } from "../helpers/authToken";
 import { teamsQueryOptions } from "../queries/teams";
@@ -16,6 +17,7 @@ import { CrossPass, Dog, DogTask, Event, Task, Team, User } from "../helpers/typ
 const SseHandler = () => {
   const { user, setUserDogs } = useAuthContext();
   const queryClient = useQueryClient();
+  const club = useCurrentClub();
 
   // Read fresh inside event listeners without making the connection effect
   // below depend on the whole `user` object - see the comment on that
@@ -92,20 +94,9 @@ const SseHandler = () => {
     });
 
     return () => source.close();
-    // Deliberately `user?._id`, not `user`: this handler's own setUserDogs
-    // calls (both above and in users_updated) change the user object's
-    // identity on every dogs/self update, and depending on the whole object
-    // would tear down and recreate the connection every single time. That
-    // reconnect isn't just wasteful - it's a real bug: the brief gap while
-    // the old connection closes and the new one re-registers can silently
-    // drop a broadcast that lands in that window (e.g. deleting a dog
-    // broadcasts dogs_updated immediately followed by tasks_updated in the
-    // same request - the first one's own setUserDogs call was tearing down
-    // the connection just in time to lose the second). _id only changes on
-    // an actual login/logout/user-switch, which is when this really should
-    // reconnect.
+    // Not the whole `user` object - setUserDogs churns its identity. `club` added: a club-switch keeps the same `_id`, so reconnect needs it too.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?._id, queryClient, setUserDogs]);
+  }, [user?._id, club, queryClient, setUserDogs]);
 
   return null;
 };

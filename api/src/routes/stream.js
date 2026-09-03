@@ -30,7 +30,11 @@ const streamHandler = (req, res) => {
 
   addClient(club, res);
 
+  // Heroku's router drops an idle connection after ~55s with no data.
+  const heartbeat = setInterval(() => res.write(":\n\n"), 20000);
+
   req.on("close", () => {
+    clearInterval(heartbeat);
     removeClient(club, res);
   });
 };
