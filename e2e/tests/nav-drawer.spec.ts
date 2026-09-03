@@ -64,3 +64,15 @@ test("every drawer and bottom-tab nav link goes to its own route", async ({ page
   await bottomNav.getByRole("link", { name: "Teams", exact: true }).click();
   await expect(page).toHaveURL(/\/user-panel\/teams$/);
 });
+
+test("the bottom nav bar is hidden on login and signup", async ({ page }) => {
+  await page.goto("/login");
+  await expect(page.getByRole("textbox", { name: "Email", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "open drawer" })).toHaveCount(0);
+  await expect(page.locator(".MuiBottomNavigation-root")).toHaveCount(0);
+
+  await page.goto("/signup");
+  await expect(page.getByRole("textbox", { name: "Name", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "open drawer" })).toHaveCount(0);
+  await expect(page.locator(".MuiBottomNavigation-root")).toHaveCount(0);
+});

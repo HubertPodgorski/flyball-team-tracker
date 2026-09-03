@@ -26,6 +26,18 @@ describe("decodeToken", () => {
     expect(req.userId).toBe("real-user");
   });
 
+  it("falls back to the old `team` claim for a pre-rename token", () => {
+    const oldToken = jwt.sign({ _id: "real-user", team: "TEST_TEAM" }, process.env.SECRET);
+    const req = { headers: { authorization: `Bearer ${oldToken}` } };
+    const res = mockRes();
+    const next = vi.fn();
+
+    decodeToken(req, res, next);
+
+    expect(next).toHaveBeenCalledOnce();
+    expect(req.club).toBe("TEST_TEAM");
+  });
+
   it("rejects a token signed with the wrong secret, even with a well-formed payload", () => {
     const forged = jwt.sign(
       { _id: "attacker", club: "TEST_TEAM" },

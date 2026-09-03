@@ -23,7 +23,8 @@ const decodeToken = (req, res, next) => {
     return res.status(401).json({ error: "INVALID_TOKEN" });
   }
 
-  req.club = decoded.club;
+  // Fallback: old tokens (pre team->club rename) carry `team`, not `club`.
+  req.club = decoded.club ?? decoded.team;
   req.userId = decoded._id;
 
   next();
