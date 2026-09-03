@@ -17,6 +17,7 @@ import { useAuthContext } from "../../hooks/useAuthContext";
 import { useNavigate } from "@tanstack/react-router";
 import {
   notAuthenticatedRoutes,
+  pitchRoute,
   userRoutes,
 } from "../../helpers/routesAndPaths";
 import { useLogin } from "../../hooks/useLogin";
@@ -106,6 +107,15 @@ const LoginForm = () => {
               }}
             >
               {t("forms.login.signup")}
+            </Button>
+
+            <Button
+              size="small"
+              variant="text"
+              color="inherit"
+              onClick={() => navigate({ to: pitchRoute })}
+            >
+              {t("pitch.linkLabel")}
             </Button>
           </Box>
         </FormGrid>

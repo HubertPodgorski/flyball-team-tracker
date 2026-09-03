@@ -14,7 +14,7 @@ import { useTranslation } from "react-i18next";
 import FormTextField from "../../components/inputs/FormTextField";
 import FormGrid from "../../components/FormGrid";
 import { useNavigate } from "@tanstack/react-router";
-import { notAuthenticatedRoutes } from "../../helpers/routesAndPaths";
+import { notAuthenticatedRoutes, pitchRoute } from "../../helpers/routesAndPaths";
 import { useSignup } from "../../hooks/useSignup";
 import { useClubCodesQuery } from "../../queries/clubCodes";
 
@@ -130,6 +130,15 @@ const SignupForm = () => {
               onClick={() => navigate({ to: notAuthenticatedRoutes.login })}
             >
               {t("forms.signup.login")}
+            </Button>
+
+            <Button
+              size="small"
+              variant="text"
+              color="inherit"
+              onClick={() => navigate({ to: pitchRoute })}
+            >
+              {t("pitch.linkLabel")}
             </Button>
           </Box>
         </FormGrid>

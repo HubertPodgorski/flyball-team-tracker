@@ -293,5 +293,34 @@
         "Drużyny - buduj i edytuj drużyny oraz ich składy dla całego klubu, nie tylko dla własnych psów."
       ]
     }
+  },
+  "pitch": {
+    "intro": "Flyball Team Tracker pomaga klubowi planować treningi i zawody: kto przychodzi, które psy biegają które zadania i jak układane są składy startowe.",
+    "sections": {
+      "tasks": {
+        "title": "Zadania",
+        "body": "Tablica zadań treningowych z przeciąganiem, planowana na podstawie obecności psów."
+      },
+      "calendar": {
+        "title": "Kalendarz",
+        "body": "Treningi, zawody i zebrania klubu w jednym miejscu, z filtrem dat."
+      },
+      "myDogs": {
+        "title": "Moje psy",
+        "body": "Notatki i crossy (przekazania między psami w składzie) każdego psa, opcjonalnie synchronizowane ze składem drużyny."
+      },
+      "teams": {
+        "title": "Drużyny i składy",
+        "body": "Buduj pulę psów i układaj z niej składy startowe - wysokość skoku liczy się sama."
+      },
+      "settings": {
+        "title": "Ustawienia",
+        "body": "Polski/angielski, zmiana hasła, reset hasła bez maila dla trenera."
+      }
+    },
+    "needCode": "Do rejestracji potrzebujesz kodu klubu od trenera.",
+    "login": "Zaloguj się",
+    "signup": "Zarejestruj się",
+    "linkLabel": "Zobacz, co potrafi"
   }
 }
