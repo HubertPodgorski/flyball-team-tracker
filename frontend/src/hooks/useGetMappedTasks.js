@@ -1,4 +1,4 @@
-import { useLayoutEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import {
   applyTaskUpdates,
   getRowCompactionUpdates,
@@ -6,13 +6,20 @@ import {
   mapTasksForAdminPanel,
 } from "../helpers/tasks";
 import { useAppContext } from "./useAppContext";
-import { useReorderTasksMutation } from "../queries/tasks";
+import { useReorderTasksMutation, useTasksQuery } from "../queries/tasks";
 
 export const useGetMappedTasks = (adminPanel, isDragging = false) => {
   const { tasks, setTasks } = useAppContext();
+  const { data: queriedTasks } = useTasksQuery();
   const reorderTasksMutation = useReorderTasksMutation();
 
   const [mappedTasks, setMappedTasks] = useState([]);
+
+  // Owning the query here (not in an app-root singleton) means it mounts
+  // fresh, with the current club, every time a Tasks page is actually visited.
+  useEffect(() => {
+    setTasks(queriedTasks ?? []);
+  }, [queriedTasks, setTasks]);
 
   // useLayoutEffect so a reorder never paints a stale frame first.
   useLayoutEffect(() => {

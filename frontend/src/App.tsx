@@ -6,7 +6,6 @@ import { AppContextProvider } from "./contexts/AppContext";
 import { router } from "./router";
 import { queryClient } from "./queryClient";
 import theme from "./helpers/theme";
-import TasksContextBridge from "./components/TasksContextBridge";
 import SseHandler from "./components/SseHandler";
 import { AuthContextProvider } from "./contexts/AuthContext";
 import { ConfirmProvider } from "material-ui-confirm";
@@ -40,7 +39,6 @@ const App = () => {
                 adapterLocale={dateLocale}
               >
                 <AppContextProvider>
-                  <TasksContextBridge />
                   <SseHandler />
 
                   <CssBaseline />

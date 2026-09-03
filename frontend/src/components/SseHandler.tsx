@@ -37,6 +37,11 @@ const SseHandler = () => {
 
     const source = new EventSource(`${apiSuffix}/stream?token=${token}`);
 
+    // A (re)connect (login/logout/club-switch/dropped-connection) resyncs everything, not just the mounted page's own queries.
+    source.addEventListener("open", () => {
+      queryClient.invalidateQueries();
+    });
+
     source.addEventListener("teams_updated", (event: MessageEvent) => {
       const teams: Team[] = JSON.parse(event.data);
 

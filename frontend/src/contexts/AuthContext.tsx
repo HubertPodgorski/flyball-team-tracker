@@ -1,4 +1,4 @@
-import React, { createContext, useState } from "react";
+import React, { createContext, useCallback, useMemo, useState } from "react";
 import i18next from "i18next";
 import { Dog, User } from "../helpers/types";
 import { AuthContextType } from "./types";
@@ -46,28 +46,20 @@ const getInitialUser = (): User | null => {
 export const AuthContextProvider = ({ children }) => {
   const [user, setUser] = useState<User | null>(getInitialUser);
 
-  const clearUserData = () => {
+  const logout = useCallback(() => {
     setUser(null);
     localStorage.removeItem("user");
     ENTITY_QUERY_KEYS.forEach((queryKey) =>
       queryClient.removeQueries({ queryKey: [queryKey] })
     );
-  };
+  }, []);
 
-  const logout = () => {
-    clearUserData();
-  };
-
-  const login = (user) => {
+  const login = useCallback((user) => {
     setUser(user);
-  };
+  }, []);
 
-  // Also patches the cached localStorage blob, not just React state - a hard
-  // navigation (page.goto in e2e, an actual browser reload for real users)
-  // re-derives the initial `user` from that cached blob, not from whatever
-  // this render's React state holds, so a dogs sync that only touched state
-  // was invisible again the moment the page next reloaded.
-  const setUserDogs = (dogs: Dog[]) => {
+  // Also patches the cached localStorage blob - a hard reload re-derives from that, not React state.
+  const setUserDogs = useCallback((dogs: Dog[]) => {
     setUser((prevUser) => (prevUser ? { ...prevUser, dogs } : prevUser));
 
     const userLocalstorage = localStorage.getItem("user");
@@ -80,11 +72,10 @@ export const AuthContextProvider = ({ children }) => {
       "user",
       JSON.stringify({ ...parsed, user: { ...parsed.user, dogs } })
     );
-  };
+  }, []);
 
-  // Also patches the cached localStorage blob, not just React state - i18n
-  // reads the language from there synchronously on the next app boot.
-  const setUserLanguage = (language: "en" | "pl") => {
+  // Also patches the cached localStorage blob - i18n reads language from there on next boot.
+  const setUserLanguage = useCallback((language: "en" | "pl") => {
     setUser((prevUser) => (prevUser ? { ...prevUser, language } : prevUser));
     i18next.changeLanguage(language);
 
@@ -98,20 +89,13 @@ export const AuthContextProvider = ({ children }) => {
       "user",
       JSON.stringify({ ...parsed, user: { ...parsed.user, language } })
     );
-  };
+  }, []);
 
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        login,
-        logout,
-        setUser,
-        setUserDogs,
-        setUserLanguage,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+  // Stable reference - SseHandler's reconnect effect depends on setUserDogs, and an unstable one reopened the connection on every broadcast it processed.
+  const value = useMemo(
+    () => ({ user, login, logout, setUser, setUserDogs, setUserLanguage }),
+    [user, login, logout, setUserDogs, setUserLanguage]
   );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
