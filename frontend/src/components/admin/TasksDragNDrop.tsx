@@ -323,7 +323,10 @@ const TasksDragNDrop = ({
                               }}
                             >
                               {task.description && (
-                                <Typography variant={isMobile ? "body2" : "h5"}>
+                                <Typography
+                                  variant={isMobile ? "body2" : "h5"}
+                                  sx={{ marginRight: "24px" }}
+                                >
                                   {task.description}
                                 </Typography>
                               )}
