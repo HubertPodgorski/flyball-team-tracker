@@ -296,26 +296,27 @@
   },
   "pitch": {
     "intro": "Flyball Team Tracker pomaga klubowi planować treningi i zawody: kto przychodzi, które psy biegają które zadania i jak układane są składy startowe.",
-    "sections": {
-      "tasks": {
-        "title": "Zadania",
-        "body": "Tablica zadań treningowych z przeciąganiem, planowana na podstawie obecności psów."
+    "howItWorks": "Jak to działa",
+    "workflow": {
+      "addDogs": {
+        "title": "Dodaj swoje psy do klubu",
+        "body": "Każdy pies dostaje swoją kartę - notatki, wysokość skoku, crossy."
       },
-      "calendar": {
-        "title": "Kalendarz",
-        "body": "Treningi, zawody i zebrania klubu w jednym miejscu, z filtrem dat."
+      "buildTeams": {
+        "title": "Zbuduj drużyny i składy",
+        "body": "Pula do 6 psów na drużynę, dowolna liczba składów, każdy w swojej kolejności."
       },
-      "myDogs": {
-        "title": "Moje psy",
-        "body": "Notatki i crossy (przekazania między psami w składzie) każdego psa, opcjonalnie synchronizowane ze składem drużyny."
+      "addTasks": {
+        "title": "Dodaj zadania",
+        "body": "Tablica z przeciąganiem, planowana na podstawie tego, które psy są na treningu."
       },
-      "teams": {
-        "title": "Drużyny i składy",
-        "body": "Buduj pulę psów i układaj z niej składy startowe - wysokość skoku liczy się sama."
+      "setCrossPasses": {
+        "title": "Na treningu ustaw czasy crossów",
+        "body": "Podepnij zadanie pod skład i edytuj czasy między sąsiednimi psami od razu z poziomu tego zadania."
       },
-      "settings": {
-        "title": "Ustawienia",
-        "body": "Polski/angielski, zmiana hasła, reset hasła bez maila dla trenera."
+      "liveSync": {
+        "title": "Wszyscy widzą to na żywo",
+        "body": "Zmiana w składzie albo obecności pojawia się od razu u każdego, kto ma otwartą aplikację."
       }
     },
     "needCode": "Do rejestracji potrzebujesz kodu klubu od trenera.",
