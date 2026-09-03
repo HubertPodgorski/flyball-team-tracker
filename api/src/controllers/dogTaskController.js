@@ -1,96 +1,46 @@
 const DogTaskModel = require("../models/dogTaskModel");
+const { broadcast } = require("../sse");
 
-const mongoose = require("mongoose");
-const jwt = require("jsonwebtoken");
+const findClubDogTasks = (club) =>
+  DogTaskModel.find({ team: club }).sort({ createdAt: -1 });
 
-// get all dogTasks
-const getAllDogTasks = async (callback, userToken) => {
-  const { team } = jwt.decode(userToken);
+const getDogTasks = async (req, res) => {
+  const dogTasks = await findClubDogTasks(req.club);
 
-  const dogTasks = await DogTaskModel.find({ team }).sort({ createdAt: -1 });
-
-  callback(dogTasks);
+  res.status(200).json(dogTasks);
 };
 
-// get single dog task
-const getDogTaskById = async (received, callback) => {
-  const { _id } = received;
+const createDogTask = async (req, res) => {
+  const dogTask = await DogTaskModel.create({ ...req.body, team: req.club });
 
-  if (!mongoose.Types.ObjectId.isValid(_id)) {
-    return res.status(404).json({ error: "DOG_TASK_NOT_FOUND" });
-  }
-
-  const dogTask = await DogTaskModel.findById(_id);
-
-  callback(dogTask);
+  res.status(200).json(dogTask);
+  broadcast(req.club, "dog_tasks_updated", await findClubDogTasks(req.club));
 };
 
-// create new dog task
-const createDogTask = async (received, callback, io, userToken) => {
-  const { team } = jwt.decode(userToken);
-
-  const { name } = received;
-
-  const dogTask = await DogTaskModel.create({ name, team });
-
-  const allDogTasks = await DogTaskModel.find({ team });
-
-  callback("create_dog_task", dogTask);
-
-  io.to(team).emit("dog_tasks_updated", allDogTasks);
-};
-
-// delete dog task
-const deleteDogTaskById = async (received, io, userToken) => {
-  const { team } = jwt.decode(userToken);
-
-  const { _id } = received;
-
-  // TODO: WS handler for dog not found
-  // if (!mongoose.Types.ObjectId.isValid(_id)) {
-  //   return res.status(404).json({ error: "DOG_NOT_FOUND" });
-  // }
-
-  await DogTaskModel.findOneAndDelete({ _id });
-
-  // TODO: WS handler for dog not found
-
-  const allDogTasks = await DogTaskModel.find({ team });
-  io.to(team).emit("dog_tasks_updated", allDogTasks);
-};
-
-// update dog
-const updateDogTaskById = async (received, callback, io, userToken) => {
-  const { team } = jwt.decode(userToken);
-
-  const { _id } = received;
-
-  // TODO: WS handler for dog not found
-  // if (!mongoose.Types.ObjectId.isValid(id)) {
-  //   return res.status(404).json({ error: "DOG_NOT_FOUND" });
-  // }
+const updateDogTask = async (req, res) => {
+  const { _id, ...data } = req.body;
 
   const dogTask = await DogTaskModel.findOneAndUpdate(
-    { _id: _id },
-    { ...received },
+    { _id, team: req.club },
+    { ...data, team: req.club },
     { returnDocument: "after" }
   );
 
-  // TODO: WS handler for dog not found
-  // if (!dog) {
-  //   return res.status(404).json({ error: "DOG_NOT_FOUND" });
-  // }
+  if (!dogTask) {
+    return res.status(404).json({ error: "NOT_FOUND" });
+  }
 
-  const allDogTasks = await DogTaskModel.find({ team });
-
-  callback(dogTask);
-  io.to(team).emit("dog_tasks_updated", allDogTasks);
+  res.status(200).json(dogTask);
+  broadcast(req.club, "dog_tasks_updated", await findClubDogTasks(req.club));
 };
 
-module.exports = {
-  createDogTask,
-  getAllDogTasks,
-  getDogTaskById,
-  deleteDogTaskById,
-  updateDogTaskById,
+const deleteDogTask = async (req, res) => {
+  const { id } = req.params;
+
+  await DogTaskModel.findOneAndDelete({ _id: id, team: req.club });
+
+  res.status(200).json({ ok: true });
+  broadcast(req.club, "dog_tasks_updated", await findClubDogTasks(req.club));
 };
+
+module.exports = { getDogTasks, createDogTask, updateDogTask, deleteDogTask };

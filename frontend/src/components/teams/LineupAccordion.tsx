@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { Accordion, AccordionDetails, Box, IconButton, Typography } from "@mui/material";
+import { useTranslation } from "react-i18next";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import DeleteIcon from "@mui/icons-material/Delete";
 import FixedHeightAccordionSummary from "../FixedHeightAccordionSummary";
 import { Dog, Lineup, LineupCrossPass } from "../../helpers/types";
+import { formatLineupLabel } from "../../helpers/lineup";
 import DogChain from "./DogChain";
 import LineupNameField from "./LineupNameField";
 import LineupDogsOrder from "./LineupDogsOrder";
@@ -26,6 +28,7 @@ const LineupAccordion = ({
   onDogsChange,
   onCrossPassesChange,
 }: Props) => {
+  const { t } = useTranslation();
   // Controlled - avoids the CSS ".Mui-expanded &" trick.
   const [expanded, setExpanded] = useState(false);
 
@@ -39,7 +42,7 @@ const LineupAccordion = ({
     >
       <FixedHeightAccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ paddingLeft: 0, paddingRight: 0 }}>
         <Box sx={{ display: "flex", flexDirection: "column", flexGrow: 1, minWidth: 0, gap: 0.5 }}>
-          <Typography>{lineup.name || "Lineup"}</Typography>
+          <Typography>{formatLineupLabel(lineup, t("pages.teams.lineupFallback"))}</Typography>
 
           <DogChain dogs={lineup.dogs} variant="caption" color="text.secondary" noWrap />
         </Box>

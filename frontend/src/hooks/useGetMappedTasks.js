@@ -6,11 +6,11 @@ import {
   mapTasksForAdminPanel,
 } from "../helpers/tasks";
 import { useAppContext } from "./useAppContext";
-import { useSocketContext } from "./useSocketContext";
+import { useReorderTasksMutation } from "../queries/tasks";
 
 export const useGetMappedTasks = (adminPanel, isDragging = false) => {
   const { tasks, setTasks } = useAppContext();
-  const { socket } = useSocketContext();
+  const reorderTasksMutation = useReorderTasksMutation();
 
   const [mappedTasks, setMappedTasks] = useState([]);
 
@@ -26,13 +26,14 @@ export const useGetMappedTasks = (adminPanel, isDragging = false) => {
       const correctedTasks = applyTaskUpdates(tasks, compactionUpdates);
 
       setTasks(correctedTasks);
-      socket.emit("update_tasks_order", { tasks: compactionUpdates });
+      reorderTasksMutation.mutate(compactionUpdates);
       setMappedTasks(mapTasksForAdminPanel(correctedTasks));
       return;
     }
 
     setMappedTasks(adminPanel ? mapTasksForAdminPanel(tasks) : mapTasks(tasks));
-  }, [tasks, adminPanel, isDragging, setTasks, socket]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tasks, adminPanel, isDragging, setTasks]);
 
   return { mappedTasks, setMappedTasks };
 };

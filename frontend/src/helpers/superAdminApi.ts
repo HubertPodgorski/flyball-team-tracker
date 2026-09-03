@@ -54,3 +54,15 @@ export const deleteSuperAdminItem = async (
     params: { team },
   });
 };
+
+export const resetSuperAdminUserPassword = async (
+  _id: string
+): Promise<{ temporaryPassword: string }> => {
+  const { data } = await axios.patch(
+    `${apiSuffix}/super-admin/users/${_id}/reset-password`,
+    {},
+    authHeaders()
+  );
+
+  return data;
+};

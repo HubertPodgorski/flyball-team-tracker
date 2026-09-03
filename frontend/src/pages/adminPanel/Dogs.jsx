@@ -1,17 +1,18 @@
 import React from "react";
 import DogForm from "../forms/DogForm";
-import { IconButton, List, ListItem, ListItemButton } from "@mui/material";
-import CenteredContent from "../../components/CenteredContent";
+import { Box, Card, IconButton, Typography, alpha, useTheme } from "@mui/material";
+import { useTranslation } from "react-i18next";
 import AddFab, { FAB_CONTENT_CLEARANCE } from "../../components/AddFab";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useFormHelpers } from "../../hooks/useFormHelpers";
-import { useAppContext } from "../../hooks/useAppContext";
 import { useConfirmModal } from "../../hooks/useConfirmModal";
-import { useSocketContext } from "../../hooks/useSocketContext";
+import { useDogsQuery, useDeleteDogMutation } from "../../queries/dogs";
 
 const Dogs = () => {
-  const { socket } = useSocketContext();
-  const { dogs } = useAppContext();
+  const theme = useTheme();
+  const { t } = useTranslation();
+  const { data: dogs = [] } = useDogsQuery();
+  const deleteDogMutation = useDeleteDogMutation();
   const confirm = useConfirmModal();
 
   const {
@@ -27,38 +28,62 @@ const Dogs = () => {
   });
 
   const onDeleteClick = async (id) => {
-    await confirm();
+    try {
+      await confirm();
+    } catch {
+      return;
+    }
 
-    socket.emit("delete_dog", { _id: id });
+    deleteDogMutation.mutate(id);
   };
 
   return (
     <>
-      <CenteredContent sx={{ marginBottom: `${FAB_CONTENT_CLEARANCE}px` }}>
-        <List>
-          {dogs.map(({ name, _id }) => (
-            <ListItem
-              divider
-              key={_id}
-              onClick={() => onEditClick({ name }, _id)}
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 1,
+          marginBottom: `${FAB_CONTENT_CLEARANCE}px`,
+        }}
+      >
+        {dogs.map(({ name, _id, jumpHeight }) => (
+          <Card
+            key={_id}
+            onClick={() => onEditClick({ name, jumpHeight }, _id)}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: theme.spacing(1, 2),
+              cursor: "pointer",
+              backgroundColor: alpha(theme.palette.background.paper, 0.75),
+              backdropFilter: "blur(6px)",
+            }}
+          >
+            <Box>
+              <Typography>{name}</Typography>
+
+              {jumpHeight !== undefined && (
+                <Typography variant="caption" color="text.secondary">
+                  {t("pages.myDogs.jumpHeight", { height: jumpHeight })}
+                </Typography>
+              )}
+            </Box>
+
+            <IconButton
+              color="error"
+              onClick={(event) => {
+                event.stopPropagation();
+
+                onDeleteClick(_id);
+              }}
             >
-              {/*TODO: do edit*/}
-              <ListItemButton>{name}</ListItemButton>
-
-              <IconButton
-                color="error"
-                onClick={(event) => {
-                  event.stopPropagation();
-
-                  onDeleteClick(_id);
-                }}
-              >
-                <DeleteIcon />
-              </IconButton>
-            </ListItem>
-          ))}
-        </List>
-      </CenteredContent>
+              <DeleteIcon />
+            </IconButton>
+          </Card>
+        ))}
+      </Box>
 
       <AddFab onClick={() => setFormOpen(true)} />
 

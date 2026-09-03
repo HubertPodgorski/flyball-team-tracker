@@ -7,7 +7,14 @@ export default defineConfig({
   testDir: "./tests",
   fullyParallel: false,
   workers: 1,
-  retries: 0,
+  // A small CI-only retry budget absorbs runner-environment flakiness
+  // (network hiccups, etc.) without masking real failures during local
+  // iteration, where retries stay off.
+  retries: process.env.CI ? 1 : 0,
+  // html so a failed CI run has a report worth uploading as an artifact -
+  // list locally, since html's default "open a browser tab" behavior would
+  // fire on every single local run otherwise.
+  reporter: process.env.CI ? "html" : "list",
   timeout: 30_000,
   globalSetup: require.resolve("./global-setup"),
   use: {

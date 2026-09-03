@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useId, useState } from "react";
 import {
   Box,
   FormControl,
@@ -10,6 +10,7 @@ import {
   ToggleButtonGroup,
 } from "@mui/material";
 import type { AnyFieldApi } from "@tanstack/react-form";
+import { useTranslation } from "react-i18next";
 import { FormFieldProps } from "./utils";
 import ClearableTextField from "./ClearableTextField";
 
@@ -88,6 +89,13 @@ interface InnerProps {
 
 // Meter anchor +/- offset, time-picker style.
 const FormStartingPositionFieldInner = ({ field, label }: InnerProps) => {
+  const { t } = useTranslation();
+  // Not `${label}-meters`/`${label}-offset` - aria-labelledby is a
+  // space-separated list of ids, so an id built from label text containing
+  // a space (e.g. "Starting position-meters") silently splits into two
+  // bogus references and the Select ends up with no accessible name at all.
+  const metersLabelId = useId();
+  const offsetLabelId = useId();
   const value: string = field.state.value ?? "";
   const parsed = parseValue(value);
 
@@ -106,9 +114,9 @@ const FormStartingPositionFieldInner = ({ field, label }: InnerProps) => {
     <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
       <Box sx={{ display: "flex", gap: 1, width: "100%", alignItems: "center" }}>
         <FormControl sx={{ flex: 1 }}>
-          <InputLabel id={`${label}-meters`}>{label}</InputLabel>
+          <InputLabel id={metersLabelId}>{label}</InputLabel>
           <Select
-            labelId={`${label}-meters`}
+            labelId={metersLabelId}
             label={label}
             value={meters}
             onChange={(event) => updateValue(Number(event.target.value), sign, offsetCm)}
@@ -137,17 +145,17 @@ const FormStartingPositionFieldInner = ({ field, label }: InnerProps) => {
         </ToggleButtonGroup>
 
         <FormControl sx={{ flex: 1 }}>
-          <InputLabel id={`${label}-offset`}>Offset</InputLabel>
+          <InputLabel id={offsetLabelId}>{t("inputs.startingPosition.offset")}</InputLabel>
           <Select
-            labelId={`${label}-offset`}
-            label="Offset"
+            labelId={offsetLabelId}
+            label={t("inputs.startingPosition.offset")}
             value={offsetCm}
             onChange={(event) => updateValue(meters, sign, Number(event.target.value))}
             MenuProps={{ sx: { maxHeight: "50vh" } }}
           >
             <MenuItem value={0}>—</MenuItem>
 
-            <ListSubheader>Feet</ListSubheader>
+            <ListSubheader>{t("inputs.startingPosition.feet")}</ListSubheader>
 
             {FOOT_OFFSETS.map(({ cm, label: offsetLabel }) => (
               <MenuItem key={cm} value={cm}>
@@ -155,7 +163,7 @@ const FormStartingPositionFieldInner = ({ field, label }: InnerProps) => {
               </MenuItem>
             ))}
 
-            <ListSubheader>Centimeters</ListSubheader>
+            <ListSubheader>{t("inputs.startingPosition.centimeters")}</ListSubheader>
 
             {CM_OFFSETS.map(({ cm, label: offsetLabel }) => (
               <MenuItem key={cm} value={cm}>
@@ -170,7 +178,7 @@ const FormStartingPositionFieldInner = ({ field, label }: InnerProps) => {
         value={value}
         onChange={(newValue) => field.handleChange(newValue)}
         onBlur={field.handleBlur}
-        placeholder="e.g. 16m - 25cm, or a custom note"
+        placeholder={t("inputs.startingPosition.placeholder")}
         size="small"
       />
     </Box>

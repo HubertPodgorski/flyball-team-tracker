@@ -1,6 +1,8 @@
 import React from "react";
 import {
   AppBar,
+  BottomNavigation,
+  BottomNavigationAction,
   Box,
   Divider,
   Drawer,
@@ -20,13 +22,15 @@ import TextSnippetIcon from "@mui/icons-material/TextSnippet";
 import GroupsIcon from "@mui/icons-material/Groups";
 
 import { Link, useLocation } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { trainerRoutes, userRoutes } from "../helpers/routesAndPaths";
 import LoginLogoutListButton from "./LoginLogoutListButton";
 import FormatListNumberedIcon from "@mui/icons-material/FormatListNumbered";
 import { useIsTrainer } from "../hooks/useIsTrainer";
 import { useIsSuperAdmin } from "../hooks/useIsSuperAdmin";
-import SaveIcon from "@mui/icons-material/Save";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
+import SettingsIcon from "@mui/icons-material/Settings";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 
 const drawerWidth = 240;
 
@@ -52,8 +56,42 @@ const NavListItem = ({ to, icon, label }) => {
   );
 };
 
+const UserTabBar = () => {
+  const { pathname } = useLocation();
+  const { t } = useTranslation();
+
+  // Every logged-in user's own nav (not gated by role) - lives in the bottom
+  // tab row now, not the drawer. Trainer/super-admin sections stay drawer-only.
+  const userTabs = [
+    { to: userRoutes.tasks, icon: <FormatListNumberedIcon />, label: t("nav.tasks") },
+    { to: userRoutes.calendar, icon: <CalendarMonthIcon />, label: t("nav.calendar") },
+    { to: userRoutes.myDogs, icon: <PetsIcon />, label: t("nav.myDogs") },
+    { to: userRoutes.teams, icon: <GroupsIcon />, label: t("nav.teams") },
+  ];
+
+  return (
+    <BottomNavigation
+      value={pathname}
+      showLabels
+      sx={{ flexGrow: 1, backgroundColor: "transparent" }}
+    >
+      {userTabs.map(({ to, icon, label }) => (
+        <BottomNavigationAction
+          key={to}
+          component={Link}
+          to={to}
+          value={to}
+          icon={icon}
+          label={label}
+        />
+      ))}
+    </BottomNavigation>
+  );
+};
+
 const BottomNavBar = () => {
   const [mobileOpen, setMobileOpen] = React.useState(false);
+  const { t } = useTranslation();
 
   const onDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -65,118 +103,95 @@ const BottomNavBar = () => {
   const drawer = (
     <Box onClick={onDrawerToggle} sx={{ textAlign: "center" }}>
       <List>
-        {isTrainer && <MenuListItemStyled>User views</MenuListItemStyled>}
-
-        <NavListItem
-          to={userRoutes.tasks}
-          icon={<FormatListNumberedIcon />}
-          label="Tasks"
-        />
-        <NavListItem
-          to={userRoutes.calendar}
-          icon={<CalendarMonthIcon />}
-          label="Calendar"
-        />
-        <NavListItem
-          to={userRoutes.myDogs}
-          icon={<PetsIcon />}
-          label="My Dogs"
-        />
-        <NavListItem
-          to={userRoutes.teams}
-          icon={<GroupsIcon />}
-          label="Teams"
-        />
-
         {isTrainer && (
           <>
-            <Divider />
-
-            <MenuListItemStyled>Trainer</MenuListItemStyled>
+            <MenuListItemStyled>{t("nav.trainerSection")}</MenuListItemStyled>
 
             <NavListItem
               to={trainerRoutes.tasks}
               icon={<FormatListBulletedIcon />}
-              label="Tasks"
+              label={t("nav.tasks")}
             />
             <NavListItem
               to={trainerRoutes.dogs}
               icon={<PetsIcon />}
-              label="Dogs"
+              label={t("nav.dogs")}
             />
             <NavListItem
               to={trainerRoutes.dogTasks}
               icon={<TextSnippetIcon />}
-              label="Dog tasks"
+              label={t("nav.dogTasks")}
             />
             <NavListItem
               to={trainerRoutes.events}
               icon={<CalendarMonthIcon />}
-              label="Events"
-            />
-            <NavListItem
-              to={trainerRoutes.eventTemplates}
-              icon={<SaveIcon />}
-              label="Event templates"
+              label={t("nav.events")}
             />
             <NavListItem
               to={trainerRoutes.users}
               icon={<PersonIcon />}
-              label="Users"
+              label={t("nav.users")}
             />
             <NavListItem
               to={trainerRoutes.teams}
               icon={<GroupsIcon />}
-              label="Teams"
+              label={t("nav.teams")}
             />
           </>
         )}
 
         {isSuperAdmin && (
           <>
-            <Divider />
+            {isTrainer && <Divider />}
 
-            <MenuListItemStyled>Super Admin</MenuListItemStyled>
+            <MenuListItemStyled>{t("nav.superAdminSection")}</MenuListItemStyled>
 
             <NavListItem
               to="/club-switch"
               icon={<SwapHorizIcon />}
-              label="Club switch"
+              label={t("nav.clubSwitch")}
             />
             <NavListItem
               to="/super-admin/users"
               icon={<PersonIcon />}
-              label="All users"
+              label={t("nav.allUsers")}
             />
             <NavListItem
               to="/super-admin/dogs"
               icon={<PetsIcon />}
-              label="All dogs"
+              label={t("nav.allDogs")}
             />
             <NavListItem
               to="/super-admin/dog-tasks"
               icon={<TextSnippetIcon />}
-              label="All dog tasks"
+              label={t("nav.allDogTasks")}
             />
             <NavListItem
               to="/super-admin/events"
               icon={<CalendarMonthIcon />}
-              label="All events"
-            />
-            <NavListItem
-              to="/super-admin/event-templates"
-              icon={<SaveIcon />}
-              label="All event templates"
+              label={t("nav.allEvents")}
             />
             <NavListItem
               to="/super-admin/teams"
               icon={<GroupsIcon />}
-              label="All teams"
+              label={t("nav.allTeams")}
             />
           </>
         )}
 
         <Divider />
+
+        <NavListItem
+          to={userRoutes.settings}
+          icon={<SettingsIcon />}
+          label={t("nav.settings")}
+        />
+
+        <NavListItem
+          to={userRoutes.about}
+          icon={<InfoOutlinedIcon />}
+          label={t("about.navLabel")}
+        />
 
         <LoginLogoutListButton />
       </List>
@@ -217,6 +232,7 @@ const BottomNavBar = () => {
       </Box>
 
       <Toolbar
+        disableGutters
         sx={{
           backgroundColor: (theme) => theme.palette.background.paper,
           // MUI overrides minHeight again at this breakpoint - restate it.
@@ -226,12 +242,12 @@ const BottomNavBar = () => {
           },
         }}
       >
-        <Box sx={{ flexGrow: 1 }} />
+        <UserTabBar />
 
         <IconButton
           color="inherit"
-          aria-label="open drawer"
-          edge="start"
+          aria-label={t("nav.openDrawer")}
+          sx={{ marginRight: 1 }}
           onClick={onDrawerToggle}
         >
           <MenuIcon />

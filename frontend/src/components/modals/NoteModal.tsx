@@ -1,11 +1,13 @@
 import React, { useEffect } from "react";
 import { Dog } from "../../helpers/types";
 import { Button, DialogActions } from "@mui/material";
-import { useSocketContext } from "../../hooks/useSocketContext";
+import { useUpdateDogMutation } from "../../queries/dogs";
 import { useForm } from "@tanstack/react-form";
+import { useTranslation } from "react-i18next";
 import FormModal from "./../FormModal.jsx";
 import FormGrid from "./../FormGrid.jsx";
 import FormTextField from "./../inputs/FormTextField.jsx";
+import { useSubmitGuard } from "../../hooks/useSubmitGuard";
 
 interface Props {
   open: boolean;
@@ -18,20 +20,19 @@ interface FormData {
 }
 
 const NoteModal = ({ dog, open, onClose }: Props) => {
-  const { socket } = useSocketContext();
+  const { t } = useTranslation();
+  const updateDogMutation = useUpdateDogMutation();
+  const submitGuard = useSubmitGuard();
 
   const form = useForm({
     defaultValues: { note: dog?.note || "" } as FormData,
     onSubmit: async ({ value: { note } }) => {
       if (!dog) return;
 
-      await socket.emit(
-        "update_dog",
+      updateDogMutation.mutate(
         { _id: dog._id, note: note || "" },
-        () => onClose()
+        { onSuccess: onClose }
       );
-
-      // TODO: error handling eventually?
     },
   });
 
@@ -45,22 +46,25 @@ const NoteModal = ({ dog, open, onClose }: Props) => {
     <FormModal
       open={open}
       onClose={onClose}
-      title={`${dog?.name ?? "Dog"}'s notes`}
+      title={t("modals.note.title", {
+        name: dog?.name ?? t("modals.note.fallbackName"),
+      })}
     >
       <FormGrid>
-        <FormTextField form={form} name="note" label="Notes" rows={5} />
+        <FormTextField form={form} name="note" label={t("modals.note.notes")} rows={5} />
 
         <DialogActions sx={{ padding: 0 }}>
           <Button size="medium" variant="outlined" onClick={onClose}>
-            Cancel
+            {t("common.cancel")}
           </Button>
 
           <Button
             size="medium"
             variant="contained"
-            onClick={() => form.handleSubmit()}
+            disabled={updateDogMutation.isPending}
+            onClick={() => submitGuard(() => form.handleSubmit())}
           >
-            Save notes
+            {t("modals.note.save")}
           </Button>
         </DialogActions>
       </FormGrid>

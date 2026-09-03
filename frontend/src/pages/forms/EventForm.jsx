@@ -1,16 +1,27 @@
 import React, { useEffect } from "react";
 import { Button, DialogActions } from "@mui/material";
-import { useForm } from "@tanstack/react-form";
+import { useForm, useStore } from "@tanstack/react-form";
+import { useTranslation } from "react-i18next";
 import FormTextField from "../../components/inputs/FormTextField";
 import FormModal from "../../components/FormModal";
 import FormGrid from "../../components/FormGrid";
 import FormDatePicker from "../../components/inputs/FormDatePicker";
-import { eventTypeOptions } from "../../components/inputs/consts";
+import { getEventTypeOptions } from "../../components/inputs/consts";
 import FormSelect from "../../components/inputs/FormSelect";
-import { TEAMS } from "../../helpers/teams";
-import { useSocketContext } from "../../hooks/useSocketContext";
+import { CLUBS } from "../../helpers/teams";
+import { useCreateEventMutation, useUpdateEventMutation } from "../../queries/events";
+import { useSubmitGuard } from "../../hooks/useSubmitGuard";
 
-const teamOptions = TEAMS.map((team) => ({ value: team, label: team }));
+const teamOptions = CLUBS.map((club) => ({ value: club, label: club }));
+
+// Single source for both useForm's defaultValues and the reset effect below
+// - see DogTaskForm.jsx for why keeping these in sync matters.
+const mapToFormValues = ({ name, date, type, team }) => ({
+  name,
+  date,
+  type,
+  team: team ?? "",
+});
 
 const EventForm = ({
   open,
@@ -19,10 +30,13 @@ const EventForm = ({
   editingId,
   onSubmitOverride,
 }) => {
-  const { socket } = useSocketContext();
+  const { t } = useTranslation();
+  const createEventMutation = useCreateEventMutation();
+  const updateEventMutation = useUpdateEventMutation();
+  const submitGuard = useSubmitGuard();
 
   const form = useForm({
-    defaultValues: initialData,
+    defaultValues: mapToFormValues(initialData),
     onSubmit: async ({ value: values }) => {
       // Team reassignment is super-admin only (onSubmitOverride).
       if (onSubmitOverride) {
@@ -46,23 +60,21 @@ const EventForm = ({
       };
 
       if (editingId) {
-        socket.emit("update_event", { ...data, _id: editingId }, () => {
-          handleClose();
-        });
+        updateEventMutation.mutate(
+          { ...data, _id: editingId },
+          { onSuccess: handleClose }
+        );
       } else {
-        socket.emit("add_event", data, () => {
-          handleClose();
-        });
+        createEventMutation.mutate(data, { onSuccess: handleClose });
       }
-
-      // TODO: error handling eventually?
     },
   });
 
-  useEffect(() => {
-    const { name, date, type, team } = initialData;
+  // See DogForm.jsx for why both flags are needed.
+  const isSubmitting = useStore(form.store, (state) => state.isSubmitting);
 
-    form.reset({ name, date, type, team: team ?? "" });
+  useEffect(() => {
+    form.reset(mapToFormValues(initialData));
   }, [initialData, form]);
 
   const handleClose = () => {
@@ -71,25 +83,29 @@ const EventForm = ({
   };
 
   return (
-    <FormModal onClose={handleClose} open={open} title="Event">
+    <FormModal
+      onClose={handleClose}
+      open={open}
+      title={editingId ? t("forms.event.editTitle") : t("forms.event.addTitle")}
+    >
       <FormGrid>
         <FormSelect
           form={form}
           multi={false}
           name="type"
-          options={eventTypeOptions}
-          label="Event type"
+          options={getEventTypeOptions(t)}
+          label={t("forms.event.type")}
         />
 
-        <FormTextField form={form} name="name" label="Name" required />
+        <FormTextField form={form} name="name" label={t("common.name")} required />
 
-        <FormDatePicker form={form} name="date" label="Date" />
+        <FormDatePicker form={form} name="date" label={t("common.date")} />
 
         {onSubmitOverride && (
           <FormSelect
             form={form}
             name="team"
-            label="Team"
+            label={t("common.team")}
             multi={false}
             options={teamOptions}
           />
@@ -97,15 +113,18 @@ const EventForm = ({
 
         <DialogActions sx={{ padding: 0 }}>
           <Button size="medium" variant="outlined" onClick={handleClose}>
-            Cancel
+            {t("common.cancel")}
           </Button>
 
           <Button
             size="medium"
             variant="contained"
-            onClick={() => form.handleSubmit()}
+            disabled={
+              isSubmitting || createEventMutation.isPending || updateEventMutation.isPending
+            }
+            onClick={() => submitGuard(() => form.handleSubmit())}
           >
-            Submit
+            {t("common.submit")}
           </Button>
         </DialogActions>
       </FormGrid>

@@ -1,5 +1,6 @@
 import React from "react";
 import { Box, useTheme } from "@mui/material";
+import { useTranslation } from "react-i18next";
 import { useFormHelpers } from "../hooks/useFormHelpers";
 import TaskForm from "../pages/forms/TaskForm";
 
@@ -11,6 +12,7 @@ interface Props {
 
 const AddTaskHereButton = ({ columnIndex, rowIndex, positionIndex }: Props) => {
   const theme = useTheme();
+  const { t } = useTranslation();
   const {
     editingId: taskEditingId,
     formOpen: taskFormOpen,
@@ -38,7 +40,7 @@ const AddTaskHereButton = ({ columnIndex, rowIndex, positionIndex }: Props) => {
         }}
         onClick={() => setTaskFormOpen(true)}
       >
-        Add task here
+        {t("tasksGrid.addTaskHere")}
       </Box>
 
       <TaskForm

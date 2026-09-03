@@ -6,19 +6,3 @@ export const registerServiceWorker = async () => {
 
   throw Error("serviceworker not supported");
 };
-
-export const subscribe = async (socket, setSubscriptionDetails) => {
-  const serviceWorker = await navigator.serviceWorker.ready;
-
-  const push = await serviceWorker.pushManager.subscribe({
-    userVisibleOnly: true,
-    applicationServerKey:
-      "BMvqn2yS-nL3Z5J6DeiHGCnP3nw72L21vyftP2YePMTnXIVMiBggqxkPFYpMYXKuKinLPE8IRRCYhiwbJMgHTh8",
-  });
-
-  socket.emit("save_subscription", push, (subscriptionDetails) => {
-    if (subscriptionDetails) {
-      setSubscriptionDetails(subscriptionDetails);
-    }
-  });
-};

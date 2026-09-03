@@ -5,14 +5,20 @@ const { addClient, removeClient } = require("../sse");
 const router = express.Router();
 
 // Token in query string - EventSource can't set headers.
-router.get("/", (req, res) => {
-  const decoded = jwt.decode(req.query.token);
+const streamHandler = (req, res) => {
+  // Same requirement as decodeToken.js: verify the signature, not just parse
+  // the payload. jwt.decode() alone would let anyone hand-craft a token
+  // claiming any club and subscribe to that club's live broadcast feed -
+  // this route was missed when decodeToken.js got the equivalent fix.
+  let decoded;
 
-  if (!decoded) {
+  try {
+    decoded = jwt.verify(req.query.token, process.env.SECRET);
+  } catch (e) {
     return res.status(401).end();
   }
 
-  const { team } = decoded;
+  const { club } = decoded;
 
   res.writeHead(200, {
     "Content-Type": "text/event-stream",
@@ -21,11 +27,14 @@ router.get("/", (req, res) => {
   });
   res.write("\n");
 
-  addClient(team, res);
+  addClient(club, res);
 
   req.on("close", () => {
-    removeClient(team, res);
+    removeClient(club, res);
   });
-});
+};
+
+router.get("/", streamHandler);
 
 module.exports = router;
+module.exports.streamHandler = streamHandler;

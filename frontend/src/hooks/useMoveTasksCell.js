@@ -1,10 +1,10 @@
 import { getMappedItemsToUpdate } from "../helpers/dragNDrop";
 import { applyTaskUpdates, getRowCompactionUpdates } from "../helpers/tasks";
 import { useAppContext } from "./useAppContext";
-import { useSocketContext } from "./useSocketContext";
+import { useReorderTasksMutation } from "../queries/tasks";
 
 export const useMoveTasksCell = () => {
-  const { socket } = useSocketContext();
+  const reorderTasksMutation = useReorderTasksMutation();
   const { tasks, setTasks } = useAppContext();
 
   return (result, mappedTasks) => {
@@ -40,8 +40,6 @@ export const useMoveTasksCell = () => {
 
     setTasks(applyTaskUpdates(updatedTasksListWithChanges, compactionUpdates));
 
-    socket.emit("update_tasks_order", {
-      tasks: [...mappedItemsToUpdate, ...compactionUpdates],
-    });
+    reorderTasksMutation.mutate([...mappedItemsToUpdate, ...compactionUpdates]);
   };
 };

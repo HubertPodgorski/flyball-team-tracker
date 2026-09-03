@@ -1,5 +1,6 @@
 // Static for now - move to a DB-backed CMS (super-admin managed) later.
-const TEAMS = [
+// Values are real club identifiers (still stored as the `team` field) - not renamed here, that's a data migration.
+const CLUBS = [
   "DZIKIE_GZIKI",
   "FLYVENGERS",
   "DZIKIE_GZIKI_NABOR",
@@ -7,4 +8,4 @@ const TEAMS = [
   "TEST_TEAM",
 ];
 
-module.exports = { TEAMS };
+module.exports = { CLUBS };

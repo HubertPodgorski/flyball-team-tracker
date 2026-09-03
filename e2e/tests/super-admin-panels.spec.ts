@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../helpers/fixtures";
 import { uniqueEmail } from "../helpers/testData";
 import { promoteToTrainer, promoteToSuperAdmin } from "../helpers/db";
 import { login, logout, signupAndLoginAsTrainer } from "../helpers/auth";
@@ -65,7 +65,7 @@ test("super-admin dog-tasks panel lists across teams, filters by team, and suppo
 
   // Filter down to one team - the other team's row and the Team column
   // both disappear.
-  await page.getByRole("combobox", { name: "Team" }).click();
+  await page.getByRole("combobox", { name: "Club" }).click();
   await page.getByRole("option", { name: "TEST_TEAM", exact: true }).click();
 
   await expect(page.getByText(teamATaskName)).toBeVisible();

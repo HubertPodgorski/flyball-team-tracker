@@ -1,0 +1,126 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: 24
+
+jobs:
+  backend-tests:
+    name: Backend tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - uses: actions/checkout@v4
+
+      # Must come before setup-node: with cache: yarn below, setup-node
+      # shells out to yarn itself to resolve the cache directory - before
+      # corepack is enabled, that hits the runner's preinstalled Yarn
+      # Classic (1.x), which refuses to run at all against a repo pinning
+      # packageManager to Yarn 4.
+      - run: corepack enable
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
+          cache-dependency-path: api/yarn.lock
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      # mongodb-memory-server spins up its own in-memory Mongo per run -
+      # no external DB service or secrets needed.
+      - name: Run tests
+        run: yarn test
+
+  frontend-checks:
+    name: Frontend lint, typecheck, tests, build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      # See backend-tests' identical step for why this comes before setup-node.
+      - run: corepack enable
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
+          cache-dependency-path: frontend/yarn.lock
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Lint
+        run: yarn lint
+
+      - name: Unit tests
+        run: yarn test
+
+      # Runs vite build then tsc --noEmit (see package.json) - also the step
+      # that generates routeTree.gen.ts, gitignored and otherwise absent on
+      # a fresh checkout.
+      - name: Typecheck & build
+        run: yarn build
+
+  e2e-tests:
+    name: End-to-end tests
+    runs-on: ubuntu-latest
+    needs: [backend-tests, frontend-checks]
+    steps:
+      - uses: actions/checkout@v4
+
+      # See backend-tests' identical step for why this comes before setup-node.
+      - run: corepack enable
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
+          cache-dependency-path: |
+            api/yarn.lock
+            frontend/yarn.lock
+            e2e/yarn.lock
+
+      # e2e/global-setup.ts spawns the real api/src/server.js and starts
+      # frontend's own dev server directly - both need their real
+      # dependencies installed, not just e2e's own.
+      - name: Install API dependencies
+        working-directory: api
+        run: yarn install --immutable
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: yarn install --immutable
+
+      - name: Install e2e dependencies
+        working-directory: e2e
+        run: yarn install --immutable
+
+      - name: Install Playwright browsers
+        working-directory: e2e
+        run: yarn playwright install --with-deps
+
+      - name: Run e2e tests
+        working-directory: e2e
+        run: yarn test
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: e2e/playwright-report/
+          retention-days: 7
+          if-no-files-found: ignore

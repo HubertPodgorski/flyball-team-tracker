@@ -15,8 +15,9 @@ import {
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useSnackbar } from "notistack";
+import { useTranslation } from "react-i18next";
 import AddFab, { FAB_CONTENT_CLEARANCE } from "../../components/AddFab";
-import { TEAMS } from "../../helpers/teams";
+import { CLUBS } from "../../helpers/teams";
 import {
   createSuperAdminItem,
   deleteSuperAdminItem,
@@ -56,6 +57,7 @@ const SuperAdminEntityGrid = ({
   const [formExtraProps, setFormExtraProps] = useState<object>({});
   const confirm = useConfirmModal();
   const { enqueueSnackbar } = useSnackbar();
+  const { t } = useTranslation();
 
   const {
     formInitialData,
@@ -74,7 +76,7 @@ const SuperAdminEntityGrid = ({
 
       setRows(data);
     } catch {
-      enqueueSnackbar("Failed to load data", { variant: "error" });
+      enqueueSnackbar(t("pages.teams.loadFailed"), { variant: "error" });
     } finally {
       setLoading(false);
     }
@@ -100,7 +102,7 @@ const SuperAdminEntityGrid = ({
     try {
       setFormExtraProps((await resolveFormExtraProps?.(team)) ?? {});
     } catch {
-      enqueueSnackbar("Failed to load data", { variant: "error" });
+      enqueueSnackbar(t("pages.teams.loadFailed"), { variant: "error" });
       return;
     }
 
@@ -111,7 +113,7 @@ const SuperAdminEntityGrid = ({
     try {
       setFormExtraProps((await resolveFormExtraProps?.(row.team)) ?? {});
     } catch {
-      enqueueSnackbar("Failed to load data", { variant: "error" });
+      enqueueSnackbar(t("pages.teams.loadFailed"), { variant: "error" });
       return;
     }
 
@@ -127,7 +129,7 @@ const SuperAdminEntityGrid = ({
         await createSuperAdminItem(entity, data);
       }
     } catch {
-      enqueueSnackbar("Failed to save", { variant: "error" });
+      enqueueSnackbar(t("pages.teams.saveFailed"), { variant: "error" });
       return;
     }
 
@@ -152,22 +154,22 @@ const SuperAdminEntityGrid = ({
     ...columns.map(withColumnSizing),
     ...(team
       ? []
-      : [withColumnSizing({ field: "team", headerName: "Club" })]),
+      : [withColumnSizing({ field: "team", headerName: t("common.club") })]),
     withColumnSizing({
       field: "actions",
       type: "actions",
-      headerName: "Actions",
+      headerName: t("pages.myDogs.actions"),
       getActions: (params) => [
         <GridActionsCellItem
           key="edit"
           icon={<EditIcon />}
-          label="Edit"
+          label={t("common.edit")}
           onClick={() => onEditRowClick(params.row)}
         />,
         <GridActionsCellItem
           key="delete"
           icon={<DeleteIcon />}
-          label="Delete"
+          label={t("common.delete")}
           onClick={() => onDeleteClick(params.row)}
         />,
       ],
@@ -180,16 +182,16 @@ const SuperAdminEntityGrid = ({
 
       <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
         <FormControl sx={{ minWidth: 220 }}>
-          <InputLabel id="super-admin-team-select-label">Club</InputLabel>
+          <InputLabel id="super-admin-entity-grid-club-label">{t("common.club")}</InputLabel>
           <Select
-            labelId="super-admin-team-select-label"
-            label="Club"
+            labelId="super-admin-entity-grid-club-label"
+            label={t("common.club")}
             value={team}
             onChange={(event) => setTeam(event.target.value)}
           >
-            <MenuItem value="">All clubs</MenuItem>
+            <MenuItem value="">{t("pages.superAdmin.allClubs")}</MenuItem>
 
-            {TEAMS.map((teamOption) => (
+            {CLUBS.map((teamOption) => (
               <MenuItem key={teamOption} value={teamOption}>
                 {teamOption}
               </MenuItem>

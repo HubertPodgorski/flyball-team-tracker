@@ -36,18 +36,25 @@ const RootComponent = () => {
 
   return (
     <AppBackground>
-      <ActingAsBanner />
+      <Box sx={{ display: "flex", flexDirection: "column", height: "100dvh" }}>
+        <ActingAsBanner />
 
-      <Box
-        sx={{
-          padding: theme.spacing(2, 2, 9, 2),
-          [theme.breakpoints.down("md")]: {
-            gridGap: theme.spacing(1),
-            padding: theme.spacing(1, 1, 9, 1),
-          },
-        }}
-      >
-        <Outlet />
+        {/* Only this region scrolls - html/body/#root are pinned (see
+            index.css) so the fixed BottomNavBar never drifts with content. */}
+        <Box
+          sx={{
+            flex: 1,
+            minHeight: 0,
+            overflowY: "auto",
+            padding: theme.spacing(2, 2, 7, 2),
+            [theme.breakpoints.down("md")]: {
+              gridGap: theme.spacing(1),
+              padding: theme.spacing(1, 1, 7, 1),
+            },
+          }}
+        >
+          <Outlet />
+        </Box>
 
         <BottomNavBar />
       </Box>

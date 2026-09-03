@@ -1,10 +1,11 @@
 import { applyTaskUpdates, getRowCompactionUpdates } from "../helpers/tasks";
 import { useAppContext } from "./useAppContext";
-import { useSocketContext } from "./useSocketContext";
+import { useDeleteTaskMutation, useReorderTasksMutation } from "../queries/tasks";
 
 // Can empty out a row too - see getRowCompactionUpdates.
 export const useDeleteTask = () => {
-  const { socket } = useSocketContext();
+  const deleteTaskMutation = useDeleteTaskMutation();
+  const reorderTasksMutation = useReorderTasksMutation();
   const { tasks, setTasks } = useAppContext();
 
   return (taskId) => {
@@ -14,10 +15,10 @@ export const useDeleteTask = () => {
 
     setTasks(applyTaskUpdates(remainingTasks, compactionUpdates));
 
-    socket.emit("delete_task", { _id: taskId });
+    deleteTaskMutation.mutate(taskId);
 
     if (compactionUpdates.length) {
-      socket.emit("update_tasks_order", { tasks: compactionUpdates });
+      reorderTasksMutation.mutate(compactionUpdates);
     }
   };
 };

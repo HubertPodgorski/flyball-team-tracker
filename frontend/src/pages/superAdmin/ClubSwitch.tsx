@@ -8,13 +8,15 @@ import {
   Typography,
 } from "@mui/material";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
+import { useTranslation } from "react-i18next";
 import { useAuthContext } from "../../hooks/useAuthContext";
 import { useIsSuperAdmin } from "../../hooks/useIsSuperAdmin";
 import { useCurrentClub } from "../../hooks/useCurrentClub";
 import { useSwitchClub } from "../../hooks/useSwitchClub";
-import { TEAMS } from "../../helpers/teams";
+import { CLUBS } from "../../helpers/teams";
 
 const ClubSwitch = () => {
+  const { t } = useTranslation();
   const { user } = useAuthContext();
   const isSuperAdmin = useIsSuperAdmin();
   const navigate = useNavigate();
@@ -31,14 +33,14 @@ const ClubSwitch = () => {
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-      <Typography variant="h4">Club switch</Typography>
+      <Typography variant="h4">{t("pages.clubSwitch.title")}</Typography>
 
       <Typography variant="body1">
-        Currently acting as <b>{currentClub}</b>
+        {t("pages.clubSwitch.currentlyActingAs")} <b>{currentClub}</b>
       </Typography>
 
       <List>
-        {TEAMS.map((club) => (
+        {CLUBS.map((club) => (
           <ListItemButton
             divider
             key={club}

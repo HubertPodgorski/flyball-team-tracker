@@ -13,6 +13,7 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useSnackbar } from "notistack";
+import { useTranslation } from "react-i18next";
 import ClearableTextField from "../inputs/ClearableTextField";
 import { Dog, Lineup, LineupCrossPass, Team } from "../../helpers/types";
 import TeamDogsEditor from "./TeamDogsEditor";
@@ -42,6 +43,7 @@ const TeamCard = ({
   onDeleteTeam,
 }: Props) => {
   const theme = useTheme();
+  const { t } = useTranslation();
   const { enqueueSnackbar } = useSnackbar();
   const updateTeamMutation = useUpdateTeamMutation();
   const deleteTeamMutation = useDeleteTeamMutation();
@@ -57,7 +59,8 @@ const TeamCard = ({
     updateTeamMutation.mutate(
       { ...targetTeam, ...changes, _id: targetTeam._id },
       {
-        onError: () => enqueueSnackbar("Failed to save", { variant: "error" }),
+        onError: () =>
+          enqueueSnackbar(t("pages.teams.saveFailed"), { variant: "error" }),
       }
     );
   };
@@ -98,7 +101,7 @@ const TeamCard = ({
 
   const onDeleteLineup = async (lineupId: string) => {
     try {
-      await confirmSoft("Remove this lineup?");
+      await confirmSoft(t("pages.teams.removeLineupConfirm"));
     } catch {
       return;
     }
@@ -132,7 +135,8 @@ const TeamCard = ({
     }
 
     deleteTeamMutation.mutate(team._id, {
-      onError: () => enqueueSnackbar("Failed to delete", { variant: "error" }),
+      onError: () =>
+        enqueueSnackbar(t("pages.teams.deleteFailed"), { variant: "error" }),
     });
   };
 
@@ -151,10 +155,10 @@ const TeamCard = ({
         onClick={() => setExpanded((previous) => !previous)}
         sx={{ display: "flex", alignItems: "center", cursor: "pointer" }}
       >
-        <Typography variant="h5" sx={{ flexGrow: 1 }}>{team.name}</Typography>
+        <Typography sx={{ flexGrow: 1 }}>{team.name}</Typography>
 
         <Typography variant="body2" color="text.secondary">
-          {team.dogs.length}/6 dogs
+          {t("pages.teams.dogsCount", { count: team.dogs.length })}
         </Typography>
 
         <IconButton
@@ -169,7 +173,7 @@ const TeamCard = ({
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2, paddingTop: 2 }}>
           {editable && (
             <ClearableTextField
-              label="Team name"
+              label={t("pages.teams.teamName")}
               value={nameDraft}
               onChange={setNameDraft}
               onBlur={onRenameBlur}
@@ -177,7 +181,7 @@ const TeamCard = ({
             />
           )}
 
-          <Typography variant="subtitle2">Dogs</Typography>
+          <Typography variant="subtitle2">{t("common.dogs")}</Typography>
 
           <TeamDogsEditor
             dogs={team.dogs}
@@ -186,10 +190,10 @@ const TeamCard = ({
             onChange={onDogsChange}
           />
 
-          <Typography variant="subtitle2">Lineups</Typography>
+          <Typography variant="subtitle2">{t("pages.teams.lineups")}</Typography>
 
           {team.matchups.length === 0 && (
-            <Typography color="text.secondary">No lineups yet</Typography>
+            <Typography color="text.secondary">{t("pages.teams.noLineupsYet")}</Typography>
           )}
 
           {team.matchups.map((lineup, index) => (
@@ -222,13 +226,13 @@ const TeamCard = ({
               onClick={() => setIsAddLineupOpen(true)}
               sx={{ alignSelf: "flex-start" }}
             >
-              Add lineup
+              {t("pages.teams.addLineup")}
             </Button>
           )}
 
           {editable && (
             <Button color="error" onClick={handleDeleteTeam} sx={{ alignSelf: "flex-start" }}>
-              Delete team
+              {t("pages.teams.deleteTeam")}
             </Button>
           )}
         </Box>
@@ -240,6 +244,7 @@ const TeamCard = ({
           onClose={() => setIsAddLineupOpen(false)}
           dogs={team.dogs}
           onCreate={onCreateLineup}
+          isSubmitting={updateTeamMutation.isPending}
         />
       )}
     </Card>

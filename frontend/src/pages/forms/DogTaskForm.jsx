@@ -1,14 +1,25 @@
 import React, { useEffect } from "react";
 import { Button, DialogActions } from "@mui/material";
-import { useForm } from "@tanstack/react-form";
+import { useForm, useStore } from "@tanstack/react-form";
+import { useTranslation } from "react-i18next";
 import FormTextField from "../../components/inputs/FormTextField";
 import FormModal from "../../components/FormModal";
 import FormGrid from "../../components/FormGrid";
 import FormSelect from "../../components/inputs/FormSelect";
-import { TEAMS } from "../../helpers/teams";
-import { useSocketContext } from "../../hooks/useSocketContext";
+import { CLUBS } from "../../helpers/teams";
+import {
+  useCreateDogTaskMutation,
+  useUpdateDogTaskMutation,
+} from "../../queries/dogTasks";
+import { useSubmitGuard } from "../../hooks/useSubmitGuard";
 
-const teamOptions = TEAMS.map((team) => ({ value: team, label: team }));
+const teamOptions = CLUBS.map((club) => ({ value: club, label: club }));
+
+// Single source for both defaultValues and the reset effect below - see
+// CrossPassModal.tsx's getFormValues for why keeping these in sync matters.
+// Not visibly broken here (team's field isn't gated on a live form value),
+// but the same latent risk, so worth closing anyway.
+const mapToFormValues = ({ name, team }) => ({ name, team: team ?? "" });
 
 const DogTaskForm = ({
   open,
@@ -17,10 +28,13 @@ const DogTaskForm = ({
   editingId,
   onSubmitOverride,
 }) => {
-  const { socket } = useSocketContext();
+  const { t } = useTranslation();
+  const createDogTaskMutation = useCreateDogTaskMutation();
+  const updateDogTaskMutation = useUpdateDogTaskMutation();
+  const submitGuard = useSubmitGuard();
 
   const form = useForm({
-    defaultValues: initialData,
+    defaultValues: mapToFormValues(initialData),
     onSubmit: async ({ value: values }) => {
       // Team reassignment is super-admin only (onSubmitOverride).
       if (onSubmitOverride) {
@@ -35,23 +49,21 @@ const DogTaskForm = ({
       const data = { name: values.name };
 
       if (editingId) {
-        await socket.emit(
-          "update_dog_task",
+        updateDogTaskMutation.mutate(
           { _id: editingId, ...data },
-          () => handleClose()
+          { onSuccess: handleClose }
         );
       } else {
-        await socket.emit("add_dog_task", data, () => handleClose());
+        createDogTaskMutation.mutate(data, { onSuccess: handleClose });
       }
-
-      // TODO: error handling eventually?
     },
   });
 
-  useEffect(() => {
-    const { name, team } = initialData;
+  // See DogForm.jsx for why both flags are needed.
+  const isSubmitting = useStore(form.store, (state) => state.isSubmitting);
 
-    form.reset({ name, team: team ?? "" });
+  useEffect(() => {
+    form.reset(mapToFormValues(initialData));
   }, [initialData, form]);
 
   const handleClose = () => {
@@ -60,15 +72,24 @@ const DogTaskForm = ({
   };
 
   return (
-    <FormModal onClose={handleClose} open={open} title="Dog task form">
+    <FormModal
+      onClose={handleClose}
+      open={open}
+      title={editingId ? t("forms.dogTask.editTitle") : t("forms.dogTask.addTitle")}
+    >
       <FormGrid>
-        <FormTextField form={form} name="name" label="Task name" required />
+        <FormTextField
+          form={form}
+          name="name"
+          label={t("forms.dogTask.name")}
+          required
+        />
 
         {onSubmitOverride && (
           <FormSelect
             form={form}
             name="team"
-            label="Team"
+            label={t("common.team")}
             multi={false}
             options={teamOptions}
           />
@@ -76,15 +97,20 @@ const DogTaskForm = ({
 
         <DialogActions sx={{ padding: 0 }}>
           <Button size="medium" variant="outlined" onClick={handleClose}>
-            Cancel
+            {t("common.cancel")}
           </Button>
 
           <Button
             size="medium"
             variant="contained"
-            onClick={() => form.handleSubmit()}
+            disabled={
+              isSubmitting ||
+              createDogTaskMutation.isPending ||
+              updateDogTaskMutation.isPending
+            }
+            onClick={() => submitGuard(() => form.handleSubmit())}
           >
-            Submit
+            {t("common.submit")}
           </Button>
         </DialogActions>
       </FormGrid>

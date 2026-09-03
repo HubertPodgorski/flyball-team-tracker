@@ -1,9 +1,10 @@
 import { applyTaskUpdates, getRowCompactionUpdates } from "../helpers/tasks";
 import { useAppContext } from "./useAppContext";
-import { useSocketContext } from "./useSocketContext";
+import { useDeleteTaskMutation, useReorderTasksMutation } from "../queries/tasks";
 
 export const useDeleteTasksRow = () => {
-  const { socket } = useSocketContext();
+  const deleteTaskMutation = useDeleteTaskMutation();
+  const reorderTasksMutation = useReorderTasksMutation();
   const { tasks, setTasks } = useAppContext();
 
   return (rowIndex) => {
@@ -21,11 +22,11 @@ export const useDeleteTasksRow = () => {
     setTasks(applyTaskUpdates(remainingTasks, compactionUpdates));
 
     deletedTaskIds.forEach((taskId) => {
-      socket.emit("delete_task", { _id: taskId });
+      deleteTaskMutation.mutate(taskId);
     });
 
     if (compactionUpdates.length) {
-      socket.emit("update_tasks_order", { tasks: compactionUpdates });
+      reorderTasksMutation.mutate(compactionUpdates);
     }
   };
 };

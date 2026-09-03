@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { registerServiceWorker, subscribe } from "./serviceWorkerHelpers";
+import { registerServiceWorker } from "./serviceWorkerHelpers";
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -22,56 +22,5 @@ describe("registerServiceWorker", () => {
     await expect(registerServiceWorker()).rejects.toThrow(
       "serviceworker not supported"
     );
-  });
-});
-
-describe("subscribe", () => {
-  it("subscribes to push and stores the subscription details on success", async () => {
-    const push = { endpoint: "https://push.example.com" };
-    const subscribeToPush = vi.fn().mockResolvedValue(push);
-
-    vi.stubGlobal("navigator", {
-      serviceWorker: {
-        ready: Promise.resolve({
-          pushManager: { subscribe: subscribeToPush },
-        }),
-      },
-    });
-
-    const setSubscriptionDetails = vi.fn();
-    const socket = {
-      emit: vi.fn((event, data, callback) => callback({ id: "sub-1" })),
-    };
-
-    await subscribe(socket, setSubscriptionDetails);
-
-    expect(subscribeToPush).toHaveBeenCalledWith(
-      expect.objectContaining({ userVisibleOnly: true })
-    );
-    expect(socket.emit).toHaveBeenCalledWith(
-      "save_subscription",
-      push,
-      expect.any(Function)
-    );
-    expect(setSubscriptionDetails).toHaveBeenCalledWith({ id: "sub-1" });
-  });
-
-  it("doesn't update subscription details when the server sends nothing back", async () => {
-    vi.stubGlobal("navigator", {
-      serviceWorker: {
-        ready: Promise.resolve({
-          pushManager: { subscribe: vi.fn().mockResolvedValue({}) },
-        }),
-      },
-    });
-
-    const setSubscriptionDetails = vi.fn();
-    const socket = {
-      emit: vi.fn((event, data, callback) => callback(undefined)),
-    };
-
-    await subscribe(socket, setSubscriptionDetails);
-
-    expect(setSubscriptionDetails).not.toHaveBeenCalled();
   });
 });

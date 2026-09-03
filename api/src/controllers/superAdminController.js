@@ -2,71 +2,105 @@ const UserModel = require("../models/userModel");
 const DogModel = require("../models/dogModel");
 const DogTaskModel = require("../models/dogTaskModel");
 const EventModel = require("../models/eventModel");
-const EventTemplateModel = require("../models/eventTemplateModel");
-const SquadModel = require("../models/squadModel");
-const { TEAMS } = require("../helpers/teams");
+const TeamModel = require("../models/teamModel");
+const TaskModel = require("../models/taskModel");
+const { CLUBS } = require("../helpers/teams");
+const { broadcast } = require("../sse");
+const { detachTasksFromMatchup, keepOnlyPoolDogsInMatchups } = require("../helpers/lineupCascade");
+const { replaceDogEverywhere, broadcastDogCascade } = require("../helpers/dogCascade");
+const {
+  findChangedSyncedCrossPasses,
+  syncCrossPassTiming,
+  syncCrossPassesToMyDogs,
+} = require("../helpers/crossPassSync");
 
 const entityConfig = {
   users: { Model: UserModel, updatedEvent: "users_updated" },
   dogs: { Model: DogModel, updatedEvent: "dogs_updated" },
   "dog-tasks": { Model: DogTaskModel, updatedEvent: "dog_tasks_updated" },
   events: { Model: EventModel, updatedEvent: "events_updated" },
-  "event-templates": {
-    Model: EventTemplateModel,
-    updatedEvent: "event_templates_updated",
-  },
-  squads: { Model: SquadModel, updatedEvent: "squads_updated" },
+  teams: { Model: TeamModel, updatedEvent: "teams_updated" },
 };
 
 // Same exclusion as userController's getAllUsers.
 const withoutSuperAdmins = (entity, filter) =>
   entity === "users" ? { ...filter, roles: { $nin: ["SUPER_ADMIN"] } } : filter;
 
-const broadcastTeam = async (io, entity, team) => {
+const broadcastClub = async (entity, club) => {
   const { Model, updatedEvent } = entityConfig[entity];
 
-  const items = await Model.find(withoutSuperAdmins(entity, { team })).sort({
+  const items = await Model.find(withoutSuperAdmins(entity, { team: club })).sort({
     createdAt: -1,
   });
 
-  io.to(team).emit(updatedEvent, items);
+  broadcast(club, updatedEvent, items);
 };
 
 const getList = (entity) => async (req, res) => {
   const { Model } = entityConfig[entity];
-  const { team } = req.query;
+  const { team: club } = req.query;
 
-  if (team && !TEAMS.includes(team)) {
+  if (club && !CLUBS.includes(club)) {
     return res.status(400).json({ error: "INVALID_TEAM" });
   }
 
-  const filter = withoutSuperAdmins(entity, team ? { team } : {});
+  const filter = withoutSuperAdmins(entity, club ? { team: club } : {});
 
   const items = await Model.find(filter).sort({ createdAt: -1 });
 
   res.status(200).json(items);
 };
 
-const createItem = (entity, io) => async (req, res) => {
+const createItem = (entity) => async (req, res) => {
   const { Model } = entityConfig[entity];
-  const { team, ...data } = req.body;
+  const { team: club, ...data } = req.body;
 
-  if (!team || !TEAMS.includes(team)) {
+  if (!club || !CLUBS.includes(club)) {
     return res.status(400).json({ error: "INVALID_TEAM" });
   }
 
-  const created = await Model.create({ ...data, team });
+  const created = await Model.create({ ...data, team: club });
 
-  await broadcastTeam(io, entity, team);
+  await broadcastClub(entity, club);
 
   res.status(200).json(created);
 };
 
-const updateItem = (entity, io) => async (req, res) => {
-  const { Model } = entityConfig[entity];
-  const { _id, team, ...data } = req.body;
+// Same lineup-detach the regular /teams route does (see teamController.js) -
+// this generic entity path is teams' OTHER write path (super-admin grid),
+// so it needs the same cascade or a removed lineup here re-orphans tasks.
+const detachRemovedLineups = async (existingTeam, newMatchups) => {
+  const newMatchupIds = new Set(
+    (newMatchups ?? []).map((matchup) => matchup._id?.toString()).filter(Boolean)
+  );
 
-  if (!team || !TEAMS.includes(team)) {
+  const removedLineups = newMatchups
+    ? existingTeam.matchups.filter(
+        (lineup) => !newMatchupIds.has(lineup._id.toString())
+      )
+    : [];
+
+  let tasksChanged = false;
+
+  for (const lineup of removedLineups) {
+    const changed = await detachTasksFromMatchup(
+      existingTeam.team,
+      existingTeam._id,
+      lineup._id,
+      lineup.dogs
+    );
+
+    tasksChanged = tasksChanged || changed;
+  }
+
+  return tasksChanged;
+};
+
+const updateItem = (entity) => async (req, res) => {
+  const { Model } = entityConfig[entity];
+  const { _id, team: club, ...data } = req.body;
+
+  if (!club || !CLUBS.includes(club)) {
     return res.status(400).json({ error: "INVALID_TEAM" });
   }
 
@@ -76,38 +110,129 @@ const updateItem = (entity, io) => async (req, res) => {
     return res.status(404).json({ error: "NOT_FOUND" });
   }
 
-  const previousTeam = existing.team;
+  const previousClub = existing.team;
+
+  const tasksChanged =
+    entity === "teams" ? await detachRemovedLineups(existing, data.matchups) : false;
+
+  // Every lineup may only reference dogs still in this team's pool - kept
+  // as an invariant of the payload itself (not a diff against server state),
+  // same as teamController.js's /teams route.
+  if (entity === "teams" && data.dogs && data.matchups) {
+    const allowedDogIds = new Set(
+      data.dogs.map((dog) => dog._id?.toString()).filter(Boolean)
+    );
+
+    data.matchups = keepOnlyPoolDogsInMatchups(data.matchups, allowedDogIds);
+  }
+
+  // Diffed against the pre-update state, same as teamController.js's own
+  // /teams route - this generic entity path is teams' OTHER write path.
+  const changedSyncedCrossPasses =
+    entity === "teams" ? findChangedSyncedCrossPasses(existing, data.matchups) : [];
 
   const updated = await Model.findOneAndUpdate(
     { _id },
-    { ...data, team },
+    { ...data, team: club },
     { returnDocument: "after" }
   );
 
-  await broadcastTeam(io, entity, team);
+  // Same dog fan-out the regular /dogs route does (see dogCascade.js) - this
+  // generic entity path is dogs' OTHER write path (super-admin grid), so it
+  // needs the same cascade or an edit here (e.g. jump height) never
+  // propagates to Tasks/Teams/lineups/Users/CrossPasses that embed the dog.
+  const dogCascade =
+    entity === "dogs" ? await replaceDogEverywhere(previousClub, _id, updated) : null;
 
-  // Row moved teams - refresh the old team's clients too.
-  if (previousTeam && previousTeam !== team) {
-    await broadcastTeam(io, entity, previousTeam);
+  if (entity === "teams") {
+    await syncCrossPassTiming(
+      previousClub,
+      changedSyncedCrossPasses.filter((entry) => entry.syncLineups)
+    );
+    await syncCrossPassesToMyDogs(previousClub, changedSyncedCrossPasses);
+  }
+
+  await broadcastClub(entity, club);
+
+  // Row moved clubs - refresh the old club's clients too.
+  if (previousClub && previousClub !== club) {
+    await broadcastClub(entity, previousClub);
+  }
+
+  if (tasksChanged) {
+    broadcast(
+      previousClub,
+      "tasks_updated",
+      await TaskModel.find({ team: previousClub }).sort({ createdAt: -1 })
+    );
+  }
+
+  if (dogCascade) {
+    await broadcastDogCascade(previousClub, dogCascade);
   }
 
   res.status(200).json(updated);
 };
 
-const deleteItem = (entity, io) => async (req, res) => {
+const deleteItem = (entity) => async (req, res) => {
   const { Model } = entityConfig[entity];
   const { _id } = req.params;
-  const { team } = req.query;
+  const { team: club } = req.query;
 
-  if (!team || !TEAMS.includes(team)) {
+  if (!club || !CLUBS.includes(club)) {
     return res.status(400).json({ error: "INVALID_TEAM" });
   }
 
+  const existing =
+    entity === "teams" || entity === "dogs" ? await Model.findById(_id) : null;
+
   await Model.findOneAndDelete({ _id });
 
-  await broadcastTeam(io, entity, team);
+  const tasksChanged =
+    entity === "teams" && existing ? await detachRemovedLineups(existing, []) : false;
+
+  const dogCascade =
+    entity === "dogs" && existing
+      ? await replaceDogEverywhere(existing.team, _id, null)
+      : null;
+
+  await broadcastClub(entity, club);
+
+  if (tasksChanged) {
+    broadcast(
+      existing.team,
+      "tasks_updated",
+      await TaskModel.find({ team: existing.team }).sort({ createdAt: -1 })
+    );
+  }
+
+  if (dogCascade) {
+    await broadcastDogCascade(existing.team, dogCascade);
+  }
 
   res.status(200).json({ ok: true });
 };
 
-module.exports = { entityConfig, getList, createItem, updateItem, deleteItem };
+// Super-admin resets any club's member's password - unlike the trainer
+// version (userController.resetUserPassword), not scoped to one club. The
+// temporary password is returned once, in this response only.
+const resetUserPassword = async (req, res) => {
+  const { _id } = req.params;
+
+  try {
+    const { temporaryPassword } = await UserModel.resetPasswordForUser(_id);
+
+    res.status(200).json({ temporaryPassword });
+  } catch (e) {
+    res.status(404).json({ error: e.message });
+  }
+};
+
+module.exports = {
+  entityConfig,
+  getList,
+  createItem,
+  updateItem,
+  deleteItem,
+  resetUserPassword,
+};

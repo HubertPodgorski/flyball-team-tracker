@@ -1,3 +1,4 @@
+import type { TFunction } from "i18next";
 import { SelectOption } from "./types";
 
 export enum EventType {
@@ -14,22 +15,15 @@ const eventTypes: EventType[] = [
   EventType.MEETING,
 ];
 
-const getEventTypeLabelByType = (eventType: EventType) => {
-  switch (eventType) {
-    case EventType.COMPETITION:
-      return "Competition";
-    case EventType.SEMINARY:
-      return "Seminary";
-    case EventType.TRAINING:
-      return "Training";
-    case EventType.MEETING:
-      return "Meeting";
-    default:
-      return "";
-  }
+const eventTypeLabelKeys: Record<EventType, string> = {
+  [EventType.COMPETITION]: "eventTypes.competition",
+  [EventType.SEMINARY]: "eventTypes.seminary",
+  [EventType.TRAINING]: "eventTypes.training",
+  [EventType.MEETING]: "eventTypes.meeting",
 };
 
-export const eventTypeOptions: SelectOption[] = eventTypes.map((type) => ({
-  value: type,
-  label: getEventTypeLabelByType(type),
-}));
+export const getEventTypeOptions = (t: TFunction): SelectOption[] =>
+  eventTypes.map((type) => ({
+    value: type,
+    label: t(eventTypeLabelKeys[type]),
+  }));

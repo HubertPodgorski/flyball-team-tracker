@@ -1,8 +1,12 @@
 import { useAppContext } from "./useAppContext";
+import { useEventsQuery } from "../queries/events";
+import { useDogsQuery } from "../queries/dogs";
 
 // Every dog, cross-referenced against event attendance + task planning.
 export const useDogsWithAttendance = (selectedEventId) => {
-  const { events, tasks, dogs } = useAppContext();
+  const { tasks } = useAppContext();
+  const { data: events = [] } = useEventsQuery();
+  const { data: dogs = [] } = useDogsQuery();
 
   if (!selectedEventId) return [];
 

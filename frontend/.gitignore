@@ -2,3 +2,7 @@
 
 node_modules
 .env
+
+# TanStack Router codegen scratch files (route-tree.gen.ts output goes
+# through here transiently) - never meant to be committed.
+.tanstack/

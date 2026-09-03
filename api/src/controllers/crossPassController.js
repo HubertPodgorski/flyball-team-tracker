@@ -1,59 +1,75 @@
 const CrossPassModel = require("../models/crossPassModel");
+const DogModel = require("../models/dogModel");
+const TeamModel = require("../models/teamModel");
+const { broadcast } = require("../sse");
+const { syncCrossPassFromMyDogs } = require("../helpers/crossPassSync");
 
-const jwt = require("jsonwebtoken");
+const findClubCrossPasses = (club) =>
+  CrossPassModel.find({ team: club }).sort({ createdAt: -1 });
 
-// get all cross passes
-const getAllCrossPasses = async (callback, userToken) => {
-  const { team } = jwt.decode(userToken);
+const getCrossPasses = async (req, res) => {
+  const crossPasses = await findClubCrossPasses(req.club);
 
-  const crossPasses = await CrossPassModel.find({ team });
-
-  callback(crossPasses);
+  res.status(200).json(crossPasses);
 };
 
-// create cross pass
-const createCrossPass = async (received, callback, io, userToken) => {
-  const { team } = jwt.decode(userToken);
-  const crossPass = await CrossPassModel.create({ ...received, team });
+// My Dogs -> lineup half of the bridge (see crossPassSync.js) - only fires
+// when the owning dog has syncCrossPassesWithMyDogs on.
+const syncToLineupsIfEnabled = async (club, crossPass) => {
+  const dog = await DogModel.findById(crossPass.dogId);
 
-  const allCrossPasses = await CrossPassModel.find({ team });
+  if (!dog?.syncCrossPassesWithMyDogs) return false;
 
-  callback(crossPass);
-
-  io.to(team).emit("cross_passes_updated", allCrossPasses);
+  return syncCrossPassFromMyDogs(club, crossPass);
 };
 
-// delete cross pass
-const deleteCrossPassById = async (received, io, userToken) => {
-  const { team } = jwt.decode(userToken);
-  const { _id } = received;
+const createCrossPass = async (req, res) => {
+  const crossPass = await CrossPassModel.create({ ...req.body, team: req.club });
 
-  await CrossPassModel.findOneAndDelete({ _id });
+  res.status(200).json(crossPass);
+  broadcast(req.club, "cross_passes_updated", await findClubCrossPasses(req.club));
 
-  const allCrossPasses = await CrossPassModel.find({ team });
-
-  io.to(team).emit("cross_passes_updated", allCrossPasses);
+  if (await syncToLineupsIfEnabled(req.club, crossPass)) {
+    broadcast(
+      req.club,
+      "teams_updated",
+      await TeamModel.find({ team: req.club }).sort({ createdAt: -1 })
+    );
+  }
 };
 
-// update cross pass
-const updateCrossPassById = async (received, callback, io, userToken) => {
-  const { team } = jwt.decode(userToken);
-  const { _id } = received;
+const updateCrossPass = async (req, res) => {
+  const { _id, ...data } = req.body;
 
-  const crossPass = await CrossPassModel.findOneAndUpdate({ _id }, received, {
-    returnDocument: "after",
-  });
+  const crossPass = await CrossPassModel.findOneAndUpdate(
+    { _id, team: req.club },
+    { ...data, team: req.club },
+    { returnDocument: "after" }
+  );
 
-  const allCrossPasses = await CrossPassModel.find({ team });
+  if (!crossPass) {
+    return res.status(404).json({ error: "NOT_FOUND" });
+  }
 
-  callback(crossPass);
+  res.status(200).json(crossPass);
+  broadcast(req.club, "cross_passes_updated", await findClubCrossPasses(req.club));
 
-  io.to(team).emit("cross_passes_updated", allCrossPasses);
+  if (await syncToLineupsIfEnabled(req.club, crossPass)) {
+    broadcast(
+      req.club,
+      "teams_updated",
+      await TeamModel.find({ team: req.club }).sort({ createdAt: -1 })
+    );
+  }
 };
 
-module.exports = {
-  getAllCrossPasses,
-  deleteCrossPassById,
-  updateCrossPassById,
-  createCrossPass,
+const deleteCrossPass = async (req, res) => {
+  const { id } = req.params;
+
+  await CrossPassModel.findOneAndDelete({ _id: id, team: req.club });
+
+  res.status(200).json({ ok: true });
+  broadcast(req.club, "cross_passes_updated", await findClubCrossPasses(req.club));
 };
+
+module.exports = { getCrossPasses, createCrossPass, updateCrossPass, deleteCrossPass };

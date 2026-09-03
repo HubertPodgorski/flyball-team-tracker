@@ -1,5 +1,6 @@
 import React from "react";
 import { IconButton, InputAdornment, TextField, TextFieldProps } from "@mui/material";
+import { useTranslation } from "react-i18next";
 import ClearIcon from "@mui/icons-material/Clear";
 
 interface Props extends Omit<TextFieldProps, "onChange"> {
@@ -9,6 +10,7 @@ interface Props extends Omit<TextFieldProps, "onChange"> {
 
 // Every free-text field gets an "x" to clear it.
 const ClearableTextField = ({ value, onChange, onClear, slotProps, ...rest }: Props) => {
+  const { t } = useTranslation();
   const hasValue = !!value;
 
   return (
@@ -25,7 +27,7 @@ const ClearableTextField = ({ value, onChange, onClear, slotProps, ...rest }: Pr
               <IconButton
                 size="small"
                 edge="end"
-                aria-label="Clear"
+                aria-label={t("common.clear")}
                 onClick={() => (onClear ? onClear() : onChange(""))}
                 // Align top for multiline, not centered.
                 sx={{ alignSelf: rest.multiline ? "flex-start" : undefined }}

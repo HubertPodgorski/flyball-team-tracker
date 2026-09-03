@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Lineup } from "../../helpers/types";
 import ClearableTextField from "../inputs/ClearableTextField";
 
@@ -8,6 +9,7 @@ interface Props {
 }
 
 const LineupNameField = ({ lineup, onSave }: Props) => {
+  const { t } = useTranslation();
   const [draft, setDraft] = useState(lineup.name ?? "");
 
   useEffect(() => {
@@ -32,7 +34,7 @@ const LineupNameField = ({ lineup, onSave }: Props) => {
       }}
       onBlur={onBlur}
       onClick={(event) => event.stopPropagation()}
-      label="Lineup name"
+      label={t("pages.teams.lineupName")}
       size="small"
       sx={{ flexGrow: 1 }}
     />

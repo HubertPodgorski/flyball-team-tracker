@@ -13,7 +13,9 @@ import {
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import OpenWithIcon from "@mui/icons-material/OpenWith";
+import { useTranslation } from "react-i18next";
 import { Dog } from "../../helpers/types";
+import { matchSortableDogs } from "../../helpers/sortableDogs";
 
 export const MAX_TEAM_DOGS = 6;
 
@@ -37,6 +39,7 @@ interface Props {
 }
 
 const TeamDogsEditor = ({ dogs, allDogs, editable, onChange }: Props) => {
+  const { t } = useTranslation();
   const [items, setItems] = useState<ItemInterface[]>(() => toItems(dogs));
 
   useEffect(() => {
@@ -51,7 +54,7 @@ const TeamDogsEditor = ({ dogs, allDogs, editable, onChange }: Props) => {
         ))}
 
         {dogs.length === 0 && (
-          <Typography color="text.secondary">No dogs yet</Typography>
+          <Typography color="text.secondary">{t("pages.teams.noDogsYet")}</Typography>
         )}
       </Box>
     );
@@ -88,35 +91,30 @@ const TeamDogsEditor = ({ dogs, allDogs, editable, onChange }: Props) => {
         }}
         animation={150}
         forceFallback
+        fallbackOnBody
         style={{ display: "flex", flexDirection: "column", gap: "4px" }}
       >
-        {items.map((item, index) => {
-          const dog = dogs.find(({ _id }) => _id === item.id);
+        {matchSortableDogs(items, dogs).map(({ dog, index }) => (
+          <DogRowStyled key={dog._id}>
+            <OpenWithIcon fontSize="small" />
 
-          if (!dog) return null;
+            <Typography sx={{ flexGrow: 1 }}>
+              {index + 1}. {dog.name}
+            </Typography>
 
-          return (
-            <DogRowStyled key={dog._id}>
-              <OpenWithIcon fontSize="small" />
-
-              <Typography sx={{ flexGrow: 1 }}>
-                {index + 1}. {dog.name}
-              </Typography>
-
-              <IconButton size="small" onClick={() => onRemoveDog(dog._id)}>
-                <DeleteIcon fontSize="small" />
-              </IconButton>
-            </DogRowStyled>
-          );
-        })}
+            <IconButton size="small" onClick={() => onRemoveDog(dog._id)}>
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+          </DogRowStyled>
+        ))}
       </ReactSortable>
 
       {dogs.length < MAX_TEAM_DOGS && availableDogs.length > 0 && (
         <FormControl size="small">
-          <InputLabel id="add-team-dog-label">Add dog</InputLabel>
+          <InputLabel id="add-team-dog-label">{t("pages.teams.addDog")}</InputLabel>
           <Select
             labelId="add-team-dog-label"
-            label="Add dog"
+            label={t("pages.teams.addDog")}
             value=""
             onChange={(event) => onAddDog(event.target.value)}
           >
@@ -131,7 +129,7 @@ const TeamDogsEditor = ({ dogs, allDogs, editable, onChange }: Props) => {
 
       {dogs.length >= MAX_TEAM_DOGS && (
         <Typography variant="caption" color="text.secondary">
-          Team is full ({MAX_TEAM_DOGS} dogs max)
+          {t("pages.teams.teamFull", { max: MAX_TEAM_DOGS })}
         </Typography>
       )}
     </Box>
