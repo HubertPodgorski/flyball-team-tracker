@@ -10,15 +10,15 @@ See [.github/copilot-instructions.md](.github/copilot-instructions.md) for React
 
 See [.github/instructions/api.instructions.md](.github/instructions/api.instructions.md) for backend (`api/`) conventions — same sharing mechanism, scoped via `applyTo`.
 
-## Domain naming: Club / Team / Lineup (mid-migration)
+## Domain naming: Club / Team / Lineup
 
-Old names clashed with their Polish translations one level apart: org ("Team") ↔ Klub, dog-pool ("Squad") ↔ Drużyna (= "Team"), 4-dog lineup ("Matchup") ↔ Skład (= "Squad"). Renamed frontend-side to break the chain: **Club** (org/tenant), **Team** (dog pool, was Squad), **Lineup** (4-dog ordered set, was Matchup).
+Old names clashed with their Polish translations one level apart: org ("Team") ↔ Klub, dog-pool ("Squad") ↔ Drużyna (= "Team"), 4-dog lineup ("Matchup") ↔ Skład (= "Squad"). Renamed to break the chain: **Club** (org/tenant), **Team** (dog pool, was Squad), **Lineup** (4-dog ordered set, was Matchup).
 
-Backend hasn't caught up yet - don't "fix" these to look consistent, they're intentional bridges:
-- JWT claim / DB field / API param: still `team` (means Club now)
-- REST endpoint: still `/squads`
-- Wire field names: `matchupRef`, `squadId`, `matchupId` (see comments in `helpers/types.ts`)
-- SSE event: still `squads_updated`
-- Frontend function/type names on the Club/Team/Lineup side reflect the new terms; their internal wire calls don't
+Code-level identifiers, routes, the JWT claim, and SSE events have all been renamed (route is `/teams`, JWT claim is `club`, model is `mongoose.model("Team", ...)`, broadcast event is `teams_updated`, etc.) — this part of the migration is done, don't go looking for a stale `/squads`/`squads_updated` anywhere in current code.
 
-Full backend rename (JWT/DB/routes/socket rooms) is a separate future branch. Until then, new code should use Club/Team/Lineup terminology at the frontend-facing layer (types, components, labels) and only touch the old wire names where required to talk to the backend.
+What's still deliberately unrenamed, because it's actual persisted data and renaming it needs a real migration, not just a code change:
+- The Mongo **collection** stays named `squads` (`mongoose.model("Team", teamSchema, "squads")` in `teamModel.js`).
+- The **DB field / query param** for club is still the literal string `team` (e.g. `Model.find({ team: club })`, `?team=CLUB_CODE`) — every route-level variable is named `club` and reads/writes this field, but the field key itself hasn't moved.
+- Wire field names `matchupRef`, `squadId`, `matchupId` (see comments in `helpers/types.ts` and `.github/instructions/api.instructions.md`) and the `matchups` array key on a Team document.
+
+A future data-migration pass would rename the collection and these field keys in one scripted, coordinated step. Until then, new code should use Club/Team/Lineup terminology everywhere except where it's reading/writing one of the fields above — there, keep the old literal key and let the surrounding variable name carry the new terminology instead.

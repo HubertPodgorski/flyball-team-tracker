@@ -20,13 +20,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Must come before setup-node: with cache: yarn below, setup-node
+      # shells out to yarn itself to resolve the cache directory - before
+      # corepack is enabled, that hits the runner's preinstalled Yarn
+      # Classic (1.x), which refuses to run at all against a repo pinning
+      # packageManager to Yarn 4.
+      - run: corepack enable
+
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: yarn
           cache-dependency-path: api/yarn.lock
-
-      - run: corepack enable
 
       - name: Install dependencies
         run: yarn install --immutable
@@ -45,13 +50,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # See backend-tests' identical step for why this comes before setup-node.
+      - run: corepack enable
+
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: yarn
           cache-dependency-path: frontend/yarn.lock
-
-      - run: corepack enable
 
       - name: Install dependencies
         run: yarn install --immutable
@@ -75,6 +81,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # See backend-tests' identical step for why this comes before setup-node.
+      - run: corepack enable
+
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -83,8 +92,6 @@ jobs:
             api/yarn.lock
             frontend/yarn.lock
             e2e/yarn.lock
-
-      - run: corepack enable
 
       # e2e/global-setup.ts spawns the real api/src/server.js and starts
       # frontend's own dev server directly - both need their real
