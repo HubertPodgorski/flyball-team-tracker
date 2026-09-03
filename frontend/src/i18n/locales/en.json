@@ -293,5 +293,35 @@
         "Teams - build and edit teams and their lineups for your whole club, not just your own dogs."
       ]
     }
+  },
+  "pitch": {
+    "intro": "Flyball Team Tracker helps a club plan trainings and competitions: who's coming, which dogs run which tasks, and how race lineups are built.",
+    "howItWorks": "How it works",
+    "workflow": {
+      "addDogs": {
+        "title": "Add your dogs to the club",
+        "body": "Every dog gets its own card - notes, jump height, cross-passes."
+      },
+      "buildTeams": {
+        "title": "Build teams and lineups",
+        "body": "A pool of up to 6 dogs per team, any number of lineups, each in its own running order."
+      },
+      "addTasks": {
+        "title": "Add tasks",
+        "body": "A drag-and-drop board, planned around which dogs are actually at training."
+      },
+      "setCrossPasses": {
+        "title": "At training, set cross-pass times",
+        "body": "Link a task to a lineup and edit the timing between neighboring dogs right from that task."
+      },
+      "liveSync": {
+        "title": "Everyone sees it live",
+        "body": "A lineup or attendance change shows up for everyone with the app open, right away."
+      }
+    },
+    "needCode": "You'll need a club code from your trainer to sign up.",
+    "login": "Log in",
+    "signup": "Sign up",
+    "linkLabel": "See what it does"
   }
 }

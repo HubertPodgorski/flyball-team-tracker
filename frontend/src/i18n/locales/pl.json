@@ -293,5 +293,35 @@
         "Drużyny - buduj i edytuj drużyny oraz ich składy dla całego klubu, nie tylko dla własnych psów."
       ]
     }
+  },
+  "pitch": {
+    "intro": "Flyball Team Tracker pomaga klubowi planować treningi i zawody: kto przychodzi, które psy biegają które zadania i jak układane są składy startowe.",
+    "howItWorks": "Jak to działa",
+    "workflow": {
+      "addDogs": {
+        "title": "Dodaj swoje psy do klubu",
+        "body": "Każdy pies dostaje swoją kartę - notatki, wysokość skoku, crossy."
+      },
+      "buildTeams": {
+        "title": "Zbuduj drużyny i składy",
+        "body": "Pula do 6 psów na drużynę, dowolna liczba składów, każdy w swojej kolejności."
+      },
+      "addTasks": {
+        "title": "Dodaj zadania",
+        "body": "Tablica z przeciąganiem, planowana na podstawie tego, które psy są na treningu."
+      },
+      "setCrossPasses": {
+        "title": "Na treningu ustaw czasy crossów",
+        "body": "Podepnij zadanie pod skład i edytuj czasy między sąsiednimi psami od razu z poziomu tego zadania."
+      },
+      "liveSync": {
+        "title": "Wszyscy widzą to na żywo",
+        "body": "Zmiana w składzie albo obecności pojawia się od razu u każdego, kto ma otwartą aplikację."
+      }
+    },
+    "needCode": "Do rejestracji potrzebujesz kodu klubu od trenera.",
+    "login": "Zaloguj się",
+    "signup": "Zarejestruj się",
+    "linkLabel": "Zobacz, co potrafi"
   }
 }

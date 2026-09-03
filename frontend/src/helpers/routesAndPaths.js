@@ -3,6 +3,8 @@ export const notAuthenticatedRoutes = {
   signup: "/signup",
 };
 
+export const pitchRoute = "/pitch";
+
 export const userRoutes = {
   tasks: "/user-panel/tasks",
   calendar: "/user-panel/calendar",
