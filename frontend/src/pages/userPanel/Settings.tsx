@@ -18,6 +18,7 @@ import { useSnackbar } from "notistack";
 import { useTranslation } from "react-i18next";
 import { useAuthContext } from "../../hooks/useAuthContext";
 import { useIsSuperAdmin } from "../../hooks/useIsSuperAdmin";
+import { usePwaInstall } from "../../hooks/usePwaInstall";
 import { useDogsQuery, useUpdateDogMutation } from "../../queries/dogs";
 import { useChangeOwnPasswordMutation, useUpdateUserMutation } from "../../queries/users";
 import { getAuthErrorMessage } from "../../helpers/authErrors";
@@ -33,6 +34,7 @@ const LANGUAGE_OPTIONS = [
 const Settings = () => {
   const { user, setUserLanguage } = useAuthContext();
   const isSuperAdmin = useIsSuperAdmin();
+  const { isStandalone, isIos, canPromptInstall, promptInstall } = usePwaInstall();
   const { data: dogs = [] } = useDogsQuery();
   const updateUserMutation = useUpdateUserMutation();
   const updateDogMutation = useUpdateDogMutation();
@@ -120,6 +122,35 @@ const Settings = () => {
           ))}
         </Select>
       </FormControl>
+
+      {!isStandalone && (canPromptInstall || isIos) && (
+        <>
+          <Divider />
+
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 1, maxWidth: 300 }}>
+            <Typography variant="h6">{t("settings.installAppTitle")}</Typography>
+
+            {canPromptInstall ? (
+              <>
+                <Typography variant="body2" color="text.secondary">
+                  {t("settings.installAppHint")}
+                </Typography>
+                <Button
+                  variant="contained"
+                  onClick={promptInstall}
+                  sx={{ alignSelf: "flex-start" }}
+                >
+                  {t("settings.installAppAction")}
+                </Button>
+              </>
+            ) : (
+              <Typography variant="body2" color="text.secondary">
+                {t("settings.installAppIosHint")}
+              </Typography>
+            )}
+          </Box>
+        </>
+      )}
 
       <Divider />
 
