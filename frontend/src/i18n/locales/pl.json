@@ -73,7 +73,18 @@
     "repeatNewPassword": "Powtórz nowe hasło",
     "passwordMismatch": "Hasła nie są takie same",
     "changePasswordSubmit": "Zmień hasło",
-    "changePasswordSuccess": "Hasło zostało zmienione"
+    "changePasswordSuccess": "Hasło zostało zmienione",
+    "installAppTitle": "Zainstaluj aplikację",
+    "installAppHint": "Dodaj Flyball Team Tracker do ekranu głównego, by mieć do niej szybki dostęp na pełnym ekranie.",
+    "installAppAction": "Zainstaluj",
+    "installAppIosHint": "Stuknij ikonę Udostępnij w Safari, a potem \"Dodaj do ekranu początkowego\"."
+  },
+  "pwaInstall": {
+    "title": "Zainstaluj Flyball Team Tracker",
+    "body": "Dodaj ją do ekranu głównego, by mieć szybki dostęp na pełnym ekranie.",
+    "iosHint": "Stuknij ikonę Udostępnij, a potem \"Dodaj do ekranu początkowego\".",
+    "action": "Zainstaluj",
+    "dismiss": "Odrzuć"
   },
   "forms": {
     "login": {

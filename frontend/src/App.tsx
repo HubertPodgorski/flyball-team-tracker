@@ -7,6 +7,8 @@ import { router } from "./router";
 import { queryClient } from "./queryClient";
 import theme from "./helpers/theme";
 import SseHandler from "./components/SseHandler";
+import PwaInstallBanner from "./components/PwaInstallBanner";
+import { PwaInstallProvider } from "./contexts/PwaInstallContext";
 import { AuthContextProvider } from "./contexts/AuthContext";
 import { ConfirmProvider } from "material-ui-confirm";
 import { SnackbarProvider } from "notistack";
@@ -21,36 +23,40 @@ const App = () => {
   const dateLocale = i18n.language === "en" ? enUS : pl;
 
   return (
-    <ThemeProvider theme={theme}>
-      <SnackbarProvider maxSnack={3}>
-        {/* useLegacyReturn: v4's confirm() otherwise never rejects on cancel.
-            defaultOptions.title: material-ui-confirm's own default is the
-            hardcoded English "Are you sure?" - neither useConfirmModal nor
-            useConfirmModalSoft ever overrode it, so every confirm dialog
-            showed that untranslated regardless of the selected language. */}
-        <ConfirmProvider
-          useLegacyReturn
-          defaultOptions={{ title: t("confirm.title") }}
-        >
-          <QueryClientProvider client={queryClient}>
-            <AuthContextProvider>
-              <LocalizationProvider
-                dateAdapter={AdapterDateFns}
-                adapterLocale={dateLocale}
-              >
-                <AppContextProvider>
-                  <SseHandler />
+    // Outermost - listening before any route could miss the one-shot event.
+    <PwaInstallProvider>
+      <ThemeProvider theme={theme}>
+        <SnackbarProvider maxSnack={3}>
+          {/* useLegacyReturn: v4's confirm() otherwise never rejects on cancel.
+              defaultOptions.title: material-ui-confirm's own default is the
+              hardcoded English "Are you sure?" - neither useConfirmModal nor
+              useConfirmModalSoft ever overrode it, so every confirm dialog
+              showed that untranslated regardless of the selected language. */}
+          <ConfirmProvider
+            useLegacyReturn
+            defaultOptions={{ title: t("confirm.title") }}
+          >
+            <QueryClientProvider client={queryClient}>
+              <AuthContextProvider>
+                <LocalizationProvider
+                  dateAdapter={AdapterDateFns}
+                  adapterLocale={dateLocale}
+                >
+                  <AppContextProvider>
+                    <SseHandler />
+                    <PwaInstallBanner />
 
-                  <CssBaseline />
+                    <CssBaseline />
 
-                  <RouterProvider router={router} />
-                </AppContextProvider>
-              </LocalizationProvider>
-            </AuthContextProvider>
-          </QueryClientProvider>
-        </ConfirmProvider>
-      </SnackbarProvider>
-    </ThemeProvider>
+                    <RouterProvider router={router} />
+                  </AppContextProvider>
+                </LocalizationProvider>
+              </AuthContextProvider>
+            </QueryClientProvider>
+          </ConfirmProvider>
+        </SnackbarProvider>
+      </ThemeProvider>
+    </PwaInstallProvider>
   );
 };
 
