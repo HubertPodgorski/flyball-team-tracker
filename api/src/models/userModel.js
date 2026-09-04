@@ -13,6 +13,7 @@ const teamCodeMap = {
   DZIKIE_GZIKI_NABOR: "DZIKIE_GZIKI_NABOR",
   WEST_SIDE_DOGZ: "WEST_SIDE_DOGZ",
   TEST: "TEST_TEAM",
+  ULTRA_FLYBALL_TEAM: "ULTRA_FLYBALL_TEAM",
 };
 
 const getTeamFromTeamCode = (teamCode) => teamCodeMap[teamCode];

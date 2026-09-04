@@ -6,6 +6,7 @@ const CLUBS = [
   "DZIKIE_GZIKI_NABOR",
   "WEST_SIDE_DOGZ",
   "TEST_TEAM",
+  "ULTRA_FLYBALL_TEAM",
 ];
 
 module.exports = { CLUBS };
