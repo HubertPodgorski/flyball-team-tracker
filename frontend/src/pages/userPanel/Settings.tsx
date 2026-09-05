@@ -19,6 +19,7 @@ import { useTranslation } from "react-i18next";
 import { useAuthContext } from "../../hooks/useAuthContext";
 import { useIsSuperAdmin } from "../../hooks/useIsSuperAdmin";
 import { usePwaInstall } from "../../hooks/usePwaInstall";
+import { useClubFeatures } from "../../hooks/useClubFeatures";
 import { useDogsQuery, useUpdateDogMutation } from "../../queries/dogs";
 import { useChangeOwnPasswordMutation, useUpdateUserMutation } from "../../queries/users";
 import { getAuthErrorMessage } from "../../helpers/authErrors";
@@ -35,6 +36,7 @@ const Settings = () => {
   const { user, setUserLanguage } = useAuthContext();
   const isSuperAdmin = useIsSuperAdmin();
   const { isStandalone, isIos, canPromptInstall, promptInstall } = usePwaInstall();
+  const { crossPasses: crossPassesEnabled } = useClubFeatures();
   const { data: dogs = [] } = useDogsQuery();
   const updateUserMutation = useUpdateUserMutation();
   const updateDogMutation = useUpdateDogMutation();
@@ -200,7 +202,7 @@ const Settings = () => {
         </FormGrid>
       </Box>
 
-      {(isSuperAdmin || ownDogs.length > 0) && (
+      {crossPassesEnabled && (isSuperAdmin || ownDogs.length > 0) && (
         <>
           <Divider />
 

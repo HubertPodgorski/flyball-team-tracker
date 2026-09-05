@@ -8,6 +8,7 @@ import { LinkedLineup, withLineupCrossPasses } from "../../helpers/lineupLink";
 import { formatLineupLabel } from "../../helpers/lineup";
 import { LineupCrossPass } from "../../helpers/types";
 import { useUpdateTeamMutation } from "../../queries/teams";
+import { useClubFeatures } from "../../hooks/useClubFeatures";
 
 interface Props {
   open: boolean;
@@ -20,6 +21,7 @@ const TaskLineupModal = ({ open, onClose, linked }: Props) => {
   const { t } = useTranslation();
   const { team, lineup } = linked;
   const updateTeamMutation = useUpdateTeamMutation();
+  const { crossPasses: crossPassesEnabled } = useClubFeatures();
 
   const onCrossPassesChange = (crossPasses: LineupCrossPass[]) => {
     updateTeamMutation.mutate(withLineupCrossPasses(team, lineup._id, crossPasses));
@@ -34,7 +36,9 @@ const TaskLineupModal = ({ open, onClose, linked }: Props) => {
 
         <DogChain dogs={lineup.dogs} />
 
-        <LineupCrossPasses lineup={lineup} editable onChange={onCrossPassesChange} />
+        {crossPassesEnabled && (
+          <LineupCrossPasses lineup={lineup} editable onChange={onCrossPassesChange} />
+        )}
 
         <DialogActions sx={{ padding: 0 }}>
           <Button size="medium" variant="outlined" onClick={onClose}>

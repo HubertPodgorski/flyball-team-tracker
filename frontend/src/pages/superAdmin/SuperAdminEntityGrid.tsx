@@ -17,7 +17,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { useSnackbar } from "notistack";
 import { useTranslation } from "react-i18next";
 import AddFab, { FAB_CONTENT_CLEARANCE } from "../../components/AddFab";
-import { CLUBS } from "../../helpers/teams";
+import { useClubsQuery } from "../../queries/clubs";
 import {
   createSuperAdminItem,
   deleteSuperAdminItem,
@@ -53,6 +53,7 @@ const SuperAdminEntityGrid = ({
   resolveFormExtraProps,
 }: Props) => {
   const [team, setTeam] = useState("");
+  const { data: clubs = [] } = useClubsQuery();
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [formExtraProps, setFormExtraProps] = useState<object>({});
@@ -192,7 +193,7 @@ const SuperAdminEntityGrid = ({
           >
             <MenuItem value="">{t("pages.superAdmin.allClubs")}</MenuItem>
 
-            {CLUBS.map((teamOption) => (
+            {clubs.map((teamOption) => (
               <MenuItem key={teamOption} value={teamOption}>
                 {teamOption}
               </MenuItem>

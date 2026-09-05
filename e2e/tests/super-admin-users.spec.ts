@@ -17,14 +17,14 @@ test("super-admin can reassign a user's club and roles via the entity grid", asy
   await signupAndLoginAsTrainer(page, {
     email: memberEmail,
     name: memberName,
-    teamCode: "TEST",
+    clubCode: "TEST",
   });
   await logout(page);
 
   await signupAndLoginAsTrainer(page, {
     email: superAdminEmail,
     name: "E2E Super Admin",
-    teamCode: "TEST",
+    clubCode: "TEST",
   });
   await promoteToSuperAdmin(superAdminEmail);
   await logout(page);
@@ -118,4 +118,45 @@ test("super-admin can reassign a user's club and roles via the entity grid", asy
   await row.locator('[aria-label="Delete"]').click();
   await page.getByRole("button", { name: "Delete forever" }).click();
   await expect(page.getByText(memberName, { exact: true })).not.toBeVisible();
+});
+
+// Regression: the super-admin UI's own hardcoded club list drifted from the
+// backend's - the Select silently showed unselected for a club missing from it.
+test("editing a user from a less common club shows that club correctly prefilled in the Team select", async ({
+  page,
+}) => {
+  const superAdminEmail = uniqueEmail("super-admin");
+  const memberEmail = uniqueEmail("member");
+  const memberName = "E2E Ultra Club Member";
+
+  await signupAndLoginAsTrainer(page, {
+    email: memberEmail,
+    name: memberName,
+    clubCode: "ULTRA_FLYBALL_TEAM",
+  });
+  await logout(page);
+
+  await signupAndLoginAsTrainer(page, {
+    email: superAdminEmail,
+    name: "E2E Ultra Club Super Admin",
+    clubCode: "TEST",
+  });
+  await promoteToSuperAdmin(superAdminEmail);
+  await logout(page);
+  await login(page, superAdminEmail);
+
+  // Left on "All clubs" - that's what auto-injects the Team column (see
+  // SuperAdminEntityGrid.tsx) the trainer already saw the right value in.
+  await page.goto("/super-admin/users");
+
+  await expect(
+    page.locator(".MuiDataGrid-row", { hasText: memberName }).getByText("ULTRA_FLYBALL_TEAM")
+  ).toBeVisible();
+
+  await page
+    .locator(".MuiDataGrid-row", { hasText: memberName })
+    .locator('[aria-label="Edit"]')
+    .click();
+
+  await expect(page.getByRole("combobox", { name: "Team" })).toHaveText("ULTRA_FLYBALL_TEAM");
 });

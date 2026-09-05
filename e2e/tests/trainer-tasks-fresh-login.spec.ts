@@ -14,7 +14,7 @@ test("tasks actually load after a pure SPA login, reached via nav link (no page 
   page,
 }) => {
   const email = uniqueEmail("fresh-login-tasks");
-  await signupAndLoginAsTrainer(page, { email, name: "Fresh Login", teamCode: "TEST" });
+  await signupAndLoginAsTrainer(page, { email, name: "Fresh Login", clubCode: "TEST" });
   await promoteToTrainer(email);
   await logout(page);
   await login(page, email);

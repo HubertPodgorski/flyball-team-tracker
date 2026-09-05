@@ -10,7 +10,7 @@ test("trainer can pick a specific date for an event via the date picker", async 
 }) => {
   const email = uniqueEmail("trainer");
 
-  await signupAndLoginAsTrainer(page, { email, name: "E2E Trainer", teamCode: "TEST" });
+  await signupAndLoginAsTrainer(page, { email, name: "E2E Trainer", clubCode: "TEST" });
   await promoteToTrainer(email);
   await logout(page);
   await login(page, email);

@@ -14,7 +14,7 @@ import { signupAndLoginAsTrainer, login, logout } from "../helpers/auth";
 test("every drawer and bottom-tab nav link goes to its own route", async ({ page }) => {
   const email = uniqueEmail("super-admin");
 
-  await signupAndLoginAsTrainer(page, { email, name: "E2E Nav User", teamCode: "TEST" });
+  await signupAndLoginAsTrainer(page, { email, name: "E2E Nav User", clubCode: "TEST" });
   await promoteToSuperAdmin(email);
   await logout(page);
   await login(page, email);

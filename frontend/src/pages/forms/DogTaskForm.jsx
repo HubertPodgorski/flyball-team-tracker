@@ -6,14 +6,12 @@ import FormTextField from "../../components/inputs/FormTextField";
 import FormModal from "../../components/FormModal";
 import FormGrid from "../../components/FormGrid";
 import FormSelect from "../../components/inputs/FormSelect";
-import { CLUBS } from "../../helpers/teams";
+import { useClubsQuery } from "../../queries/clubs";
 import {
   useCreateDogTaskMutation,
   useUpdateDogTaskMutation,
 } from "../../queries/dogTasks";
 import { useSubmitGuard } from "../../hooks/useSubmitGuard";
-
-const teamOptions = CLUBS.map((club) => ({ value: club, label: club }));
 
 // Single source for both defaultValues and the reset effect below - see
 // CrossPassModal.tsx's getFormValues for why keeping these in sync matters.
@@ -29,6 +27,8 @@ const DogTaskForm = ({
   onSubmitOverride,
 }) => {
   const { t } = useTranslation();
+  const { data: clubs = [] } = useClubsQuery();
+  const teamOptions = clubs.map((club) => ({ value: club, label: club }));
   const createDogTaskMutation = useCreateDogTaskMutation();
   const updateDogTaskMutation = useUpdateDogTaskMutation();
   const submitGuard = useSubmitGuard();

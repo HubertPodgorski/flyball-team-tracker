@@ -11,7 +11,7 @@ test("trainer can assign a dog to a teammate and remove them", async ({ page }) 
   await signupAndLoginAsTrainer(page, {
     email: trainerEmail,
     name: "E2E Trainer",
-    teamCode: "TEST",
+    clubCode: "TEST",
   });
   await promoteToTrainer(trainerEmail);
   await logout(page);
@@ -25,7 +25,7 @@ test("trainer can assign a dog to a teammate and remove them", async ({ page }) 
   await signupAndLoginAsTrainer(page, {
     email: teammateEmail,
     name: teammateName,
-    teamCode: "TEST",
+    clubCode: "TEST",
   });
   await logout(page);
 
@@ -75,7 +75,7 @@ test("trainer can reset a teammate's password when they're locked out", async ({
   await signupAndLoginAsTrainer(page, {
     email: trainerEmail,
     name: "E2E Reset Trainer",
-    teamCode: "TEST",
+    clubCode: "TEST",
   });
   await promoteToTrainer(trainerEmail);
   await logout(page);
@@ -83,7 +83,7 @@ test("trainer can reset a teammate's password when they're locked out", async ({
   await signupAndLoginAsTrainer(page, {
     email: teammateEmail,
     name: teammateName,
-    teamCode: "TEST",
+    clubCode: "TEST",
   });
   await logout(page);
 

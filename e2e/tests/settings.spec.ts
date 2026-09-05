@@ -9,7 +9,7 @@ test("user can switch the UI language and toggle a dog's cross-pass sync flags",
   const email = uniqueEmail("trainer");
   const trainerName = `E2E Settings Trainer ${Date.now()}`;
 
-  await signupAndLoginAsTrainer(page, { email, name: trainerName, teamCode: "TEST" });
+  await signupAndLoginAsTrainer(page, { email, name: trainerName, clubCode: "TEST" });
   await promoteToTrainer(email);
   await logout(page);
   await login(page, email);
@@ -77,7 +77,7 @@ test("user can change their own password from Settings", async ({ page }) => {
   await signupAndLoginAsTrainer(page, {
     email,
     name: "E2E Password Change",
-    teamCode: "TEST",
+    clubCode: "TEST",
   });
 
   await page.goto("/user-panel/settings");

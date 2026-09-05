@@ -8,7 +8,7 @@ test("super-admin can create, edit, and delete an event via the entity grid", as
 }) => {
   const email = uniqueEmail("super-admin");
 
-  await signupAndLoginAsTrainer(page, { email, name: "E2E Super Admin", teamCode: "TEST" });
+  await signupAndLoginAsTrainer(page, { email, name: "E2E Super Admin", clubCode: "TEST" });
   await promoteToSuperAdmin(email);
   await logout(page);
   await login(page, email);
@@ -45,7 +45,21 @@ test("super-admin can create, edit, and delete an event via the entity grid", as
 
   const editedRow = page.locator(".MuiDataGrid-row", { hasText: editedName });
 
-  await editedRow.locator('[aria-label="Delete"]').click();
+  // Reassign to a different club - moves the row out of the current filter.
+  await editedRow.locator('[aria-label="Edit"]').click();
+  await page.getByRole("combobox", { name: "Team", exact: true }).click();
+  await page.getByRole("option", { name: "WEST_SIDE_DOGZ", exact: true }).click();
+  await page.getByRole("button", { name: "Submit" }).click();
+  await expect(page.getByText(editedName)).not.toBeVisible();
+
+  await page.getByRole("combobox", { name: "Club" }).click();
+  await page.getByRole("option", { name: "WEST_SIDE_DOGZ", exact: true }).click();
+
+  const reassignedRow = page.locator(".MuiDataGrid-row", { hasText: editedName });
+
+  await expect(reassignedRow).toBeVisible();
+
+  await reassignedRow.locator('[aria-label="Delete"]').click();
   await page.getByRole("button", { name: "Delete forever" }).click();
   await expect(page.getByText(editedName)).not.toBeVisible();
 });

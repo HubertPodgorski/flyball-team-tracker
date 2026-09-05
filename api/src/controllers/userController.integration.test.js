@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import userControllerModule from "./userController.js";
 import testHelpersModule from "../testHelpers.js";
 
-const { signup, login, resetUserPassword, changePassword, getClubCodes } =
+const { signup, login, resetUserPassword, changePassword, getClubCodes, getClubs } =
   userControllerModule;
 const UserModel = mongoose.model("User");
 const { mockRes } = testHelpersModule;
@@ -18,7 +18,7 @@ describe("signup", () => {
           name: "Api User",
           email: "api-user@example.com",
           password: "password123",
-          teamCode: "TEST",
+          clubCode: "TEST",
         },
       },
       res
@@ -40,7 +40,7 @@ describe("signup", () => {
           name: "Api User",
           email: "orphan@example.com",
           password: "password123",
-          teamCode: "NOT_A_REAL_CODE",
+          clubCode: "NOT_A_REAL_CODE",
         },
       },
       res
@@ -60,7 +60,7 @@ describe("signup", () => {
           name: "First",
           email: "duplicate@example.com",
           password: "password123",
-          teamCode: "TEST",
+          clubCode: "TEST",
         },
       },
       first
@@ -76,7 +76,7 @@ describe("signup", () => {
           name: "Second",
           email: "duplicate@example.com",
           password: "password123",
-          teamCode: "TEST",
+          clubCode: "TEST",
         },
       },
       second
@@ -101,16 +101,16 @@ describe("getClubCodes", () => {
     expect(res.statusCode).toBe(200);
     expect(res.body.length).toBeGreaterThan(0);
 
-    for (const teamCode of res.body) {
+    for (const clubCode of res.body) {
       const signupRes = mockRes();
 
       await signup(
         {
           body: {
             name: "Code Check",
-            email: `code-check-${teamCode}@example.com`,
+            email: `code-check-${clubCode}@example.com`,
             password: "password123",
-            teamCode,
+            clubCode,
           },
         },
         signupRes
@@ -118,6 +118,43 @@ describe("getClubCodes", () => {
 
       expect(signupRes.statusCode).toBe(200);
     }
+  });
+});
+
+// getClubCodes and getClubs used to be two independently hardcoded lists
+// that drifted apart - proves every club a signup actually lands in is one getClubs hands out.
+describe("getClubs", () => {
+  it("lists exactly the clubs that signing up with a valid code actually resolves to", async () => {
+    const codesRes = mockRes();
+
+    await getClubCodes({}, codesRes);
+
+    const resolvedClubs = new Set();
+
+    for (const clubCode of codesRes.body) {
+      const signupRes = mockRes();
+
+      await signup(
+        {
+          body: {
+            name: "Club Check",
+            email: `club-check-${clubCode}@example.com`,
+            password: "password123",
+            clubCode,
+          },
+        },
+        signupRes
+      );
+
+      resolvedClubs.add(signupRes.body.user.team);
+    }
+
+    const clubsRes = mockRes();
+
+    await getClubs({}, clubsRes);
+
+    expect(clubsRes.statusCode).toBe(200);
+    expect(new Set(clubsRes.body)).toEqual(resolvedClubs);
   });
 });
 
@@ -137,7 +174,7 @@ describe("password never reaches the client", () => {
           name: "No Leak",
           email: "no-leak@example.com",
           password: "password123",
-          teamCode: "TEST",
+          clubCode: "TEST",
         },
       },
       res
@@ -159,7 +196,7 @@ describe("resetUserPassword (trainer, own club)", () => {
           name: "Reset Target",
           email: "reset-target@example.com",
           password: "original-password",
-          teamCode: "TEST",
+          clubCode: "TEST",
         },
       },
       signupRes
@@ -211,7 +248,7 @@ describe("resetUserPassword (trainer, own club)", () => {
           name: "Other Club User",
           email: "other-club-user@example.com",
           password: "original-password",
-          teamCode: "FLYVENGERS",
+          clubCode: "FLYVENGERS",
         },
       },
       signupRes
@@ -247,7 +284,7 @@ describe("changePassword (self-service)", () => {
           name: "Self Change",
           email: "self-change@example.com",
           password: "old-password",
-          teamCode: "TEST",
+          clubCode: "TEST",
         },
       },
       signupRes
@@ -286,7 +323,7 @@ describe("changePassword (self-service)", () => {
           name: "Wrong Current",
           email: "wrong-current@example.com",
           password: "real-password",
-          teamCode: "TEST",
+          clubCode: "TEST",
         },
       },
       signupRes

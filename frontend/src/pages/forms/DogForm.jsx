@@ -6,11 +6,9 @@ import FormTextField from "../../components/inputs/FormTextField";
 import FormModal from "../../components/FormModal";
 import FormGrid from "../../components/FormGrid";
 import FormSelect from "../../components/inputs/FormSelect";
-import { CLUBS } from "../../helpers/teams";
+import { useClubsQuery } from "../../queries/clubs";
 import { useCreateDogMutation, useUpdateDogMutation } from "../../queries/dogs";
 import { useSubmitGuard } from "../../hooks/useSubmitGuard";
-
-const teamOptions = CLUBS.map((club) => ({ value: club, label: club }));
 
 // useForm's `defaultValues` and this form's own `form.reset()` calls must
 // agree on shape, or TanStack Form's internal update effect fights the
@@ -27,6 +25,8 @@ const parseJumpHeight = (value) =>
 
 const DogForm = ({ open, onClose, initialData, editingId, onSubmitOverride }) => {
   const { t } = useTranslation();
+  const { data: clubs = [] } = useClubsQuery();
+  const teamOptions = clubs.map((club) => ({ value: club, label: club }));
   const createDogMutation = useCreateDogMutation();
   const updateDogMutation = useUpdateDogMutation();
   const submitGuard = useSubmitGuard();

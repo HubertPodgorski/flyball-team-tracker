@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { Button, DialogActions } from "@mui/material";
 import { useForm, useStore } from "@tanstack/react-form";
 import { useTranslation } from "react-i18next";
@@ -8,11 +8,9 @@ import FormGrid from "../../components/FormGrid";
 import FormDatePicker from "../../components/inputs/FormDatePicker";
 import { getEventTypeOptions } from "../../components/inputs/consts";
 import FormSelect from "../../components/inputs/FormSelect";
-import { CLUBS } from "../../helpers/teams";
+import { useClubsQuery } from "../../queries/clubs";
 import { useCreateEventMutation, useUpdateEventMutation } from "../../queries/events";
 import { useSubmitGuard } from "../../hooks/useSubmitGuard";
-
-const teamOptions = CLUBS.map((club) => ({ value: club, label: club }));
 
 // Single source for both useForm's defaultValues and the reset effect below
 // - see DogTaskForm.jsx for why keeping these in sync matters.
@@ -31,6 +29,8 @@ const EventForm = ({
   onSubmitOverride,
 }) => {
   const { t } = useTranslation();
+  const { data: clubs = [] } = useClubsQuery();
+  const teamOptions = clubs.map((club) => ({ value: club, label: club }));
   const createEventMutation = useCreateEventMutation();
   const updateEventMutation = useUpdateEventMutation();
   const submitGuard = useSubmitGuard();
@@ -76,6 +76,25 @@ const EventForm = ({
   useEffect(() => {
     form.reset(mapToFormValues(initialData));
   }, [initialData, form]);
+
+  const typeOptions = getEventTypeOptions(t);
+  const type = useStore(form.store, (state) => state.values.type);
+  const name = useStore(form.store, (state) => state.values.name);
+  const lastAutoNameRef = useRef("");
+
+  // New events only - declared after the reset effect above, so a fresh
+  // mount's reset can't immediately wipe out this one's fill.
+  useEffect(() => {
+    if (editingId || !type) return;
+
+    if (name !== "" && name !== lastAutoNameRef.current) return;
+
+    const label = typeOptions.find((option) => option.value === type)?.label ?? "";
+
+    form.setFieldValue("name", label);
+    lastAutoNameRef.current = label;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [type]);
 
   const handleClose = () => {
     form.reset();

@@ -24,17 +24,17 @@ const SignupForm = () => {
 
   const navigate = useNavigate();
   const { signup, loading, error } = useSignup();
-  // Single source of truth is the backend's own teamCodeMap (see
+  // Single source of truth is the backend's own clubCodeMap (see
   // userModel.js) - fetched instead of duplicated here, so the two can't
   // silently drift out of sync across two independent deployments (frontend
   // on Vercel, backend on Heroku, no shared build step between them).
   // Skip this field's own validation unless the list has actually loaded
   // successfully - while it's still loading OR if the fetch fails outright,
-  // `validTeamCodes` is undefined, and `!undefined?.includes(...)` is always
+  // `validClubCodes` is undefined, and `!undefined?.includes(...)` is always
   // true, which would otherwise flag every code (including correct ones) as
   // invalid and block signup entirely over what should be a non-blocking
   // convenience check. The backend is the real authority on submit either way.
-  const { data: validTeamCodes, isSuccess: clubCodesLoaded } = useClubCodesQuery();
+  const { data: validClubCodes, isSuccess: clubCodesLoaded } = useClubCodesQuery();
 
   const form = useForm({
     defaultValues: {
@@ -42,10 +42,10 @@ const SignupForm = () => {
       password: "",
       email: "",
       repeatPassword: "",
-      teamCode: "",
+      clubCode: "",
     },
-    onSubmit: async ({ value: { name, password, email, teamCode } }) => {
-      await signup(name, email, password, teamCode);
+    onSubmit: async ({ value: { name, password, email, clubCode } }) => {
+      await signup(name, email, password, clubCode);
     },
   });
 
@@ -102,12 +102,12 @@ const SignupForm = () => {
 
           <FormTextField
             form={form}
-            name="teamCode"
+            name="clubCode"
             label={t("forms.signup.clubCode")}
             validate={(currentValue) => {
               if (!clubCodesLoaded) return;
 
-              if (!validTeamCodes?.includes(currentValue)) {
+              if (!validClubCodes?.includes(currentValue)) {
                 return t("forms.signup.invalidClubCode");
               }
             }}

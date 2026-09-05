@@ -84,7 +84,7 @@ test.describe("forged tokens are rejected by the real server, not just the middl
     await signupAndLoginAsTrainer(page, {
       email: uniqueEmail("real-token"),
       name: "E2E Real Token",
-      teamCode: "TEST",
+      clubCode: "TEST",
     });
 
     await page.goto("/user-panel/my-dogs");
@@ -99,7 +99,7 @@ test.describe("forged tokens are rejected by the real server, not just the middl
     await signupAndLoginAsTrainer(page, {
       email: uniqueEmail("secret-rotated"),
       name: "E2E Secret Rotated",
-      teamCode: "TEST",
+      clubCode: "TEST",
     });
 
     // Simulates exactly what rotating the server's SECRET does to every
@@ -126,7 +126,9 @@ test.describe("forged tokens are rejected by the real server, not just the middl
     // Before the fix: this just hung in a broken-looking state - every
     // load/save silently 401ing with no visible explanation, "logged in"
     // localStorage still sitting there.
-    await page.goto("/user-panel/my-dogs");
+    // A parallel query's 401 can win the redirect race before this goto's
+    // own "load" fires, aborting it - the assertions below are what matter.
+    await page.goto("/user-panel/my-dogs").catch(() => {});
 
     await expect(page).toHaveURL(/\/login$/);
     await expect

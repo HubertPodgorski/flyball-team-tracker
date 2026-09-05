@@ -14,7 +14,7 @@ test("syncCrossPasses propagates cross-pass timing between two lineups sharing t
   const email = uniqueEmail("trainer");
   const trainerName = `E2E Sync Trainer ${Date.now()}`;
 
-  await signupAndLoginAsTrainer(page, { email, name: trainerName, teamCode: "TEST" });
+  await signupAndLoginAsTrainer(page, { email, name: trainerName, clubCode: "TEST" });
   await promoteToTrainer(email);
   await logout(page);
   await login(page, email);
@@ -129,7 +129,7 @@ test("syncCrossPassesWithMyDogs pushes a lineup's cross-pass timing into My Dogs
   const email = uniqueEmail("trainer");
   const trainerName = `E2E MyDogsSync Trainer ${Date.now()}`;
 
-  await signupAndLoginAsTrainer(page, { email, name: trainerName, teamCode: "TEST" });
+  await signupAndLoginAsTrainer(page, { email, name: trainerName, clubCode: "TEST" });
   await promoteToTrainer(email);
   await logout(page);
   await login(page, email);

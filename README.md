@@ -69,15 +69,17 @@ Runs both at once (`concurrently`) — API on http://localhost:4001 (nodemon), f
 
 ## Creating a local account
 
-Signup requires a `teamCode` (checked in [userModel.js](api/src/models/userModel.js)). Valid codes:
+Signup requires a `clubCode` (checked in [userModel.js](api/src/models/userModel.js)). Valid codes:
 
-| Code | Team |
+| Code | Club |
 |---|---|
 | `TEST` | `TEST_TEAM` (simplest for local dev) |
 | `DZIKIEGZIKI` | `DZIKIE_GZIKI` |
 | `DZIKIE_GZIKI_NABOR` | `DZIKIE_GZIKI_NABOR` |
 | `WEST_SIDE_DOGZ` | `WEST_SIDE_DOGZ` |
 | `FLYVENGERS` | `FLYVENGERS` |
+| `ULTRA_FLYBALL_TEAM` | `ULTRA_FLYBALL_TEAM` |
+| `SANDBOX` | `SANDBOX` (throwaway club for trying out risky features, e.g. feature flags) |
 
 All data (dogs, tasks, events, event templates, dog tasks) is scoped by `team` — only visible to/editable by users who signed up with the same code.
 

@@ -26,7 +26,7 @@ test("super-admin dog-tasks panel lists across teams, filters by team, and suppo
   await signupAndLoginAsTrainer(page, {
     email: teamAEmail,
     name: "E2E Panel Team A Trainer",
-    teamCode: "TEST",
+    clubCode: "TEST",
   });
   await promoteToTrainer(teamAEmail);
   await logout(page);
@@ -37,7 +37,7 @@ test("super-admin dog-tasks panel lists across teams, filters by team, and suppo
   await signupAndLoginAsTrainer(page, {
     email: teamBEmail,
     name: "E2E Panel Team B Trainer",
-    teamCode: "WEST_SIDE_DOGZ",
+    clubCode: "WEST_SIDE_DOGZ",
   });
   await promoteToTrainer(teamBEmail);
   await logout(page);
@@ -48,7 +48,7 @@ test("super-admin dog-tasks panel lists across teams, filters by team, and suppo
   await signupAndLoginAsTrainer(page, {
     email: superAdminEmail,
     name: "E2E Panel Super Admin",
-    teamCode: "TEST",
+    clubCode: "TEST",
   });
   await promoteToSuperAdmin(superAdminEmail);
   await logout(page);
@@ -95,12 +95,28 @@ test("super-admin dog-tasks panel lists across teams, filters by team, and suppo
   await page.getByRole("button", { name: "Submit" }).click();
   await expect(page.getByText(editedTaskName)).toBeVisible();
 
-  // Delete.
+  // Reassign to a different club - moves the row out of the current filter.
   const editedRow = page.locator(".MuiDataGrid-row", {
     hasText: editedTaskName,
   });
 
-  await editedRow.locator('[aria-label="Delete"]').click();
+  await editedRow.locator('[aria-label="Edit"]').click();
+  await page.getByRole("combobox", { name: "Team", exact: true }).click();
+  await page.getByRole("option", { name: "WEST_SIDE_DOGZ", exact: true }).click();
+  await page.getByRole("button", { name: "Submit" }).click();
+  await expect(page.getByText(editedTaskName)).not.toBeVisible();
+
+  await page.getByRole("combobox", { name: "Club" }).click();
+  await page.getByRole("option", { name: "WEST_SIDE_DOGZ", exact: true }).click();
+
+  const reassignedRow = page.locator(".MuiDataGrid-row", {
+    hasText: editedTaskName,
+  });
+
+  await expect(reassignedRow).toBeVisible();
+
+  // Delete.
+  await reassignedRow.locator('[aria-label="Delete"]').click();
   await page.getByRole("button", { name: "Delete forever" }).click();
   await expect(page.getByText(editedTaskName)).not.toBeVisible();
 });

@@ -12,7 +12,7 @@ test("super-admin can manage a club's teams directly", async ({ page }) => {
 
   const email = uniqueEmail("super-admin");
 
-  await signupAndLoginAsTrainer(page, { email, name: "E2E Super Admin", teamCode: "TEST" });
+  await signupAndLoginAsTrainer(page, { email, name: "E2E Super Admin", clubCode: "TEST" });
   await promoteToSuperAdmin(email);
   await logout(page);
   await login(page, email);

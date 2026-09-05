@@ -7,6 +7,7 @@ const CLUBS = [
   "WEST_SIDE_DOGZ",
   "TEST_TEAM",
   "ULTRA_FLYBALL_TEAM",
+  "SANDBOX",
 ];
 
 module.exports = { CLUBS };

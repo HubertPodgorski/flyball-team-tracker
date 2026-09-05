@@ -58,7 +58,33 @@
     "allDogTasks": "Wszystkie zadania psów",
     "allEvents": "Wszystkie wydarzenia",
     "allTeams": "Wszystkie drużyny",
-    "openDrawer": "otwórz menu"
+    "openDrawer": "otwórz menu",
+    "features": "Funkcje"
+  },
+  "features": {
+    "intro": "Wyłącz to, czego Twój klub nie używa - trenerzy i członkowie przestaną to widzieć w całej aplikacji.",
+    "crossPassesDisabledToo": "Crossy też zostały wyłączone - nie mają się do czego podpiąć bez składów.",
+    "teamsAndLineups": {
+      "title": "Drużyny i składy",
+      "body": "Budowanie puli psów i składów startowych.",
+      "disableConfirm_one": "To zmieni {{count}} zadanie z podpiętym składem na zwykłe zadanie z listą psów",
+      "disableConfirm_few": "To zmieni {{count}} zadania z podpiętym składem na zwykłe zadania z listą psów",
+      "disableConfirm_many": "To zmieni {{count}} zadań z podpiętym składem na zwykłe zadania z listą psów",
+      "disableConfirm_other": "To zmieni {{count}} zadania z podpiętym składem na zwykłe zadania z listą psów"
+    },
+    "crossPasses": {
+      "title": "Crossy",
+      "body": "Czasy crossów w składach drużyn oraz dwa przełączniki synchronizacji w Ustawieniach. Crossy psa w Moje psy działają niezależnie od tego ustawienia.",
+      "requiresTeams": "Wymaga włączonych Drużyn i składów."
+    },
+    "eventsCalendar": {
+      "title": "Wydarzenia / Kalendarz",
+      "body": "Planowanie i śledzenie obecności."
+    },
+    "dogTasksCatalog": {
+      "title": "Katalog zadań psów",
+      "body": "Lista podpowiedzi opisów zadań."
+    }
   },
   "settings": {
     "language": "Język",
@@ -187,6 +213,8 @@
       "showDetails": "Pokaż szczegóły",
       "selectAnyDogAttendance": "Zaznacz obecność dowolnego psa",
       "selectDogAttendance_one": "Zaznacz obecność psa",
+      "selectDogAttendance_few": "Zaznacz obecność psów",
+      "selectDogAttendance_many": "Zaznacz obecność psów",
       "selectDogAttendance_other": "Zaznacz obecność psów",
       "selectAnyoneAttendance": "Zaznacz obecność dowolnej osoby",
       "selectMyAttendance": "Zaznacz moją obecność"
@@ -301,8 +329,35 @@
         "Zadania - ta sama tablica z przeciąganiem, plus możliwość tworzenia, edycji i usuwania zadań.",
         "Psy, Zadania psów, Użytkownicy - zarządzaj psami klubu (w tym wysokością hopek każdego psa), rodzajami zadań, które można im przypisać, oraz członkami klubu. Otwórz kartę członka, aby zresetować jego hasło, jeśli nie może się zalogować - otrzymasz jednorazowe tymczasowe hasło do przekazania mu.",
         "Wydarzenia - twórz treningi, zawody, seminaria i zebrania dla klubu.",
-        "Drużyny - buduj i edytuj drużyny oraz ich składy dla całego klubu, nie tylko dla własnych psów."
+        "Drużyny - buduj i edytuj drużyny oraz ich składy dla całego klubu, nie tylko dla własnych psów.",
+        "Funkcje - wyłącz części aplikacji, których Twój klub nie używa, np. Drużyny i składy, Crossy, Wydarzenia/Kalendarz czy katalog zadań dla psów."
       ]
+    },
+    "trainerWorkflow": {
+      "title": "Pierwsze kroki jako trener",
+      "intro": "Pierwsze kroki w aplikacji:",
+      "steps": {
+        "addDogs": {
+          "title": "Dodaj swoje psy",
+          "body": "Przejdź do Psy i dodaj każdego psa w klubie - drużyna może wybierać tylko spośród psów, które już istnieją."
+        },
+        "buildTeams": {
+          "title": "Zbuduj drużynę",
+          "body": "Przejdź do Drużyny i utwórz pulę do 6 psów, z którymi startuje klub."
+        },
+        "buildLineups": {
+          "title": "Zbuduj skład",
+          "body": "W tej drużynie ułóż 4 psy w skład - wysokość hopek liczy się automatycznie na podstawie najniższego psa."
+        },
+        "addTasks": {
+          "title": "Dodaj zadania",
+          "body": "Przejdź do Zadania i planuj trening na tablicy z przeciąganiem - wybierz psy bezpośrednio albo podepnij zadanie pod cały skład."
+        },
+        "setCrossPasses": {
+          "title": "Ustaw czasy crossów",
+          "body": "Na treningu otwórz zadanie podpięte pod skład, by edytować czasy crossów."
+        }
+      }
     }
   },
   "pitch": {

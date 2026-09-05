@@ -10,6 +10,7 @@ import DogChain from "./DogChain";
 import LineupNameField from "./LineupNameField";
 import LineupDogsOrder from "./LineupDogsOrder";
 import LineupCrossPasses from "./LineupCrossPasses";
+import { useClubFeatures } from "../../hooks/useClubFeatures";
 
 interface Props {
   lineup: Lineup;
@@ -29,8 +30,23 @@ const LineupAccordion = ({
   onCrossPassesChange,
 }: Props) => {
   const { t } = useTranslation();
+  const { crossPasses: crossPassesEnabled } = useClubFeatures();
   // Controlled - avoids the CSS ".Mui-expanded &" trick.
   const [expanded, setExpanded] = useState(false);
+
+  // AccordionDetails only ever holds trainer-only controls or cross-passes -
+  // with neither, a non-trainer gets a plain summary instead of a dead expand.
+  if (!editable && !crossPassesEnabled) {
+    return (
+      <Box sx={{ display: "flex", alignItems: "center", minHeight: 48 }}>
+        <Box sx={{ display: "flex", flexDirection: "column", flexGrow: 1, minWidth: 0, gap: 0.5 }}>
+          <Typography>{formatLineupLabel(lineup, t("pages.teams.lineupFallback"))}</Typography>
+
+          <DogChain dogs={lineup.dogs} variant="caption" color="text.secondary" noWrap />
+        </Box>
+      </Box>
+    );
+  }
 
   return (
     <Accordion
@@ -72,7 +88,9 @@ const LineupAccordion = ({
 
         {/* Cross-pass times/notes are editable by any team member - only
             the team/lineup structure (dogs, order) is trainer-only. */}
-        <LineupCrossPasses lineup={lineup} editable onChange={onCrossPassesChange} />
+        {crossPassesEnabled && (
+          <LineupCrossPasses lineup={lineup} editable onChange={onCrossPassesChange} />
+        )}
       </AccordionDetails>
     </Accordion>
   );

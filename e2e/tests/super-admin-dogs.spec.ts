@@ -8,7 +8,7 @@ test("super-admin can create, edit, and delete a dog via the entity grid", async
 }) => {
   const email = uniqueEmail("super-admin");
 
-  await signupAndLoginAsTrainer(page, { email, name: "E2E Super Admin", teamCode: "TEST" });
+  await signupAndLoginAsTrainer(page, { email, name: "E2E Super Admin", clubCode: "TEST" });
   await promoteToSuperAdmin(email);
   await logout(page);
   await login(page, email);
@@ -71,7 +71,7 @@ test("super-admin can create, edit, and delete a dog via the entity grid", async
 test("super-admin can sort the dogs grid by name", async ({ page }) => {
   const email = uniqueEmail("super-admin");
 
-  await signupAndLoginAsTrainer(page, { email, name: "E2E Super Admin", teamCode: "TEST" });
+  await signupAndLoginAsTrainer(page, { email, name: "E2E Super Admin", clubCode: "TEST" });
   await promoteToSuperAdmin(email);
   await logout(page);
   await login(page, email);

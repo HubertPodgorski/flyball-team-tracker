@@ -2,6 +2,15 @@ import React from "react";
 import { Box, Divider, List, ListItem, ListItemText, Typography } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { useIsTrainer } from "../../hooks/useIsTrainer";
+import WorkflowSteps from "../../components/WorkflowSteps";
+
+const TRAINER_WORKFLOW = [
+  { key: "addDogs", color: "success" },
+  { key: "buildTeams", color: "secondary" },
+  { key: "buildLineups", color: "primary" },
+  { key: "addTasks", color: "warning" },
+  { key: "setCrossPasses", color: "info" },
+] as const;
 
 interface SectionProps {
   title: string;
@@ -70,6 +79,19 @@ const About = () => {
 
       {isTrainer && (
         <>
+          <Divider />
+
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+            <Typography variant="h6">{t("about.trainerWorkflow.title")}</Typography>
+            <Typography variant="body2" color="text.secondary">
+              {t("about.trainerWorkflow.intro")}
+            </Typography>
+
+            <Box sx={{ marginTop: 1 }}>
+              <WorkflowSteps namespace="about.trainerWorkflow.steps" steps={TRAINER_WORKFLOW} />
+            </Box>
+          </Box>
+
           <Divider />
 
           <SectionBlock

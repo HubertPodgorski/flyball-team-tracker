@@ -11,7 +11,7 @@ test("trainer can reorder task rows via drag and drop, more than once in a row",
   await signupAndLoginAsTrainer(page, {
     email,
     name: "E2E Trainer",
-    teamCode: "TEST",
+    clubCode: "TEST",
   });
   await promoteToTrainer(email);
   await logout(page);

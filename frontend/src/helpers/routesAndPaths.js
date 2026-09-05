@@ -31,6 +31,7 @@ export const trainerRoutes = {
   users: "/trainer-panel/users",
   dogTasks: "/trainer-panel/dog-tasks",
   teams: "/trainer-panel/teams",
+  features: "/trainer-panel/features",
 };
 
 export const trainerPaths = {
@@ -41,4 +42,5 @@ export const trainerPaths = {
   users: "users",
   dogTasks: "dog-tasks",
   teams: "teams",
+  features: "features",
 };

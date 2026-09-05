@@ -22,7 +22,7 @@ describe("superAdminController.resetUserPassword", () => {
           name: "Cross Club Target",
           email: "cross-club-target@example.com",
           password: "original-password",
-          teamCode: "FLYVENGERS",
+          clubCode: "FLYVENGERS",
         },
       },
       signupRes
