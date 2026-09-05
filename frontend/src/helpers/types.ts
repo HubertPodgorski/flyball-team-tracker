@@ -125,3 +125,15 @@ export interface Team {
   // Property key matches the backend's stored schema - renaming needs a data migration, not just a code change.
   matchups: Lineup[];
 }
+
+export interface ClubFeatures {
+  teamsAndLineups: boolean;
+  crossPasses: boolean;
+  eventsCalendar: boolean;
+  dogTasksCatalog: boolean;
+}
+
+export interface ClubSettings {
+  _id: string;
+  features: ClubFeatures;
+}

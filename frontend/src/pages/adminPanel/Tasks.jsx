@@ -8,11 +8,13 @@ import TasksDragNDrop from "../../components/admin/TasksDragNDrop";
 import CurrentEventSelectWithDogs from "../../components/admin/CurrentEventSelectWithDogs";
 import LineupTaskLegend from "../../components/LineupTaskLegend";
 import { TaskPlanningProvider } from "../../contexts/TaskPlanningContext";
+import { useClubFeatures } from "../../hooks/useClubFeatures";
 
 const Tasks = () => {
   const theme = useTheme();
   // TODO: load tasks from template
 
+  const { eventsCalendar: eventsCalendarEnabled } = useClubFeatures();
   const [isDragging, setIsDragging] = useState(false);
   const { mappedTasks } = useGetMappedTasks(true, isDragging);
   const maxRowIndex = useGetMaxRowIndex(mappedTasks);
@@ -41,7 +43,7 @@ const Tasks = () => {
           },
         }}
       >
-        <CurrentEventSelectWithDogs />
+        {eventsCalendarEnabled && <CurrentEventSelectWithDogs />}
 
         <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
           <LineupTaskLegend />

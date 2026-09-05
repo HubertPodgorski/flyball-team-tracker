@@ -21,7 +21,7 @@ test("a plain, unpromoted user is bounced away from trainer-panel and super-admi
 }) => {
   const email = uniqueEmail("plain-user");
 
-  await signupAndLoginAsTrainer(page, { email, name: "E2E Plain User", teamCode: "TEST" });
+  await signupAndLoginAsTrainer(page, { email, name: "E2E Plain User", clubCode: "TEST" });
 
   await page.goto("/trainer-panel/tasks");
   await expect(page).not.toHaveURL(/\/trainer-panel/);

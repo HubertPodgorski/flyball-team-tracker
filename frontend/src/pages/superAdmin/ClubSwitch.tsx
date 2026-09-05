@@ -13,7 +13,7 @@ import { useAuthContext } from "../../hooks/useAuthContext";
 import { useIsSuperAdmin } from "../../hooks/useIsSuperAdmin";
 import { useCurrentClub } from "../../hooks/useCurrentClub";
 import { useSwitchClub } from "../../hooks/useSwitchClub";
-import { CLUBS } from "../../helpers/teams";
+import { useClubsQuery } from "../../queries/clubs";
 
 const ClubSwitch = () => {
   const { t } = useTranslation();
@@ -22,6 +22,7 @@ const ClubSwitch = () => {
   const navigate = useNavigate();
   const currentClub = useCurrentClub();
   const { switchClub } = useSwitchClub();
+  const { data: clubs = [] } = useClubsQuery();
 
   useEffect(() => {
     if (!user || !isSuperAdmin) {
@@ -40,7 +41,7 @@ const ClubSwitch = () => {
       </Typography>
 
       <List>
-        {CLUBS.map((club) => (
+        {clubs.map((club) => (
           <ListItemButton
             divider
             key={club}

@@ -2,7 +2,7 @@ import { expect, Page } from "@playwright/test";
 
 export const signupAndLoginAsTrainer = async (
   page: Page,
-  { email, name, teamCode }: { email: string; name: string; teamCode: string }
+  { email, name, clubCode }: { email: string; name: string; clubCode: string }
 ) => {
   const password = "password123";
 
@@ -11,7 +11,7 @@ export const signupAndLoginAsTrainer = async (
   await page.getByRole("textbox", { name: "Email", exact: true }).fill(email);
   await page.getByRole("textbox", { name: "Password", exact: true }).fill(password);
   await page.getByRole("textbox", { name: "Repeat password", exact: true }).fill(password);
-  await page.getByRole("textbox", { name: "Club code", exact: true }).fill(teamCode);
+  await page.getByRole("textbox", { name: "Club code", exact: true }).fill(clubCode);
   await page.getByRole("button", { name: "Signup" }).click();
   await page.waitForURL(/\/user-panel/);
 };

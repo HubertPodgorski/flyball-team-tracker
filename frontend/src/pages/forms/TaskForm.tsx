@@ -37,6 +37,7 @@ import { withLineupCrossPasses } from "../../helpers/lineupLink";
 import { getLineupJumpHeight } from "../../helpers/lineup";
 import DogChain from "../../components/teams/DogChain";
 import LineupCrossPasses from "../../components/teams/LineupCrossPasses";
+import { useClubFeatures } from "../../hooks/useClubFeatures";
 
 interface DogOrderItem extends ItemInterface {
   name: string;
@@ -104,6 +105,7 @@ const TeamLineupPicker = ({ form, matchupRef }: { form: AnyReactFormApi; matchup
   const { t } = useTranslation();
   const { data: teams = [] } = useTeamsQuery();
   const updateTeamMutation = useUpdateTeamMutation();
+  const { crossPasses: crossPassesEnabled } = useClubFeatures();
   const [teamId, setTeamId] = useState(matchupRef?.squadId ?? "");
 
   if (teams.length === 0) {
@@ -187,7 +189,9 @@ const TeamLineupPicker = ({ form, matchupRef }: { form: AnyReactFormApi; matchup
       {lineup && (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
           <DogChain dogs={lineup.dogs} />
-          <LineupCrossPasses lineup={lineup} editable onChange={onCrossPassesChange} />
+          {crossPassesEnabled && (
+            <LineupCrossPasses lineup={lineup} editable onChange={onCrossPassesChange} />
+          )}
         </Box>
       )}
     </Box>
@@ -224,6 +228,8 @@ const TaskForm = ({
   const { t } = useTranslation();
   const { data: dogs = [] } = useDogsQuery();
   const { data: dogTasks = [] } = useDogTasksQuery();
+  const { dogTasksCatalog: dogTasksCatalogEnabled, teamsAndLineups: teamsEnabled } =
+    useClubFeatures();
   const createTaskMutation = useCreateTaskMutation();
   const updateTaskMutation = useUpdateTaskMutation();
   const submitGuard = useSubmitGuard();
@@ -257,8 +263,12 @@ const TaskForm = ({
     return values.position;
   };
 
+  // Not just `mode === "team"` - a stale "team" mode from data set before
+  // the feature was turned off must not resurrect a link on submit.
+  const isTeamMode = mode === "team" && teamsEnabled;
+
   const resolveSubmitDogs = (values: CreateEditTaskFormType) => {
-    if (mode === "team" && values.matchupRef) {
+    if (isTeamMode && values.matchupRef) {
       const team = teams.find(({ _id }) => _id === values.matchupRef!.squadId);
       const lineup = team?.matchups.find(({ _id }) => _id === values.matchupRef!.matchupId);
 
@@ -275,7 +285,7 @@ const TaskForm = ({
         description: values.description,
         dogs: resolveSubmitDogs(values),
         position: getPosition(values),
-        matchupRef: mode === "team" ? values.matchupRef : undefined,
+        matchupRef: isTeamMode ? values.matchupRef : undefined,
       };
 
       if (editingId) {
@@ -298,10 +308,9 @@ const TaskForm = ({
     onClose();
   };
 
-  const dogTaskOptions = dogTasks.map(({ name }) => ({
-    value: name,
-    label: name,
-  }));
+  const dogTaskOptions = dogTasksCatalogEnabled
+    ? dogTasks.map(({ name }) => ({ value: name, label: name }))
+    : [];
 
   const dogOptions = dogs.map(({ name, _id }) => {
     const attendance = dogsWithAttendance.find(({ _id: dogId }) => dogId === _id);
@@ -332,27 +341,32 @@ const TaskForm = ({
           {t("forms.task.pickDogsHint")}
         </Typography>
 
-        <ToggleButtonGroup
-          value={mode}
-          exclusive
-          fullWidth
-          onChange={(_event, newMode: "dogs" | "team" | null) => {
-            if (newMode) setMode(newMode);
-          }}
-        >
-          <ToggleButton value="dogs">{t("common.dogs")}</ToggleButton>
-          <ToggleButton value="team">{t("forms.task.teamLineup")}</ToggleButton>
-        </ToggleButtonGroup>
+        {teamsEnabled && (
+          <ToggleButtonGroup
+            value={mode}
+            exclusive
+            fullWidth
+            onChange={(_event, newMode: "dogs" | "team" | null) => {
+              if (newMode) setMode(newMode);
+            }}
+          >
+            <ToggleButton value="dogs">{t("common.dogs")}</ToggleButton>
+            <ToggleButton value="team">{t("forms.task.teamLineup")}</ToggleButton>
+          </ToggleButtonGroup>
+        )}
 
-        {mode === "dogs" && (
+        {/* Server-side, turning Teams & Lineups off already detaches every
+            task's matchupRef (see clubSettingsController.js) - this just
+            stops a NEW link being started while it's off. */}
+        {isTeamMode ? (
+          <TeamLineupPicker form={form} matchupRef={matchupRef} />
+        ) : (
           <>
             <FormSelect form={form} name="dogs" label={t("common.dogs")} options={dogOptions} />
 
             <DogsOrderField form={form} />
           </>
         )}
-
-        {mode === "team" && <TeamLineupPicker form={form} matchupRef={matchupRef} />}
 
         <DialogActions sx={{ padding: 0 }}>
           <Button size="medium" variant="outlined" onClick={handleClose}>

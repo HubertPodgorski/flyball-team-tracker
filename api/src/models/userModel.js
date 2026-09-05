@@ -5,18 +5,19 @@ const DogModel = require("./dogModel");
 
 const Schema = mongoose.Schema;
 
-// signup code -> team. Not 1:1 with CLUBS in helpers/teams.js since a code
-// can read differently than the team value it maps to (e.g. "DZIKIEGZIKI" -> "DZIKIE_GZIKI").
-const teamCodeMap = {
+// signup code -> club. Not 1:1 with CLUBS in helpers/teams.js since a code
+// can read differently than the club value it maps to (e.g. "DZIKIEGZIKI" -> "DZIKIE_GZIKI").
+const clubCodeMap = {
   DZIKIEGZIKI: "DZIKIE_GZIKI",
   FLYVENGERS: "FLYVENGERS",
   DZIKIE_GZIKI_NABOR: "DZIKIE_GZIKI_NABOR",
   WEST_SIDE_DOGZ: "WEST_SIDE_DOGZ",
   TEST: "TEST_TEAM",
   ULTRA_FLYBALL_TEAM: "ULTRA_FLYBALL_TEAM",
+  SANDBOX: "SANDBOX",
 };
 
-const getTeamFromTeamCode = (teamCode) => teamCodeMap[teamCode];
+const getClubFromClubCode = (clubCode) => clubCodeMap[clubCode];
 
 const userSchema = new Schema(
   {
@@ -48,7 +49,7 @@ const userSchema = new Schema(
   }
 );
 
-userSchema.statics.signup = async function (email, password, name, teamCode) {
+userSchema.statics.signup = async function (email, password, name, clubCode) {
   if (!email || !password) {
     throw Error("ALL_FIELDS_MUST_BE_FILLED");
   }
@@ -59,12 +60,12 @@ userSchema.statics.signup = async function (email, password, name, teamCode) {
     throw Error("EMAIL_ALREADY_IN_USE");
   }
 
-  const team = getTeamFromTeamCode(teamCode ?? "");
+  const club = getClubFromClubCode(clubCode ?? "");
 
   // An unrecognized code used to fall through silently, creating a user
   // with no club at all - a real account nothing ever surfaced as broken
   // until they wondered why every page came up empty.
-  if (!team) {
+  if (!club) {
     throw Error("INVALID_CLUB_CODE");
   }
 
@@ -76,7 +77,7 @@ userSchema.statics.signup = async function (email, password, name, teamCode) {
     password: hash,
     name,
     roles: [],
-    team,
+    team: club,
   });
 
   return user;
@@ -166,4 +167,4 @@ module.exports = mongoose.model("User", userSchema);
 // client-side validation, which could silently drift from this one (add a
 // club here and forget there, or vice versa). Exposed read-only via
 // GET /users/club-codes instead.
-module.exports.getValidTeamCodes = () => Object.keys(teamCodeMap);
+module.exports.getValidClubCodes = () => Object.keys(clubCodeMap);

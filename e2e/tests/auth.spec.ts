@@ -106,7 +106,7 @@ test.describe("authentication", () => {
     page,
   }) => {
     // SignupForm.jsx fetches the valid-codes list from GET /users/club-codes
-    // (see userModel.js's getValidTeamCodes - the server's teamCodeMap is now
+    // (see userModel.js's getValidClubCodes - the server's clubCodeMap is now
     // the single source of truth, no separate client-side list to drift out
     // of sync). Wait for that fetch before typing, or this assertion would
     // race it: the field's validator deliberately skips checking while the
@@ -145,7 +145,7 @@ test.describe("authentication", () => {
         name: "E2E API Bad Club Code",
         email,
         password: "password123",
-        teamCode: "NOT_A_REAL_CODE",
+        clubCode: "NOT_A_REAL_CODE",
       },
     });
 

@@ -18,7 +18,15 @@ const broadcast = (team, event, data) => {
 
   const payload = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
 
-  clients.forEach((res) => res.write(payload));
+  // A stale client (closed but not yet cleaned up) throws on write, which
+  // would otherwise abort delivery to every client still left in the loop.
+  clients.forEach((res) => {
+    try {
+      res.write(payload);
+    } catch {
+      clients.delete(res);
+    }
+  });
 };
 
 module.exports = { addClient, removeClient, broadcast };

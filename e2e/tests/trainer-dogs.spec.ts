@@ -97,7 +97,7 @@ test("leaving a dog's required name field empty shows a validation error", async
 test("double-clicking Submit on a new dog only creates it once", async ({ page }) => {
   const email = uniqueEmail("trainer");
 
-  await signupAndLoginAsTrainer(page, { email, name: "E2E Trainer", teamCode: "TEST" });
+  await signupAndLoginAsTrainer(page, { email, name: "E2E Trainer", clubCode: "TEST" });
   await promoteToTrainer(email);
   await logout(page);
   await login(page, email);
@@ -138,7 +138,7 @@ test("double-clicking Submit on a new dog only creates it once", async ({ page }
 test("reopening a dog for edit prefills its existing values", async ({ page }) => {
   const email = uniqueEmail("trainer");
 
-  await signupAndLoginAsTrainer(page, { email, name: "E2E Trainer", teamCode: "TEST" });
+  await signupAndLoginAsTrainer(page, { email, name: "E2E Trainer", clubCode: "TEST" });
   await promoteToTrainer(email);
   await logout(page);
   await login(page, email);

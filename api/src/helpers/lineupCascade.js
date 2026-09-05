@@ -46,4 +46,15 @@ const keepOnlyPoolDogsInMatchups = (matchups, allowedDogIds) =>
       }),
   }));
 
-module.exports = { detachTasksFromMatchup, keepOnlyPoolDogsInMatchups };
+// Club-wide version, for turning the whole feature off - no lineup to
+// re-read dogs from here, but the task's own `dogs` is already frozen.
+const detachAllLineupLinkedTasks = async (club) => {
+  const { modifiedCount } = await TaskModel.updateMany(
+    { team: club, matchupRef: { $exists: true } },
+    { $unset: { matchupRef: "" } }
+  );
+
+  return modifiedCount > 0;
+};
+
+module.exports = { detachTasksFromMatchup, keepOnlyPoolDogsInMatchups, detachAllLineupLinkedTasks };

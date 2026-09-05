@@ -15,7 +15,7 @@ test("core flows remain usable at a mobile viewport", async ({ page }) => {
 
   const email = uniqueEmail("trainer");
 
-  await signupAndLoginAsTrainer(page, { email, name: "E2E Mobile Trainer", teamCode: "TEST" });
+  await signupAndLoginAsTrainer(page, { email, name: "E2E Mobile Trainer", clubCode: "TEST" });
   await promoteToTrainer(email);
   await logout(page);
   await login(page, email);

@@ -9,6 +9,7 @@ const dogTasksRoutes = require("./routes/dogTasks");
 const eventsRoutes = require("./routes/events");
 const tasksRoutes = require("./routes/tasks");
 const dogsRoutes = require("./routes/dogs");
+const clubSettingsRoutes = require("./routes/clubSettings");
 
 const express = require("express");
 const mongoose = require("mongoose");
@@ -41,6 +42,7 @@ app.use("/dog-tasks", dogTasksRoutes);
 app.use("/events", eventsRoutes);
 app.use("/tasks", tasksRoutes);
 app.use("/dogs", dogsRoutes);
+app.use("/club-settings", clubSettingsRoutes);
 
 mongoose
   .connect(process.env.MONGO_URL)

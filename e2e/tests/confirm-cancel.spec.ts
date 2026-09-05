@@ -28,7 +28,7 @@ test("backing out of a delete confirmation (either variant) leaves the data unto
   const email = uniqueEmail("trainer");
   const trainerName = `E2E Cancel Trainer ${Date.now()}`;
 
-  await signupAndLoginAsTrainer(page, { email, name: trainerName, teamCode: "TEST" });
+  await signupAndLoginAsTrainer(page, { email, name: trainerName, clubCode: "TEST" });
   await promoteToTrainer(email);
   await logout(page);
   await login(page, email);

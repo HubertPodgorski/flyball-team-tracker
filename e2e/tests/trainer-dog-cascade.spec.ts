@@ -13,7 +13,7 @@ test("deleting a dog live-removes it from an open task board and team lineup via
 }) => {
   const email = uniqueEmail("trainer");
 
-  await signupAndLoginAsTrainer(page, { email, name: "E2E Trainer", teamCode: "TEST" });
+  await signupAndLoginAsTrainer(page, { email, name: "E2E Trainer", clubCode: "TEST" });
   await promoteToTrainer(email);
   await logout(page);
   await login(page, email);

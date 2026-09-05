@@ -31,6 +31,8 @@ import { useIsSuperAdmin } from "../hooks/useIsSuperAdmin";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import SettingsIcon from "@mui/icons-material/Settings";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import TuneIcon from "@mui/icons-material/Tune";
+import { useClubFeatures } from "../hooks/useClubFeatures";
 
 const drawerWidth = 240;
 
@@ -59,15 +61,24 @@ const NavListItem = ({ to, icon, label }) => {
 const UserTabBar = () => {
   const { pathname } = useLocation();
   const { t } = useTranslation();
+  const features = useClubFeatures();
 
   // Every logged-in user's own nav (not gated by role) - lives in the bottom
   // tab row now, not the drawer. Trainer/super-admin sections stay drawer-only.
   const userTabs = [
     { to: userRoutes.tasks, icon: <FormatListNumberedIcon />, label: t("nav.tasks") },
-    { to: userRoutes.calendar, icon: <CalendarMonthIcon />, label: t("nav.calendar") },
+    features.eventsCalendar && {
+      to: userRoutes.calendar,
+      icon: <CalendarMonthIcon />,
+      label: t("nav.calendar"),
+    },
     { to: userRoutes.myDogs, icon: <PetsIcon />, label: t("nav.myDogs") },
-    { to: userRoutes.teams, icon: <GroupsIcon />, label: t("nav.teams") },
-  ];
+    features.teamsAndLineups && {
+      to: userRoutes.teams,
+      icon: <GroupsIcon />,
+      label: t("nav.teams"),
+    },
+  ].filter(Boolean);
 
   return (
     <BottomNavigation
@@ -99,6 +110,7 @@ const BottomNavBar = () => {
 
   const isTrainer = useIsTrainer();
   const isSuperAdmin = useIsSuperAdmin();
+  const features = useClubFeatures();
 
   const drawer = (
     <Box onClick={onDrawerToggle} sx={{ textAlign: "center" }}>
@@ -117,25 +129,36 @@ const BottomNavBar = () => {
               icon={<PetsIcon />}
               label={t("nav.dogs")}
             />
-            <NavListItem
-              to={trainerRoutes.dogTasks}
-              icon={<TextSnippetIcon />}
-              label={t("nav.dogTasks")}
-            />
-            <NavListItem
-              to={trainerRoutes.events}
-              icon={<CalendarMonthIcon />}
-              label={t("nav.events")}
-            />
+            {features.dogTasksCatalog && (
+              <NavListItem
+                to={trainerRoutes.dogTasks}
+                icon={<TextSnippetIcon />}
+                label={t("nav.dogTasks")}
+              />
+            )}
+            {features.eventsCalendar && (
+              <NavListItem
+                to={trainerRoutes.events}
+                icon={<CalendarMonthIcon />}
+                label={t("nav.events")}
+              />
+            )}
             <NavListItem
               to={trainerRoutes.users}
               icon={<PersonIcon />}
               label={t("nav.users")}
             />
+            {features.teamsAndLineups && (
+              <NavListItem
+                to={trainerRoutes.teams}
+                icon={<GroupsIcon />}
+                label={t("nav.teams")}
+              />
+            )}
             <NavListItem
-              to={trainerRoutes.teams}
-              icon={<GroupsIcon />}
-              label={t("nav.teams")}
+              to={trainerRoutes.features}
+              icon={<TuneIcon />}
+              label={t("nav.features")}
             />
           </>
         )}

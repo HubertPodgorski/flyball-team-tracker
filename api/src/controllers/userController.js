@@ -124,10 +124,10 @@ const switchClub = async (req, res) => {
 };
 
 const signup = async (req, res) => {
-  const { email, password, name, teamCode } = req.body;
+  const { email, password, name, clubCode } = req.body;
 
   try {
-    const user = await UserModel.signup(email, password, name, teamCode);
+    const user = await UserModel.signup(email, password, name, clubCode);
 
     const token = createToken(user._id, user.team);
 
@@ -140,9 +140,15 @@ const signup = async (req, res) => {
 // Public (no decodeToken) - the signup form needs this before a token exists.
 // Single source of truth for valid signup codes, shared by both deployments
 // (frontend on Vercel, backend on Heroku) without either hardcoding its own
-// copy - see userModel.js's getValidTeamCodes.
+// copy - see userModel.js's getValidClubCodes.
 const getClubCodes = async (req, res) => {
-  res.status(200).json(UserModel.getValidTeamCodes());
+  res.status(200).json(UserModel.getValidClubCodes());
+};
+
+// Every actual club, as opposed to getClubCodes' signup codes - a code and
+// the club it resolves to can differ (see userModel.js's clubCodeMap).
+const getClubs = async (req, res) => {
+  res.status(200).json(CLUBS);
 };
 
 module.exports = {
@@ -156,4 +162,5 @@ module.exports = {
   signup,
   switchClub,
   getClubCodes,
+  getClubs,
 };

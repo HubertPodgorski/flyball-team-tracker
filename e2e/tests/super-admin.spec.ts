@@ -18,7 +18,7 @@ test("a super-admin can switch teams, act as them, and stays out of their user l
   await signupAndLoginAsTrainer(page, {
     email: teamAEmail,
     name: "E2E Team A Trainer",
-    teamCode: "TEST",
+    clubCode: "TEST",
   });
   await promoteToTrainer(teamAEmail);
   await logout(page);
@@ -30,7 +30,7 @@ test("a super-admin can switch teams, act as them, and stays out of their user l
   await signupAndLoginAsTrainer(page, {
     email: teamBEmail,
     name: "E2E Team B Trainer",
-    teamCode: "WEST_SIDE_DOGZ",
+    clubCode: "WEST_SIDE_DOGZ",
   });
   await promoteToTrainer(teamBEmail);
   await logout(page);
@@ -43,7 +43,7 @@ test("a super-admin can switch teams, act as them, and stays out of their user l
   await signupAndLoginAsTrainer(page, {
     email: superAdminEmail,
     name: superAdminName,
-    teamCode: "TEST",
+    clubCode: "TEST",
   });
   await promoteToSuperAdmin(superAdminEmail);
   await logout(page);

@@ -12,11 +12,10 @@ import { useDogsQuery } from "../../queries/dogs";
 import { useUpdateUserMutation } from "../../queries/users";
 import { resolveDogsByIds } from "../../helpers/dogs";
 import { Roles } from "../../helpers/types";
-import { CLUBS } from "../../helpers/teams";
+import { useClubsQuery } from "../../queries/clubs";
 import { useConfirmModalSoft } from "../../hooks/useConfirmModal";
 import { useSubmitGuard } from "../../hooks/useSubmitGuard";
 
-const teamOptions = CLUBS.map((club) => ({ value: club, label: club }));
 const roleOptions = Object.values(Roles).map((role) => ({
   value: role,
   label: role,
@@ -47,6 +46,8 @@ const UserForm = ({
   const { enqueueSnackbar } = useSnackbar();
   const confirmSoft = useConfirmModalSoft();
   const { data: contextDogs = [] } = useDogsQuery();
+  const { data: clubs = [] } = useClubsQuery();
+  const teamOptions = clubs.map((club) => ({ value: club, label: club }));
   const updateUserMutation = useUpdateUserMutation();
   const dogs = dogsOverride ?? contextDogs;
   const submitGuard = useSubmitGuard();

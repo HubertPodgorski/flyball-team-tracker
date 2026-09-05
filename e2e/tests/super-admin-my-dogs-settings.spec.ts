@@ -18,7 +18,7 @@ test("super-admin picks an arbitrary club dog on Settings and My Dogs", async ({
   await signupAndLoginAsTrainer(page, {
     email: trainerEmail,
     name: "E2E Trainer",
-    teamCode: "TEST",
+    clubCode: "TEST",
   });
   await promoteToTrainer(trainerEmail);
   await logout(page);
@@ -29,7 +29,7 @@ test("super-admin picks an arbitrary club dog on Settings and My Dogs", async ({
   await signupAndLoginAsTrainer(page, {
     email: superAdminEmail,
     name: "E2E Super Admin",
-    teamCode: "TEST",
+    clubCode: "TEST",
   });
   await promoteToSuperAdmin(superAdminEmail);
   await logout(page);

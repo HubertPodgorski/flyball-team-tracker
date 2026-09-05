@@ -16,7 +16,7 @@ import FormModal from "../../components/FormModal";
 import FormGrid from "../../components/FormGrid";
 import AddFab, { FAB_CONTENT_CLEARANCE } from "../../components/AddFab";
 import ClearableTextField from "../../components/inputs/ClearableTextField";
-import { CLUBS } from "../../helpers/teams";
+import { useClubsQuery } from "../../queries/clubs";
 import {
   createSuperAdminItem,
   deleteSuperAdminItem,
@@ -34,6 +34,7 @@ const SuperAdminTeams = () => {
   const [name, setName] = useState("");
   const { enqueueSnackbar } = useSnackbar();
   const { t } = useTranslation();
+  const { data: clubs = [] } = useClubsQuery();
 
   const load = async () => {
     if (!club) {
@@ -121,7 +122,7 @@ const SuperAdminTeams = () => {
           value={club}
           onChange={(event) => setClub(event.target.value)}
         >
-          {CLUBS.map((clubOption) => (
+          {clubs.map((clubOption) => (
             <MenuItem key={clubOption} value={clubOption}>
               {clubOption}
             </MenuItem>

@@ -10,7 +10,7 @@ test("trainer can create an event, cycle attendance, and delete it", async ({ pa
   const email = uniqueEmail("trainer");
   const trainerName = `E2E Events Trainer ${Date.now()}`;
 
-  await signupAndLoginAsTrainer(page, { email, name: trainerName, teamCode: "TEST" });
+  await signupAndLoginAsTrainer(page, { email, name: trainerName, clubCode: "TEST" });
   await promoteToTrainer(email);
   await logout(page);
   await login(page, email);
@@ -95,6 +95,15 @@ test("trainer can create an event, cycle attendance, and delete it", async ({ pa
   // (see CrossPassModal.tsx's real bug, caught only by checking this).
   await expect(page.getByRole("textbox", { name: "Name", exact: true })).toHaveValue(eventName);
   await expect(page.getByRole("combobox", { name: "Event type" })).toHaveText("Competition");
+
+  // Changing the type while editing a real event must never rewrite its
+  // already-real name - the type-prefill is for new events only.
+  await page.getByRole("combobox", { name: "Event type" }).click();
+  await page.getByRole("option", { name: "Meeting", exact: true }).click();
+  await expect(page.getByRole("textbox", { name: "Name", exact: true })).toHaveValue(eventName);
+  await page.getByRole("combobox", { name: "Event type" }).click();
+  await page.getByRole("option", { name: "Competition", exact: true }).click();
+
   await page.getByRole("textbox", { name: "Name", exact: true }).fill(editedEventName);
   await page.getByRole("button", { name: "Submit" }).click();
   await expect(page.getByText(editedEventName)).toBeVisible();
@@ -107,4 +116,37 @@ test("trainer can create an event, cycle attendance, and delete it", async ({ pa
   await expect(page.getByText(editedEventName)).not.toBeVisible();
 
   expect(pageErrors).toEqual([]);
+});
+
+test("picking an event type prefills the name, but never overwrites one already typed", async ({
+  page,
+}) => {
+  const email = uniqueEmail("trainer");
+  await signupAndLoginAsTrainer(page, { email, name: "Event Prefill Trainer", clubCode: "TEST" });
+  await promoteToTrainer(email);
+  await logout(page);
+  await login(page, email);
+
+  await page.goto("/trainer-panel/events");
+  await page.getByRole("button", { name: "Add" }).click();
+
+  const nameField = page.getByRole("textbox", { name: "Name", exact: true });
+
+  await page.getByRole("combobox", { name: "Event type" }).click();
+  await page.getByRole("option", { name: "Training", exact: true }).click();
+  await expect(nameField).toHaveValue("Training");
+
+  // Switching type again with no manual edit in between - the prefill follows.
+  await page.getByRole("combobox", { name: "Event type" }).click();
+  await page.getByRole("option", { name: "Seminary", exact: true }).click();
+  await expect(nameField).toHaveValue("Seminary");
+
+  // A custom name is never clobbered by a later type change.
+  const customName = `Custom ${Date.now()}`;
+  await nameField.fill(customName);
+  await page.getByRole("combobox", { name: "Event type" }).click();
+  await page.getByRole("option", { name: "Meeting", exact: true }).click();
+  await expect(nameField).toHaveValue(customName);
+
+  await page.getByRole("button", { name: "Cancel" }).click();
 });

@@ -15,7 +15,7 @@ export const useSignup = () => {
 
   const { login } = useAuthContext();
 
-  const signup = async (name, email, password, teamCode) => {
+  const signup = async (name, email, password, clubCode) => {
     setLoading(true);
     setError(null);
 
@@ -23,7 +23,7 @@ export const useSignup = () => {
       password,
       email,
       name,
-      teamCode,
+      clubCode,
     };
 
     try {

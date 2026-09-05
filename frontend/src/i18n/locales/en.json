@@ -58,7 +58,31 @@
     "allDogTasks": "All dog tasks",
     "allEvents": "All events",
     "allTeams": "All teams",
-    "openDrawer": "open drawer"
+    "openDrawer": "open drawer",
+    "features": "Features"
+  },
+  "features": {
+    "intro": "Turn off anything your club doesn't use - trainers and members stop seeing it everywhere in the app.",
+    "crossPassesDisabledToo": "Cross-passes was also turned off - it has nothing to attach to without lineups.",
+    "teamsAndLineups": {
+      "title": "Teams & Lineups",
+      "body": "Building dog pools and race lineups.",
+      "disableConfirm_one": "This will unlink {{count}} task currently linked to a lineup - it keeps its dogs, just as a plain task.",
+      "disableConfirm_other": "This will unlink {{count}} tasks currently linked to a lineup - they keep their dogs, just as plain tasks."
+    },
+    "crossPasses": {
+      "title": "Cross-passes",
+      "body": "Handoff timing inside team lineups, plus the two sync toggles in Settings. A dog's own My Dogs cross-passes stay available either way.",
+      "requiresTeams": "Requires Teams & Lineups."
+    },
+    "eventsCalendar": {
+      "title": "Events / Calendar",
+      "body": "Scheduling and attendance tracking."
+    },
+    "dogTasksCatalog": {
+      "title": "Dog Tasks catalog",
+      "body": "The task-description suggestion list."
+    }
   },
   "settings": {
     "language": "Language",
@@ -301,8 +325,35 @@
         "Tasks - the same drag-and-drop board, plus the ability to create, edit, and delete tasks.",
         "Dogs, Dog tasks, Users - manage your club's dogs (including each dog's jump height), the task types they can be assigned, and your club's members. Open a member's card to reset their password if they're locked out - you'll get a one-time temporary password to pass along to them.",
         "Events - create trainings, competitions, seminars, and meetings for your club.",
-        "Teams - build and edit teams and their lineups for your whole club, not just your own dogs."
+        "Teams - build and edit teams and their lineups for your whole club, not just your own dogs.",
+        "Features - turn off the parts of the app your club doesn't use, like Teams & Lineups, Cross-passes, Events/Calendar, or the Dog Tasks catalog."
       ]
+    },
+    "trainerWorkflow": {
+      "title": "Getting started as a trainer",
+      "intro": "The order that actually works, first time through:",
+      "steps": {
+        "addDogs": {
+          "title": "Add your dogs",
+          "body": "Go to Dogs and add every dog in your club - a team can only pick from dogs that already exist."
+        },
+        "buildTeams": {
+          "title": "Build a team",
+          "body": "Go to Teams and create a pool of up to 6 dogs your club races with."
+        },
+        "buildLineups": {
+          "title": "Build a lineup",
+          "body": "Inside that team, order 4 dogs into a lineup - jump height is worked out automatically from the shortest dog."
+        },
+        "addTasks": {
+          "title": "Add tasks",
+          "body": "Go to Tasks and plan training on the drag-and-drop board - pick dogs directly, or link a task to a whole lineup."
+        },
+        "setCrossPasses": {
+          "title": "Set cross-pass times",
+          "body": "At training, open a lineup-linked task to edit the handoff timing between neighboring dogs."
+        }
+      }
     }
   },
   "pitch": {

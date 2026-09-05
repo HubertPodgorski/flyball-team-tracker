@@ -14,6 +14,7 @@ const {
   signup,
   switchClub,
   getClubCodes,
+  getClubs,
 } = require("../controllers/userController");
 
 // login
@@ -30,6 +31,9 @@ router.get("/club-codes", getClubCodes);
 
 // super-admin: switch active club
 router.post("/switch-team", switchClub);
+
+// every real club (super-admin dropdowns) - see userController.getClubs.
+router.get("/clubs", decodeToken, getClubs);
 
 // club-scoped user management - decodeToken only on these, not the public auth routes above.
 // No POST here: signup is the only way a user account is ever created (see

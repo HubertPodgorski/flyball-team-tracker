@@ -20,7 +20,7 @@ test("user-panel tasks: tapping a dog opens its note, or the linked lineup's cro
 
   const email = uniqueEmail("trainer");
 
-  await signupAndLoginAsTrainer(page, { email, name: "E2E Trainer", teamCode: "TEST" });
+  await signupAndLoginAsTrainer(page, { email, name: "E2E Trainer", clubCode: "TEST" });
   await promoteToTrainer(email);
   await logout(page);
   await login(page, email);

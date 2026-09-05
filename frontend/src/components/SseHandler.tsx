@@ -11,7 +11,8 @@ import { usersQueryOptions } from "../queries/users";
 import { eventsQueryOptions } from "../queries/events";
 import { tasksQueryOptions } from "../queries/tasks";
 import { dogsQueryOptions } from "../queries/dogs";
-import { CrossPass, Dog, DogTask, Event, Task, Team, User } from "../helpers/types";
+import { clubSettingsQueryOptions } from "../queries/clubSettings";
+import { ClubSettings, CrossPass, Dog, DogTask, Event, Task, Team, User } from "../helpers/types";
 
 // Live updates for entities migrated off socket.io.
 const SseHandler = () => {
@@ -96,6 +97,12 @@ const SseHandler = () => {
       // Keep AuthContext's user.dogs (a denormalized copy) in sync too.
       const userDogIds = userRef.current!.dogs.map(({ _id }) => _id);
       setUserDogs(dogs.filter(({ _id }) => userDogIds.includes(_id)));
+    });
+
+    source.addEventListener("club_settings_updated", (event: MessageEvent) => {
+      const settings: ClubSettings = JSON.parse(event.data);
+
+      queryClient.setQueryData(clubSettingsQueryOptions().queryKey, settings);
     });
 
     return () => source.close();
