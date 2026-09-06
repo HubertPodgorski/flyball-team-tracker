@@ -43,8 +43,10 @@ test("every drawer and bottom-tab nav link goes to its own route", async ({ page
   await clickDrawerLink("All dog tasks", /\/super-admin\/dog-tasks$/);
   await clickDrawerLink("All events", /\/super-admin\/events$/);
   await clickDrawerLink("All teams", /\/super-admin\/teams$/);
+  await clickDrawerLink("All resources", /\/super-admin\/resources$/);
 
   // Shared bottom section.
+  await clickDrawerLink("Resources", /\/user-panel\/resources$/);
   await clickDrawerLink("Settings", /\/user-panel\/settings$/);
   await clickDrawerLink("About", /\/user-panel\/about$/);
 

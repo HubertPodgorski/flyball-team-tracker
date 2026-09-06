@@ -10,6 +10,7 @@ export const userRoutes = {
   calendar: "/user-panel/calendar",
   myDogs: "/user-panel/my-dogs",
   teams: "/user-panel/teams",
+  resources: "/user-panel/resources",
   settings: "/user-panel/settings",
   about: "/user-panel/about",
 };
@@ -20,6 +21,7 @@ export const userPaths = {
   calendar: "calendar",
   myDogs: "my-dogs",
   teams: "teams",
+  resources: "resources",
   settings: "settings",
   about: "about",
 };

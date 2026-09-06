@@ -12,9 +12,24 @@ import { ClubFeatures } from "../../helpers/types";
 const FEATURE_KEYS: (keyof ClubFeatures)[] = [
   "teamsAndLineups",
   "crossPasses",
+  "netTime",
   "eventsCalendar",
   "dogTasksCatalog",
+  "usefulResources",
 ];
+
+// key -> the feature it requires to be on.
+const DEPENDS_ON: Partial<Record<keyof ClubFeatures, keyof ClubFeatures>> = {
+  crossPasses: "teamsAndLineups",
+  netTime: "crossPasses",
+};
+
+// key -> what turning it off cascades onto, and the snackbar to explain it -
+// the click that caused the cascade didn't touch that other switch directly.
+const CASCADES: Partial<Record<keyof ClubFeatures, { dependent: keyof ClubFeatures; messageKey: string }>> = {
+  teamsAndLineups: { dependent: "crossPasses", messageKey: "features.crossPassesDisabledToo" },
+  crossPasses: { dependent: "netTime", messageKey: "features.netTimeDisabledToo" },
+};
 
 const Features = () => {
   const { t } = useTranslation();
@@ -32,10 +47,10 @@ const Features = () => {
       { [key]: value },
       {
         onSuccess: (updated) => {
-          // The one cascade in this feature set - worth calling out since the
-          // click that caused it didn't touch this switch directly.
-          if (key === "teamsAndLineups" && !value && !updated.features.crossPasses) {
-            enqueueSnackbar(t("features.crossPassesDisabledToo"), { variant: "info" });
+          const cascade = CASCADES[key];
+
+          if (!value && cascade && !updated.features[cascade.dependent]) {
+            enqueueSnackbar(t(cascade.messageKey), { variant: "info" });
           }
         },
       }
@@ -75,9 +90,8 @@ const Features = () => {
       </Typography>
 
       {FEATURE_KEYS.map((key) => {
-        // The only dependency in this set: no lineups, nothing for a
-        // cross-pass to attach to.
-        const disabled = key === "crossPasses" && !features.teamsAndLineups;
+        const dependsOn = DEPENDS_ON[key];
+        const disabled = !!dependsOn && !features[dependsOn];
 
         return (
           <Box key={key}>
@@ -96,7 +110,7 @@ const Features = () => {
               color="text.secondary"
               sx={{ marginLeft: "48px", marginTop: -0.5 }}
             >
-              {disabled ? t("features.crossPasses.requiresTeams") : t(`features.${key}.body`)}
+              {disabled ? t(`features.${key}.requires`) : t(`features.${key}.body`)}
             </Typography>
           </Box>
         );

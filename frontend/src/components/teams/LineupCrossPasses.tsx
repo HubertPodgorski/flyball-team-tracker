@@ -3,6 +3,8 @@ import { Box, ButtonBase, Typography, styled } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { Dog, Lineup, LineupCrossPass } from "../../helpers/types";
+import { getLineupNetTime } from "../../helpers/lineup";
+import { useClubFeatures } from "../../hooks/useClubFeatures";
 import LineupCrossPassModal, {
   LineupCrossPassSaveData,
 } from "./LineupCrossPassModal";
@@ -59,7 +61,9 @@ interface ActiveRow {
 
 const LineupCrossPasses = ({ lineup, editable, onChange }: Props) => {
   const { t } = useTranslation();
+  const { netTime: netTimeEnabled } = useClubFeatures();
   const [activeRow, setActiveRow] = useState<ActiveRow | undefined>();
+  const netTime = netTimeEnabled ? getLineupNetTime(lineup.crossPasses) : undefined;
 
   const activeCrossPass = activeRow
     ? findCrossPass(lineup.crossPasses, activeRow.dog._id, activeRow.predecessorDog)
@@ -94,50 +98,58 @@ const LineupCrossPasses = ({ lineup, editable, onChange }: Props) => {
   };
 
   return (
-    <ListStyled>
-      {buildRunOrder(lineup.dogs).map(({ dog, predecessorDog }) => {
-        const crossPass = findCrossPass(lineup.crossPasses, dog._id, predecessorDog);
+    <>
+      <ListStyled>
+        {buildRunOrder(lineup.dogs).map(({ dog, predecessorDog }) => {
+          const crossPass = findCrossPass(lineup.crossPasses, dog._id, predecessorDog);
 
-        return (
-          <RowStyled
-            key={dog._id}
-            component="div"
-            clickable={editable}
-            onClick={() => editable && setActiveRow({ dog, predecessorDog })}
-            disabled={!editable}
-          >
-            <Typography sx={{ justifySelf: "start" }}>{dog.name}</Typography>
+          return (
+            <RowStyled
+              key={dog._id}
+              component="div"
+              clickable={editable}
+              onClick={() => editable && setActiveRow({ dog, predecessorDog })}
+              disabled={!editable}
+            >
+              <Typography sx={{ justifySelf: "start" }}>{dog.name}</Typography>
 
-            <ArrowForwardIcon
-              fontSize="small"
-              color="disabled"
-              sx={{ justifySelf: "center", alignSelf: "center" }}
-            />
+              <ArrowForwardIcon
+                fontSize="small"
+                color="disabled"
+                sx={{ justifySelf: "center", alignSelf: "center" }}
+              />
 
-            <Typography color="text.secondary" sx={{ justifySelf: "start" }}>
-              {predecessorDog ? predecessorDog.name : t("pages.teams.lights")}
-            </Typography>
+              <Typography color="text.secondary" sx={{ justifySelf: "start" }}>
+                {predecessorDog ? predecessorDog.name : t("pages.teams.lights")}
+              </Typography>
 
-            <Box sx={{ display: "flex", alignItems: "baseline", gap: 1, justifySelf: "end" }}>
-              {crossPass ? (
-                <>
-                  <Typography variant="body2">{crossPass.startingPosition || "—"}</Typography>
+              <Box sx={{ display: "flex", alignItems: "baseline", gap: 1, justifySelf: "end" }}>
+                {crossPass ? (
+                  <>
+                    <Typography variant="body2">{crossPass.startingPosition || "—"}</Typography>
 
-                  {crossPass.time !== undefined && (
-                    <Typography variant="caption" color="text.secondary">
-                      {crossPass.time}s
-                    </Typography>
-                  )}
-                </>
-              ) : (
-                <Typography variant="body2" color="text.secondary">
-                  {editable ? t("pages.teams.addCrossPass") : "—"}
-                </Typography>
-              )}
-            </Box>
-          </RowStyled>
-        );
-      })}
+                    {crossPass.time !== undefined && (
+                      <Typography variant="caption" color="text.secondary">
+                        {crossPass.time}s
+                      </Typography>
+                    )}
+                  </>
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    {editable ? t("pages.teams.addCrossPass") : "—"}
+                  </Typography>
+                )}
+              </Box>
+            </RowStyled>
+          );
+        })}
+      </ListStyled>
+
+      {netTime !== undefined && (
+        <Typography variant="body2" color="text.secondary" sx={{ marginTop: 1 }}>
+          {t("pages.teams.netTime", { time: netTime })}
+        </Typography>
+      )}
 
       {activeRow && (
         <LineupCrossPassModal
@@ -150,7 +162,7 @@ const LineupCrossPasses = ({ lineup, editable, onChange }: Props) => {
           onDelete={onDeleteRow}
         />
       )}
-    </ListStyled>
+    </>
   );
 };
 

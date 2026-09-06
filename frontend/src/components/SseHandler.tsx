@@ -12,7 +12,8 @@ import { eventsQueryOptions } from "../queries/events";
 import { tasksQueryOptions } from "../queries/tasks";
 import { dogsQueryOptions } from "../queries/dogs";
 import { clubSettingsQueryOptions } from "../queries/clubSettings";
-import { ClubSettings, CrossPass, Dog, DogTask, Event, Task, Team, User } from "../helpers/types";
+import { resourcesQueryOptions } from "../queries/resources";
+import { ClubSettings, CrossPass, Dog, DogTask, Event, Resource, Task, Team, User } from "../helpers/types";
 
 // Live updates for entities migrated off socket.io.
 const SseHandler = () => {
@@ -59,6 +60,12 @@ const SseHandler = () => {
       const dogTasks: DogTask[] = JSON.parse(event.data);
 
       queryClient.setQueryData(dogTasksQueryOptions().queryKey, dogTasks);
+    });
+
+    source.addEventListener("resources_updated", (event: MessageEvent) => {
+      const resources: Resource[] = JSON.parse(event.data);
+
+      queryClient.setQueryData(resourcesQueryOptions().queryKey, resources);
     });
 
     source.addEventListener("users_updated", (event: MessageEvent) => {

@@ -6,6 +6,8 @@ const ALL_ON: ClubFeatures = {
   crossPasses: true,
   eventsCalendar: true,
   dogTasksCatalog: true,
+  usefulResources: true,
+  netTime: true,
 };
 
 // Defaults every flag to on while the query is still loading, so nothing

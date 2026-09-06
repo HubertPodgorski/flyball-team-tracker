@@ -71,6 +71,12 @@ export interface DogTask {
   name: string;
 }
 
+export interface Resource {
+  _id: string;
+  name: string;
+  url: string;
+}
+
 export interface DogWithAttendance extends Dog {
   status?: string;
 }
@@ -131,6 +137,8 @@ export interface ClubFeatures {
   crossPasses: boolean;
   eventsCalendar: boolean;
   dogTasksCatalog: boolean;
+  usefulResources: boolean;
+  netTime: boolean;
 }
 
 export interface ClubSettings {

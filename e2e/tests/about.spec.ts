@@ -14,6 +14,7 @@ test("About page shows the general sections to everyone, and an extra section to
   await expect(page.getByRole("heading", { name: "About & how to use" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Tasks", exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Teams", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Resources", exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Settings", exact: true })).toBeVisible();
   // Not a trainer yet - the trainer-only sections shouldn't render.
   await expect(page.getByRole("heading", { name: "Trainer tools" })).not.toBeVisible();

@@ -1,4 +1,4 @@
-import { createTheme } from "@mui/material/styles";
+import { alpha, createTheme } from "@mui/material/styles";
 
 const theme = createTheme({
   palette: {
@@ -11,8 +11,9 @@ const theme = createTheme({
       main: "#d96508",
       contrastText: "#b9bcbc",
     },
+    // Was MUI's light-mode red (#d32f2f) - ~3:1 against this dark background, under WCAG AA's 4.5:1 floor.
     error: {
-      main: "#d32f2f",
+      main: "#e57373",
     },
     // Muted gold, not the standard MUI orange (#ed6c02) - that sat at
     // nearly the same brightness as success's green, barely distinguishable
@@ -101,6 +102,17 @@ const theme = createTheme({
         root: {
           borderRadius: 8,
         },
+      },
+    },
+    // Opaque by default - every other surface in the app is this same
+    // frosted-glass treatment (alpha + blur) over the flashy background.
+    MuiDataGrid: {
+      styleOverrides: {
+        root: ({ theme }) => ({
+          backgroundColor: alpha(theme.palette.background.paper, 0.75),
+          backdropFilter: "blur(6px)",
+          borderRadius: 8,
+        }),
       },
     },
     MuiDialog: {
