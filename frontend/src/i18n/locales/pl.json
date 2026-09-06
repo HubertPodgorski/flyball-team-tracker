@@ -44,6 +44,7 @@
     "calendar": "Kalendarz",
     "myDogs": "Moje psy",
     "teams": "Drużyny",
+    "resources": "Przydatne linki",
     "settings": "Ustawienia",
     "logout": "Wyloguj",
     "trainerSection": "Trener",
@@ -58,12 +59,14 @@
     "allDogTasks": "Wszystkie zadania psów",
     "allEvents": "Wszystkie wydarzenia",
     "allTeams": "Wszystkie drużyny",
+    "allResources": "Wszystkie przydatne linki",
     "openDrawer": "otwórz menu",
     "features": "Funkcje"
   },
   "features": {
     "intro": "Wyłącz to, czego Twój klub nie używa - trenerzy i członkowie przestaną to widzieć w całej aplikacji.",
     "crossPassesDisabledToo": "Crossy też zostały wyłączone - nie mają się do czego podpiąć bez składów.",
+    "netTimeDisabledToo": "Czas netto też został wyłączony - nie ma czego sumować bez crossów.",
     "teamsAndLineups": {
       "title": "Drużyny i składy",
       "body": "Budowanie puli psów i składów startowych.",
@@ -75,7 +78,12 @@
     "crossPasses": {
       "title": "Crossy",
       "body": "Czasy crossów w składach drużyn oraz dwa przełączniki synchronizacji w Ustawieniach. Crossy psa w Moje psy działają niezależnie od tego ustawienia.",
-      "requiresTeams": "Wymaga włączonych Drużyn i składów."
+      "requires": "Wymaga włączonych Drużyn i składów."
+    },
+    "netTime": {
+      "title": "Czas netto",
+      "body": "Suma czasów własnych psów w składzie - nie jest to rzeczywisty czas drużyny.",
+      "requires": "Wymaga włączonych Crossów."
     },
     "eventsCalendar": {
       "title": "Wydarzenia / Kalendarz",
@@ -84,6 +92,10 @@
     "dogTasksCatalog": {
       "title": "Katalog zadań psów",
       "body": "Lista podpowiedzi opisów zadań."
+    },
+    "usefulResources": {
+      "title": "Przydatne linki",
+      "body": "Lista linków klubu - strona na Facebooku, arkusze wydarzeń i tym podobne."
     }
   },
   "settings": {
@@ -136,6 +148,13 @@
       "addTitle": "Dodawanie zadania psa",
       "editTitle": "Edycja zadania psa",
       "name": "Nazwa zadania"
+    },
+    "resource": {
+      "addTitle": "Dodawanie linku",
+      "editTitle": "Edycja linku",
+      "name": "Nazwa",
+      "url": "Adres URL",
+      "invalidUrl": "Musi wyglądać jak adres strony, np. facebook.com albo https://example.com"
     },
     "event": {
       "addTitle": "Dodawanie wydarzenia",
@@ -203,6 +222,7 @@
       "lineupFallback": "Skład",
       "lights": "Światła",
       "addCrossPass": "+ dodaj",
+      "netTime": "Czas netto: {{time}}s",
       "lineupName": "Nazwa składu",
       "noDogsYet": "Brak psów",
       "addDog": "Dodaj psa",
@@ -229,6 +249,7 @@
       "dogTasksTitle": "Zadania psów",
       "eventsTitle": "Wydarzenia",
       "usersTitle": "Użytkownicy",
+      "resourcesTitle": "Przydatne linki",
       "typeColumn": "Typ"
     },
     "calendar": {
@@ -245,6 +266,10 @@
       "runningOn": "Bieg na",
       "actions": "Akcje",
       "jumpHeight": "Wysokość hopek: {{height}}cm"
+    },
+    "resources": {
+      "intro": "Linki, których Twój klub naprawdę potrzebuje - strona na Facebooku, arkusze wydarzeń, cokolwiek innego warto mieć pod ręką.",
+      "noneYet": "Brak linków"
     }
   },
   "eventTypes": {
@@ -310,7 +335,16 @@
         "items": [
           "Drużyna to pula do 6 psów, z których klub może budować składy startowe.",
           "Każda drużyna może mieć kilka składów - skład to uporządkowany zestaw psów do biegu, wraz z czasami crossów między kolejnymi psami.",
-          "Nazwa składu pokazuje jego wysokość hopek w nawiasie, np. \"Super skład (25cm)\" - automatycznie najniższą wysokość spośród jego psów (pies bez ustawionej wysokości liczy się jako 35cm)."
+          "Nazwa składu pokazuje jego wysokość hopek w nawiasie, np. \"Super skład (25cm)\" - automatycznie najniższą wysokość spośród jego psów (pies bez ustawionej wysokości liczy się jako 35cm).",
+          "Gdy każdy pies w składzie ma zapisany czas, pod spodem pojawia się czas netto - suma czasów własnych psów, a nie rzeczywisty (szybszy) czas drużyny."
+        ]
+      },
+      "resources": {
+        "title": "Przydatne linki",
+        "items": [
+          "Wspólna lista zewnętrznych linków klubu - strona na Facebooku, arkusz wydarzenia albo cokolwiek innego warto mieć pod ręką.",
+          "Każdy w klubie może dodać, edytować albo usunąć link - nie tylko trenerzy.",
+          "Dotknij linku, aby otworzyć go w nowej karcie - ikonami ołówka i kosza edytujesz albo usuwasz go."
         ]
       },
       "settings": {
@@ -378,7 +412,7 @@
       },
       "setCrossPasses": {
         "title": "Na treningu ustaw czasy crossów",
-        "body": "Podepnij zadanie pod skład i edytuj czasy między sąsiednimi psami od razu z poziomu tego zadania."
+        "body": "Podepnij zadanie pod skład i edytuj czasy między sąsiednimi psami od razu z poziomu tego zadania - gdy każdy pies ma zapisany czas, czas netto składu liczy się sam."
       },
       "liveSync": {
         "title": "Wszyscy widzą to na żywo",

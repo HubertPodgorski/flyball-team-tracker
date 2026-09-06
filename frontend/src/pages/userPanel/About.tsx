@@ -60,6 +60,10 @@ const About = () => {
       items: t("about.sections.teams.items", { returnObjects: true }) as string[],
     },
     {
+      title: t("about.sections.resources.title"),
+      items: t("about.sections.resources.items", { returnObjects: true }) as string[],
+    },
+    {
       title: t("about.sections.settings.title"),
       items: t("about.sections.settings.items", { returnObjects: true }) as string[],
     },

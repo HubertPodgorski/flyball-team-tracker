@@ -32,6 +32,7 @@ import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import SettingsIcon from "@mui/icons-material/Settings";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import TuneIcon from "@mui/icons-material/Tune";
+import LinkIcon from "@mui/icons-material/Link";
 import { useClubFeatures } from "../hooks/useClubFeatures";
 
 const drawerWidth = 240;
@@ -199,10 +200,23 @@ const BottomNavBar = () => {
               icon={<GroupsIcon />}
               label={t("nav.allTeams")}
             />
+            <NavListItem
+              to="/super-admin/resources"
+              icon={<LinkIcon />}
+              label={t("nav.allResources")}
+            />
           </>
         )}
 
         <Divider />
+
+        {features.usefulResources && (
+          <NavListItem
+            to={userRoutes.resources}
+            icon={<LinkIcon />}
+            label={t("nav.resources")}
+          />
+        )}
 
         <NavListItem
           to={userRoutes.settings}

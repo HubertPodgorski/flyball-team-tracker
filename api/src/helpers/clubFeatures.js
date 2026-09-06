@@ -5,14 +5,17 @@ const DEFAULT_FEATURES = {
   crossPasses: true,
   eventsCalendar: true,
   dogTasksCatalog: true,
+  usefulResources: true,
+  netTime: true,
 };
 
-// Cross-passes only make sense tied to a lineup here - turning lineups off
-// takes cross-passes down with it, regardless of what was requested.
+// Each dependency cascades one level down: no lineups -> no cross-passes ->
+// no net time (it's just a sum of the per-dog times cross-passes track).
 const normalizeFeatures = (features) => {
   const normalized = { ...DEFAULT_FEATURES, ...features };
 
   if (!normalized.teamsAndLineups) normalized.crossPasses = false;
+  if (!normalized.crossPasses) normalized.netTime = false;
 
   return normalized;
 };

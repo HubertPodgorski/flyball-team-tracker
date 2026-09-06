@@ -4,6 +4,7 @@ const DogTaskModel = require("../models/dogTaskModel");
 const EventModel = require("../models/eventModel");
 const TeamModel = require("../models/teamModel");
 const TaskModel = require("../models/taskModel");
+const ResourceModel = require("../models/resourceModel");
 const { CLUBS } = require("../helpers/teams");
 const { broadcast } = require("../sse");
 const { detachTasksFromMatchup, keepOnlyPoolDogsInMatchups } = require("../helpers/lineupCascade");
@@ -20,6 +21,7 @@ const entityConfig = {
   "dog-tasks": { Model: DogTaskModel, updatedEvent: "dog_tasks_updated" },
   events: { Model: EventModel, updatedEvent: "events_updated" },
   teams: { Model: TeamModel, updatedEvent: "teams_updated" },
+  resources: { Model: ResourceModel, updatedEvent: "resources_updated" },
 };
 
 // Same exclusion as userController's getAllUsers.

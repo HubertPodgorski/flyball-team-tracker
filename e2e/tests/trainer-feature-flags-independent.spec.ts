@@ -110,3 +110,43 @@ test("disabling the Dog Tasks catalog hides its nav entry and empties the task d
   await gotoFeaturesLoaded(page);
   await dogTasksSwitch.click();
 });
+
+test("disabling Useful Resources hides its nav entry, without deleting existing resources", async ({
+  page,
+}) => {
+  const email = uniqueEmail("trainer");
+  await signupAndLoginAsTrainer(page, { email, name: "Resources Flag Trainer", clubCode: "TEST" });
+  await promoteToTrainer(email);
+  await logout(page);
+  await login(page, email);
+
+  const resourceName = `Flag Resource ${Date.now()}`;
+  await page.goto("/user-panel/resources");
+  await page.getByRole("button", { name: "Add" }).click();
+  await page.getByRole("textbox", { name: "Name", exact: true }).fill(resourceName);
+  await page.getByRole("textbox", { name: "URL", exact: true }).fill("https://example.com");
+  await page.getByRole("button", { name: "Submit" }).click();
+  await expect(page.getByText(resourceName, { exact: true })).toBeVisible();
+
+  await gotoFeaturesLoaded(page);
+  const resourcesSwitch = page.getByRole("switch", { name: "Useful Resources" });
+  if (!(await resourcesSwitch.isChecked())) await resourcesSwitch.click();
+
+  await page.getByRole("button", { name: "open drawer" }).click();
+  await expect(page.locator(".MuiDrawer-paper").getByRole("link", { name: "Resources", exact: true })).toBeVisible();
+  await page.keyboard.press("Escape");
+
+  await resourcesSwitch.click();
+
+  await page.getByRole("button", { name: "open drawer" }).click();
+  await expect(page.locator(".MuiDrawer-paper").getByRole("link", { name: "Resources", exact: true })).toHaveCount(0);
+  await page.keyboard.press("Escape");
+
+  // Hidden from nav, but the data itself is untouched - navigating there
+  // directly (no route guard exists for any feature flag) still shows it.
+  await page.goto("/user-panel/resources");
+  await expect(page.getByText(resourceName, { exact: true })).toBeVisible();
+
+  await gotoFeaturesLoaded(page);
+  await page.getByRole("switch", { name: "Useful Resources" }).click();
+});

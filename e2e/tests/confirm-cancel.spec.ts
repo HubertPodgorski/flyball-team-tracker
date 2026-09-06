@@ -14,6 +14,10 @@ import { signupAndLoginAsTrainer, login, logout, addDog } from "../helpers/auth"
 test("backing out of a delete confirmation (either variant) leaves the data untouched", async ({
   page,
 }) => {
+  // One long walk through every confirm-cancel page in the app - adding
+  // Resources' own round trip pushed this past the default 30s budget.
+  test.slow();
+
   const pageErrors: string[] = [];
   page.on("pageerror", (error) => pageErrors.push(error.message));
   // pageerror alone isn't a reliable signal for this specific bug class -
@@ -71,6 +75,18 @@ test("backing out of a delete confirmation (either variant) leaves the data unto
   await dogTaskCard.getByTestId("DeleteIcon").click();
   await page.getByRole("button", { name: "No thanks" }).click();
   await expect(page.getByText(dogTaskName, { exact: true })).toBeVisible();
+
+  const resourceName = `Cancel Resource ${suffix}`;
+  await page.goto("/user-panel/resources");
+  await page.getByRole("button", { name: "Add" }).click();
+  await page.getByRole("textbox", { name: "Name", exact: true }).fill(resourceName);
+  await page.getByRole("textbox", { name: "URL", exact: true }).fill("https://example.com");
+  await page.getByRole("button", { name: "Submit" }).click();
+  await expect(page.getByText(resourceName, { exact: true })).toBeVisible();
+  const resourceCard = page.locator(".MuiCard-root", { hasText: resourceName });
+  await resourceCard.getByTestId("DeleteIcon").click();
+  await page.getByRole("button", { name: "No thanks" }).click();
+  await expect(page.getByText(resourceName, { exact: true })).toBeVisible();
 
   // useConfirmModalSoft ("Remove" / "Cancel") - lineup delete.
   const dogAName = `Cancel Lead ${suffix}`;

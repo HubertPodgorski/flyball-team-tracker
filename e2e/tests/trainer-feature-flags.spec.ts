@@ -160,6 +160,80 @@ test("disabling Cross-passes hides the lineup cross-pass editor (TaskLineupModal
   await page.getByRole("switch", { name: "Cross-passes" }).click();
 });
 
+test("Net time sums each dog's own cross-pass time, and cascades off with Cross-passes", async ({
+  page,
+}) => {
+  // Several feature-page round trips plus three modal open/close cycles -
+  // past the default 30s budget.
+  test.slow();
+
+  const email = uniqueEmail("super-admin");
+  await signupAndLoginAsTrainer(page, { email, name: "Net Time Admin", clubCode: "TEST" });
+  await promoteToSuperAdmin(email);
+  await logout(page);
+  await login(page, email);
+
+  const { teamId, lineupId, dogs, dogAName, dogBName } = await seedTeamWithLineup("TEST_TEAM");
+  const taskDescription = `Net Time Task ${Date.now()}`;
+  await seedLineupLinkedTask("TEST_TEAM", teamId, lineupId, taskDescription, dogs);
+
+  await gotoFeaturesLoaded(page);
+  const teamsSwitch = page.getByRole("switch", { name: "Teams & Lineups" });
+  const crossPassesSwitch = page.getByRole("switch", { name: "Cross-passes" });
+  const netTimeSwitch = page.getByRole("switch", { name: "Net Time" });
+  if (!(await teamsSwitch.isChecked())) await teamsSwitch.click();
+  if (!(await crossPassesSwitch.isChecked())) await crossPassesSwitch.click();
+  if (!(await netTimeSwitch.isChecked())) await netTimeSwitch.click();
+
+  const openModal = async () => {
+    await page.goto("/user-panel/tasks");
+    await page.getByText(taskDescription, { exact: true }).click();
+  };
+
+  await openModal();
+  // Dog A runs on the lights, Dog B runs on Dog A - each gets its own time.
+  await page.getByRole("dialog").getByRole("button", { name: new RegExp(`^${dogAName}`) }).click();
+  await page.getByRole("spinbutton", { name: "Time (s)" }).fill("4.2");
+  await page.getByRole("button", { name: "Save" }).click();
+
+  await page.getByRole("dialog").getByRole("button", { name: new RegExp(`^${dogBName}`) }).click();
+  await page.getByRole("spinbutton", { name: "Time (s)" }).fill("4.5");
+  await page.getByRole("button", { name: "Save" }).click();
+
+  await expect(page.getByText("Net time: 8.7s")).toBeVisible();
+  await page.getByRole("button", { name: "Close" }).click();
+
+  // Net Time off, Cross-passes stays on - individual times remain, no total.
+  await gotoFeaturesLoaded(page);
+  await netTimeSwitch.click();
+
+  await openModal();
+  await expect(page.getByText("4.2s")).toBeVisible();
+  await expect(page.getByText("Net time: 8.7s")).toHaveCount(0);
+  await page.getByRole("button", { name: "Close" }).click();
+
+  await gotoFeaturesLoaded(page);
+  await netTimeSwitch.click();
+  await expect(netTimeSwitch).toBeChecked();
+
+  await openModal();
+  await expect(page.getByText("Net time: 8.7s")).toBeVisible();
+  await page.getByRole("button", { name: "Close" }).click();
+
+  // Turning off the thing Net Time depends on takes it down too.
+  await gotoFeaturesLoaded(page);
+  await crossPassesSwitch.click();
+  await expect(
+    page.getByText("Net time was also turned off - it has nothing to add up without cross-passes.")
+  ).toBeVisible();
+  await expect(netTimeSwitch).toBeDisabled();
+  await expect(netTimeSwitch).not.toBeChecked();
+
+  await crossPassesSwitch.click();
+  await expect(netTimeSwitch).not.toBeChecked();
+  await netTimeSwitch.click();
+});
+
 test("disabling Cross-passes hides the Settings sync section", async ({ page }) => {
   const email = uniqueEmail("super-admin");
   await signupAndLoginAsTrainer(page, { email, name: "Settings Sync Admin", clubCode: "TEST" });

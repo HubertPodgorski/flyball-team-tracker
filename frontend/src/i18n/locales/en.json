@@ -44,6 +44,7 @@
     "calendar": "Calendar",
     "myDogs": "My Dogs",
     "teams": "Teams",
+    "resources": "Resources",
     "settings": "Settings",
     "logout": "Logout",
     "trainerSection": "Trainer",
@@ -58,12 +59,14 @@
     "allDogTasks": "All dog tasks",
     "allEvents": "All events",
     "allTeams": "All teams",
+    "allResources": "All resources",
     "openDrawer": "open drawer",
     "features": "Features"
   },
   "features": {
     "intro": "Turn off anything your club doesn't use - trainers and members stop seeing it everywhere in the app.",
     "crossPassesDisabledToo": "Cross-passes was also turned off - it has nothing to attach to without lineups.",
+    "netTimeDisabledToo": "Net time was also turned off - it has nothing to add up without cross-passes.",
     "teamsAndLineups": {
       "title": "Teams & Lineups",
       "body": "Building dog pools and race lineups.",
@@ -73,7 +76,12 @@
     "crossPasses": {
       "title": "Cross-passes",
       "body": "Handoff timing inside team lineups, plus the two sync toggles in Settings. A dog's own My Dogs cross-passes stay available either way.",
-      "requiresTeams": "Requires Teams & Lineups."
+      "requires": "Requires Teams & Lineups."
+    },
+    "netTime": {
+      "title": "Net Time",
+      "body": "Each lineup's total - the sum of its dogs' own times, not the actual team time.",
+      "requires": "Requires Cross-passes."
     },
     "eventsCalendar": {
       "title": "Events / Calendar",
@@ -82,6 +90,10 @@
     "dogTasksCatalog": {
       "title": "Dog Tasks catalog",
       "body": "The task-description suggestion list."
+    },
+    "usefulResources": {
+      "title": "Useful Resources",
+      "body": "The club's list of external links - Facebook page, event spreadsheets, and the like."
     }
   },
   "settings": {
@@ -134,6 +146,13 @@
       "addTitle": "Adding a dog task",
       "editTitle": "Editing dog task",
       "name": "Task name"
+    },
+    "resource": {
+      "addTitle": "Adding a resource",
+      "editTitle": "Editing resource",
+      "name": "Name",
+      "url": "URL",
+      "invalidUrl": "Must look like a web address, e.g. facebook.com or https://example.com"
     },
     "event": {
       "addTitle": "Adding an event",
@@ -201,6 +220,7 @@
       "lineupFallback": "Lineup",
       "lights": "Lights",
       "addCrossPass": "+ add",
+      "netTime": "Net time: {{time}}s",
       "lineupName": "Lineup name",
       "noDogsYet": "No dogs yet",
       "addDog": "Add dog",
@@ -225,6 +245,7 @@
       "dogTasksTitle": "Dog tasks",
       "eventsTitle": "Events",
       "usersTitle": "Users",
+      "resourcesTitle": "Resources",
       "typeColumn": "Type"
     },
     "calendar": {
@@ -241,6 +262,10 @@
       "runningOn": "Running on",
       "actions": "Actions",
       "jumpHeight": "Jump height: {{height}}cm"
+    },
+    "resources": {
+      "intro": "Links your club actually needs - Facebook page, event spreadsheets, anything else worth keeping handy.",
+      "noneYet": "No resources yet"
     }
   },
   "eventTypes": {
@@ -306,7 +331,16 @@
         "items": [
           "A team is a pool of up to 6 dogs your club can build race lineups from.",
           "Each team can have several lineups - a lineup is an ordered set of dogs for a race, with cross-pass timing between each dog.",
-          "A lineup's name shows its jump height in brackets, e.g. \"Super lineup (25cm)\" - automatically the lowest jump height among its dogs (a dog with no height set counts as 35cm)."
+          "A lineup's name shows its jump height in brackets, e.g. \"Super lineup (25cm)\" - automatically the lowest jump height among its dogs (a dog with no height set counts as 35cm).",
+          "Once every dog in a lineup has a time recorded, its net time shows underneath - the sum of the dogs' own times, not the team's actual (faster) race time."
+        ]
+      },
+      "resources": {
+        "title": "Resources",
+        "items": [
+          "A shared list of external links for your club - its Facebook page, an event spreadsheet, or anything else worth keeping handy.",
+          "Anyone in the club can add, edit, or remove a link - not just trainers.",
+          "Tap a link to open it in a new tab; use the pencil and trash icons to edit or remove it."
         ]
       },
       "settings": {
@@ -374,7 +408,7 @@
       },
       "setCrossPasses": {
         "title": "At training, set cross-pass times",
-        "body": "Link a task to a lineup and edit the timing between neighboring dogs right from that task."
+        "body": "Link a task to a lineup and edit the timing between neighboring dogs right from that task - once every dog has a time, the lineup's net time totals itself."
       },
       "liveSync": {
         "title": "Everyone sees it live",

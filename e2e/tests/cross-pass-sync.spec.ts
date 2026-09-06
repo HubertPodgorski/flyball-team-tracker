@@ -102,14 +102,16 @@ test("syncCrossPasses propagates cross-pass timing between two lineups sharing t
   await page.getByRole("spinbutton", { name: "Time" }).fill("2.5");
   await page.getByRole("textbox", { name: "Note", exact: true }).fill("Synced timing");
   await page.getByRole("button", { name: "Save" }).click();
-  await expect(firstLineup.getByText("2.5s")).toBeVisible();
+  // exact: true - "Net time: 2.5s" (rendered in the same accordion, now that
+  // one dog has a time) would otherwise also match this substring search.
+  await expect(firstLineup.getByText("2.5s", { exact: true })).toBeVisible();
 
   // The second lineup's own (previously blank) matching entry must now show
   // the same timing, without anyone having touched it directly. The row
   // summary only ever shows startingPosition/time, never the note - reopen
   // the modal to check that too.
-  await expect(secondLineup.getByText("2.5s")).toBeVisible();
-  await secondLineup.getByText("2.5s").click();
+  await expect(secondLineup.getByText("2.5s", { exact: true })).toBeVisible();
+  await secondLineup.getByText("2.5s", { exact: true }).click();
   await expect(page.getByRole("textbox", { name: "Note", exact: true })).toHaveValue(
     "Synced timing"
   );
@@ -187,7 +189,8 @@ test("syncCrossPassesWithMyDogs pushes a lineup's cross-pass timing into My Dogs
   await page.getByRole("spinbutton", { name: "Time" }).fill("3.7");
   await page.getByRole("textbox", { name: "Note", exact: true }).fill("Pushed to My Dogs");
   await page.getByRole("button", { name: "Save" }).click();
-  await expect(page.getByText("3.7s")).toBeVisible();
+  // exact: true - "Net time: 3.7s" would otherwise also match this substring search.
+  await expect(page.getByText("3.7s", { exact: true })).toBeVisible();
 
   // A standalone cross-pass should now exist for the runner, upserted from
   // the lineup entry, without anyone creating it directly on this page.

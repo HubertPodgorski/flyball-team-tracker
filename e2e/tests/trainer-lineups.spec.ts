@@ -72,26 +72,28 @@ test("trainer can build a team's lineup, add a cross-pass, then tear it down", a
   await page.getByRole("spinbutton", { name: "Time" }).fill("3.2");
   await page.getByRole("textbox", { name: "Note", exact: true }).fill("Behind lead");
   await page.getByRole("button", { name: "Save" }).click();
-  await expect(page.getByText("3.2s")).toBeVisible();
+  // exact: true - "Net time: 3.2s" (only one dog has a time yet, so it
+  // equals this dog's own) would otherwise also match this substring search.
+  await expect(page.getByText("3.2s", { exact: true })).toBeVisible();
 
   // Edit that same cross-pass - clicking the now-filled row reopens the
   // same modal, this time in edit mode (crossPass prop populated, so the
   // Time field comes back pre-filled with the earlier value, not blank -
   // that's the actual signal this landed in edit mode, not a fresh create).
-  await page.getByText("3.2s").click();
+  await page.getByText("3.2s", { exact: true }).click();
   const timeField = page.getByRole("spinbutton", { name: "Time" });
   await expect(timeField).toHaveValue("3.2");
   await timeField.fill("4.1");
   await page.getByRole("textbox", { name: "Note", exact: true }).fill("Behind lead, later");
   await page.getByRole("button", { name: "Save" }).click();
-  await expect(page.getByText("4.1s")).toBeVisible();
-  await expect(page.getByText("3.2s")).not.toBeVisible();
+  await expect(page.getByText("4.1s", { exact: true })).toBeVisible();
+  await expect(page.getByText("3.2s", { exact: true })).not.toBeVisible();
 
   // Delete just the cross-pass via the modal's own Delete button (edit mode
   // only) - distinct from deleting the whole lineup below.
-  await page.getByText("4.1s").click();
+  await page.getByText("4.1s", { exact: true }).click();
   await page.getByRole("button", { name: "Delete", exact: true }).click();
-  await expect(page.getByText("4.1s")).not.toBeVisible();
+  await expect(page.getByText("4.1s", { exact: true })).not.toBeVisible();
   await expect(lineupHeading).toContainText("Lineup");
 
   // Delete the lineup - scope to its own Accordion so this doesn't hit one
