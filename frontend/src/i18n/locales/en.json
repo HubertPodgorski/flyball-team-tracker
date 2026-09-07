@@ -120,7 +120,14 @@
     "pushSubscribeFailed": "Failed to enable notifications",
     "pushTestAction": "Send test notification",
     "pushTestSent": "Test notification sent",
-    "pushTestHint": "Didn't get it after a minute? Check your phone's app notification settings for this app."
+    "pushTestHint": "Didn't get it after a minute? Try \"Reset notifications\" below.",
+    "pushReloadSectionTitle": "Reload notification settings",
+    "pushResetAction": "Reset notifications",
+    "pushResetSuccess": "Notifications reset - try sending a test notification again",
+    "pushResetHint": "Re-subscribes this device to push notifications.",
+    "pushReloadSwAction": "Force app refresh",
+    "pushReloadSwSuccess": "App refreshed - reloading the page...",
+    "pushReloadSwHint": "Still nothing? On your phone: Settings → Apps → this app → Notifications → turn off, then on."
   },
   "pwaInstall": {
     "title": "Install Flyball Team Tracker",

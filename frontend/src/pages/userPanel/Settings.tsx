@@ -24,6 +24,7 @@ import { useClubFeatures } from "../../hooks/useClubFeatures";
 import { useDogsQuery, useUpdateDogMutation } from "../../queries/dogs";
 import { useChangeOwnPasswordMutation, useUpdateUserMutation } from "../../queries/users";
 import { useSendTestPushNotificationMutation } from "../../queries/pushSubscriptions";
+import { registerServiceWorker } from "../../helpers/serviceWorkerHelpers";
 import { getAuthErrorMessage } from "../../helpers/authErrors";
 import FormTextField from "../../components/inputs/FormTextField";
 import FormGrid from "../../components/FormGrid";
@@ -49,6 +50,8 @@ const Settings = () => {
   const { enqueueSnackbar } = useSnackbar();
   const { t } = useTranslation();
   const [pushTogglePending, setPushTogglePending] = useState(false);
+  const [pushResetPending, setPushResetPending] = useState(false);
+  const [swReloadPending, setSwReloadPending] = useState(false);
 
   const changePasswordForm = useForm({
     defaultValues: { currentPassword: "", newPassword: "", repeatNewPassword: "" },
@@ -125,6 +128,45 @@ const Settings = () => {
     });
   };
 
+  // Force-recreates the Android notification channel - can clear an OS-level desync.
+  const onResetPush = async () => {
+    setPushResetPending(true);
+
+    try {
+      await unsubscribe();
+      const granted = await subscribe();
+
+      if (granted) {
+        enqueueSnackbar(t("settings.pushResetSuccess"), { variant: "success" });
+      } else {
+        enqueueSnackbar(t("settings.pushNotificationsDeniedHint"), { variant: "warning" });
+      }
+    } catch {
+      enqueueSnackbar(t("settings.pushSubscribeFailed"), { variant: "error" });
+    } finally {
+      setPushResetPending(false);
+    }
+  };
+
+  // A stale service worker can be why showNotification() never actually fires.
+  const onReloadServiceWorker = async () => {
+    setSwReloadPending(true);
+
+    try {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+
+      await Promise.all(registrations.map((registration) => registration.unregister()));
+      await registerServiceWorker();
+
+      enqueueSnackbar(t("settings.pushReloadSwSuccess"), { variant: "success" });
+      // Let the snackbar actually render before the reload wipes the page.
+      setTimeout(() => window.location.reload(), 1000);
+    } catch {
+      enqueueSnackbar(t("settings.pushSubscribeFailed"), { variant: "error" });
+      setSwReloadPending(false);
+    }
+  };
+
   const onSyncChange = (dogId: string, field: "syncCrossPasses" | "syncCrossPassesWithMyDogs", value: boolean) => {
     updateDogMutation.mutate(
       { _id: dogId, [field]: value },
@@ -135,10 +177,10 @@ const Settings = () => {
   };
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 2, maxWidth: 600 }}>
       <Typography variant="h5">{t("nav.settings")}</Typography>
 
-      <FormControl fullWidth sx={{ maxWidth: 300 }}>
+      <FormControl fullWidth>
         <InputLabel id="language-select-label">
           {t("settings.language")}
         </InputLabel>
@@ -162,7 +204,7 @@ const Settings = () => {
         <>
           <Divider />
 
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 1, maxWidth: 300 }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
             <Typography variant="h6">{t("settings.installAppTitle")}</Typography>
 
             {canPromptInstall ? (
@@ -191,7 +233,7 @@ const Settings = () => {
         <>
           <Divider />
 
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, maxWidth: 300 }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
             {pushPermission === "denied" ? (
               <>
                 <Typography variant="h6">{t("settings.pushNotificationsTitle")}</Typography>
@@ -220,19 +262,53 @@ const Settings = () => {
                 </Typography>
 
                 {isSubscribed && (
-                  <Box sx={{ marginLeft: "48px", marginTop: 1, display: "flex", flexDirection: "column", gap: 0.5 }}>
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      disabled={sendTestPushMutation.isPending}
-                      onClick={onSendTestPush}
-                      sx={{ alignSelf: "flex-start" }}
-                    >
-                      {t("settings.pushTestAction")}
-                    </Button>
-                    <Typography variant="body2" color="text.secondary">
-                      {t("settings.pushTestHint")}
-                    </Typography>
+                  <Box sx={{ marginTop: 1, display: "flex", flexDirection: "column", gap: 1 }}>
+                    <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        disabled={sendTestPushMutation.isPending}
+                        onClick={onSendTestPush}
+                        sx={{ alignSelf: "flex-start" }}
+                      >
+                        {t("settings.pushTestAction")}
+                      </Button>
+                      <Typography variant="body2" color="text.secondary">
+                        {t("settings.pushTestHint")}
+                      </Typography>
+                    </Box>
+
+                    <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+                      <Typography variant="subtitle2">
+                        {t("settings.pushReloadSectionTitle")}
+                      </Typography>
+
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        disabled={pushResetPending}
+                        onClick={onResetPush}
+                        sx={{ alignSelf: "flex-start" }}
+                      >
+                        {t("settings.pushResetAction")}
+                      </Button>
+                      <Typography variant="body2" color="text.secondary">
+                        {t("settings.pushResetHint")}
+                      </Typography>
+
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        disabled={swReloadPending}
+                        onClick={onReloadServiceWorker}
+                        sx={{ alignSelf: "flex-start" }}
+                      >
+                        {t("settings.pushReloadSwAction")}
+                      </Button>
+                      <Typography variant="body2" color="text.secondary">
+                        {t("settings.pushReloadSwHint")}
+                      </Typography>
+                    </Box>
                   </Box>
                 )}
               </>
@@ -243,7 +319,7 @@ const Settings = () => {
 
       <Divider />
 
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 1, maxWidth: 300 }}>
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
         <Typography variant="h6">{t("settings.changePasswordTitle")}</Typography>
 
         <FormGrid>
@@ -311,7 +387,6 @@ const Settings = () => {
                 renderInput={(params) => (
                   <TextField {...params} label={t("pages.myDogs.dogLabel")} />
                 )}
-                sx={{ maxWidth: 300 }}
               />
             )}
 

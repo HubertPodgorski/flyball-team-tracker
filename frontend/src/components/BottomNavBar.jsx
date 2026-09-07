@@ -95,8 +95,12 @@ const UserTabBar = () => {
           value={to}
           icon={icon}
           label={label}
-          // Stop two-word labels (e.g. Polish "Moje psy") wrapping and shrinking the icon.
-          sx={{ "& .MuiBottomNavigationAction-label": { whiteSpace: "nowrap" } }}
+          sx={{
+            // Stop two-word labels (e.g. Polish "Moje psy") wrapping and shrinking the icon.
+            "& .MuiBottomNavigationAction-label": { whiteSpace: "nowrap" },
+            // MUI bumps the selected label's font-size by default - stops the tab visibly growing.
+            "&.Mui-selected .MuiBottomNavigationAction-label": { fontSize: "0.75rem" },
+          }}
         />
       ))}
     </BottomNavigation>

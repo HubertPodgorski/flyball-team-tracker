@@ -122,7 +122,14 @@
     "pushSubscribeFailed": "Nie udało się włączyć powiadomień",
     "pushTestAction": "Wyślij powiadomienie testowe",
     "pushTestSent": "Wysłano powiadomienie testowe",
-    "pushTestHint": "Nie dotarło po minucie? Sprawdź ustawienia powiadomień tej aplikacji w telefonie."
+    "pushTestHint": "Nie dotarło po minucie? Spróbuj \"Zresetuj powiadomienia\" poniżej.",
+    "pushReloadSectionTitle": "Przeładuj ustawienia powiadomień",
+    "pushResetAction": "Zresetuj powiadomienia",
+    "pushResetSuccess": "Powiadomienia zresetowane - spróbuj ponownie wysłać powiadomienie testowe",
+    "pushResetHint": "Ponownie subskrybuje powiadomienia push na tym urządzeniu.",
+    "pushReloadSwAction": "Wymuś odświeżenie aplikacji",
+    "pushReloadSwSuccess": "Aplikacja odświeżona - przeładowywanie strony...",
+    "pushReloadSwHint": "Nadal nic? W telefonie: Ustawienia → Aplikacje → ta aplikacja → Powiadomienia → wyłącz, potem włącz."
   },
   "pwaInstall": {
     "title": "Zainstaluj Flyball Team Tracker",

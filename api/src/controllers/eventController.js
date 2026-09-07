@@ -24,20 +24,7 @@ const createEvent = async (req, res) => {
   // Fire-and-forget - never blocks the response, and a push failure here
   // shouldn't surface as if creating the event itself had failed.
   findClubUsers(req.club)
-    .then((members) => {
-      const recipients = members.filter((member) => member._id.toString() !== req.userId);
-
-      // TEMP DEBUG - remove once the prod push mystery is solved.
-      console.log("NEW-EVENT PUSH DEBUG", {
-        reqClub: req.club,
-        creatorId: req.userId,
-        clubMembersCount: members.length,
-        clubMemberIds: members.map((m) => m._id.toString()),
-        recipientsAfterExcludingCreator: recipients.length,
-      });
-
-      return recipients;
-    })
+    .then((members) => members.filter((member) => member._id.toString() !== req.userId))
     .then((recipients) =>
       sendPushToMembers(req.club, recipients, "newEvent", event.name, event._id.toString())
     )
@@ -131,13 +118,6 @@ const toggleEventUser = async (req, res) => {
 // that exists only to stop the automatic cron from repeating.
 const sendEventReminder = async (req, res) => {
   const { id } = req.params;
-
-  // TEMP DEBUG - remove once the prod remindedCount:0 mystery is solved.
-  console.log("SEND-REMINDER DEBUG", {
-    reqClub: req.club,
-    reqUserId: req.userId,
-    eventIdParam: id,
-  });
 
   const event = await EventModel.findOne({ _id: id, team: req.club });
 
