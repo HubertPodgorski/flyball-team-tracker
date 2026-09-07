@@ -1,4 +1,7 @@
+const mongoose = require("mongoose");
 const EventModel = require("./models/eventModel");
+const UserModel = require("./models/userModel");
+const PushSubscriptionModel = require("./models/pushSubscriptionModel");
 const { findClubUsers } = require("./helpers/clubUsers");
 const { sendPushToMembers } = require("./helpers/push");
 const { isWithinReminderWindow } = require("./helpers/reminderWindow");
@@ -12,6 +15,40 @@ const sendReminderForEvent = async (event) => {
 
   const clubUsers = await findClubUsers(event.team);
   const unmarkedMembers = clubUsers.filter((user) => !markedUserIds.has(user._id.toString()));
+
+  // TEMP DEBUG - remove once the prod remindedCount:0 mystery is solved.
+  // Covers every hypothesis in one pass so this doesn't need a second deploy:
+  // wrong/whitespace-y event.team, the SUPER_ADMIN role filter wrongly
+  // excluding everyone, or being connected to an unexpectedly empty DB/collection.
+  try {
+    const rawTeamMatches = await UserModel.find({ team: event.team }).lean();
+    const allUsersEver = await UserModel.countDocuments({});
+    const distinctTeams = await UserModel.distinct("team");
+    const subscriptionsForTeam = await PushSubscriptionModel.find({ team: event.team }).lean();
+
+    console.log("REMINDER DEBUG", {
+      eventId: event._id.toString(),
+      eventTeamRaw: JSON.stringify(event.team),
+      eventUsers: event.users,
+      dbName: mongoose.connection.name,
+      dbHost: mongoose.connection.host,
+      findClubUsersCount: clubUsers.length,
+      findClubUsersIds: clubUsers.map((u) => u._id.toString()),
+      unmarkedCount: unmarkedMembers.length,
+      rawTeamMatchCount: rawTeamMatches.length,
+      rawTeamMatches: rawTeamMatches.map((u) => ({
+        id: u._id.toString(),
+        name: u.name,
+        team: u.team,
+        roles: u.roles,
+      })),
+      totalUsersInDb: allUsersEver,
+      distinctTeamValuesInDb: distinctTeams,
+      subscriptionsForThisTeamCount: subscriptionsForTeam.length,
+    });
+  } catch (debugError) {
+    console.error("REMINDER DEBUG FAILED", debugError);
+  }
 
   if (unmarkedMembers.length > 0) {
     await sendPushToMembers(

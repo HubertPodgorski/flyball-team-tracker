@@ -95,6 +95,8 @@ const UserTabBar = () => {
           value={to}
           icon={icon}
           label={label}
+          // Stop two-word labels (e.g. Polish "Moje psy") wrapping and shrinking the icon.
+          sx={{ "& .MuiBottomNavigationAction-label": { whiteSpace: "nowrap" } }}
         />
       ))}
     </BottomNavigation>
