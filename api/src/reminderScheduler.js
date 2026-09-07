@@ -46,7 +46,12 @@ const sendAttendanceReminders = async () => {
 };
 
 const startReminderScheduler = () => {
-  setInterval(sendAttendanceReminders, HOUR_MS);
+  // setInterval alone only fires after a full hour - useless if the dyno cycles more often than that.
+  const runCheck = () =>
+    sendAttendanceReminders().catch((error) => console.error("Reminder check failed:", error));
+
+  runCheck();
+  setInterval(runCheck, HOUR_MS);
 };
 
 module.exports = { sendReminderForEvent, sendAttendanceReminders, startReminderScheduler };

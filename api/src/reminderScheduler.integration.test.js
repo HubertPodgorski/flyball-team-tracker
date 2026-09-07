@@ -4,7 +4,7 @@ import webpush from "web-push";
 
 import reminderSchedulerModule from "./reminderScheduler.js";
 
-const { sendReminderForEvent, sendAttendanceReminders } = reminderSchedulerModule;
+const { sendReminderForEvent, sendAttendanceReminders, startReminderScheduler } = reminderSchedulerModule;
 const EventModel = mongoose.model("Event");
 const UserModel = mongoose.model("User");
 const PushSubscriptionModel = mongoose.model("PushSubscription");
@@ -206,6 +206,19 @@ describe("sendAttendanceReminders", () => {
     await sendAttendanceReminders();
 
     expect(webpush.sendNotification).not.toHaveBeenCalled();
+  });
+});
+
+describe("startReminderScheduler", () => {
+  it("runs a check immediately on startup, not only after the first hour ticks", async () => {
+    const findSpy = vi.spyOn(EventModel, "find");
+
+    vi.useFakeTimers();
+    startReminderScheduler();
+    await vi.advanceTimersByTimeAsync(0);
+    vi.useRealTimers();
+
+    expect(findSpy).toHaveBeenCalled();
   });
 });
 
