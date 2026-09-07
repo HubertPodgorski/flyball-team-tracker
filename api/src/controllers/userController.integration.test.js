@@ -3,9 +3,10 @@ import mongoose from "mongoose";
 import userControllerModule from "./userController.js";
 import testHelpersModule from "../testHelpers.js";
 
-const { signup, login, resetUserPassword, changePassword, getClubCodes, getClubs } =
+const { signup, login, deleteUser, resetUserPassword, changePassword, getClubCodes, getClubs } =
   userControllerModule;
 const UserModel = mongoose.model("User");
+const PushSubscriptionModel = mongoose.model("PushSubscription");
 const { mockRes } = testHelpersModule;
 
 describe("signup", () => {
@@ -271,6 +272,42 @@ describe("resetUserPassword (trainer, own club)", () => {
     );
 
     expect(loginRes.statusCode).toBe(200);
+  });
+});
+
+// findClubUsers already excludes deleted users, so push.js's 404/410
+// cleanup would never get a chance to fire for their orphaned rows.
+describe("deleteUser - push subscription cascade", () => {
+  it("deletes the removed user's push subscriptions", async () => {
+    const signupRes = mockRes();
+
+    await signup(
+      {
+        body: {
+          name: "Departing Member",
+          email: "departing-member@example.com",
+          password: "password123",
+          clubCode: "TEST",
+        },
+      },
+      signupRes
+    );
+
+    const userId = signupRes.body.user._id;
+
+    await PushSubscriptionModel.create({
+      endpoint: "https://push.example.com/departing",
+      keys: { p256dh: "p256dh", auth: "auth" },
+      userId,
+      team: "TEST_TEAM",
+    });
+
+    const res = mockRes();
+
+    await deleteUser({ params: { id: userId }, club: "TEST_TEAM" }, res);
+
+    expect(res.statusCode).toBe(200);
+    expect(await PushSubscriptionModel.findOne({ userId })).toBeNull();
   });
 });
 

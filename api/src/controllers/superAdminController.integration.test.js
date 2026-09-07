@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
+import mongoose from "mongoose";
 import superAdminControllerModule from "./superAdminController.js";
 import userControllerModule from "./userController.js";
 import testHelpersModule from "../testHelpers.js";
 
-const { resetUserPassword } = superAdminControllerModule;
+const { resetUserPassword, deleteItem } = superAdminControllerModule;
 const { signup, login } = userControllerModule;
 const { mockRes } = testHelpersModule;
+const PushSubscriptionModel = mongoose.model("PushSubscription");
 
 // Unlike userController.resetUserPassword (trainer, own club only - see
 // userController.integration.test.js), this one is deliberately unscoped:
@@ -73,5 +75,44 @@ describe("superAdminController.resetUserPassword", () => {
     await resetUserPassword({ params: { _id: "000000000000000000000000" } }, res);
 
     expect(res.statusCode).toBe(404);
+  });
+});
+
+// Same cascade as userController's deleteUser test - the super-admin grid
+// is users' OTHER delete path and needs it too.
+describe("superAdminController.deleteItem (users) - push subscription cascade", () => {
+  it("deletes the removed user's push subscriptions", async () => {
+    const signupRes = mockRes();
+
+    await signup(
+      {
+        body: {
+          name: "Grid Deleted",
+          email: "grid-deleted@example.com",
+          password: "password123",
+          clubCode: "TEST",
+        },
+      },
+      signupRes
+    );
+
+    const userId = signupRes.body.user._id;
+
+    await PushSubscriptionModel.create({
+      endpoint: "https://push.example.com/grid-deleted",
+      keys: { p256dh: "p256dh", auth: "auth" },
+      userId,
+      team: "TEST_TEAM",
+    });
+
+    const res = mockRes();
+
+    await deleteItem("users")(
+      { params: { _id: userId }, query: { team: "TEST_TEAM" } },
+      res
+    );
+
+    expect(res.statusCode).toBe(200);
+    expect(await PushSubscriptionModel.findOne({ userId })).toBeNull();
   });
 });

@@ -1,5 +1,8 @@
 const EventModel = require("../models/eventModel");
 const { broadcast } = require("../sse");
+const { findClubUsers } = require("../helpers/clubUsers");
+const { sendPushToMembers } = require("../helpers/push");
+const { sendReminderForEvent } = require("../reminderScheduler");
 
 const findClubEvents = (club) =>
   EventModel.find({ team: club }).sort({ createdAt: -1 });
@@ -17,6 +20,15 @@ const createEvent = async (req, res) => {
 
   res.status(200).json(event);
   broadcast(req.club, "events_updated", await findClubEvents(req.club));
+
+  // Fire-and-forget - never blocks the response, and a push failure here
+  // shouldn't surface as if creating the event itself had failed.
+  findClubUsers(req.club)
+    .then((members) => members.filter((member) => member._id.toString() !== req.userId))
+    .then((recipients) =>
+      sendPushToMembers(req.club, recipients, "newEvent", event.name, event._id.toString())
+    )
+    .catch((error) => console.error("New-event push failed:", error));
 };
 
 const updateEvent = async (req, res) => {
@@ -102,6 +114,22 @@ const toggleEventUser = async (req, res) => {
   broadcast(req.club, "events_updated", await findClubEvents(req.club));
 };
 
+// Trainer-triggered - bypasses the 24h wait and the reminderSentAt guard
+// that exists only to stop the automatic cron from repeating.
+const sendEventReminder = async (req, res) => {
+  const { id } = req.params;
+
+  const event = await EventModel.findOne({ _id: id, team: req.club });
+
+  if (!event) {
+    return res.status(404).json({ error: "NOT_FOUND" });
+  }
+
+  const remindedCount = await sendReminderForEvent(event);
+
+  res.status(200).json({ remindedCount });
+};
+
 module.exports = {
   getEvents,
   createEvent,
@@ -109,4 +137,5 @@ module.exports = {
   deleteEvent,
   toggleEventDog,
   toggleEventUser,
+  sendEventReminder,
 };

@@ -67,6 +67,31 @@ test("every drawer and bottom-tab nav link goes to its own route", async ({ page
   await expect(page).toHaveURL(/\/user-panel\/teams$/);
 });
 
+// Regression: a route change that didn't click inside the drawer (its own
+// onClick wrapper only fires on that) used to leave it open over the new
+// page - browser back stands in for a real trigger (a notification deep
+// link), since anything else is blocked by the open drawer's backdrop.
+test("the drawer closes on browser back navigation, not just a click inside it", async ({
+  page,
+}) => {
+  const email = uniqueEmail("drawer-user");
+
+  await signupAndLoginAsTrainer(page, { email, name: "E2E Drawer User", clubCode: "TEST" });
+
+  // A real in-app <Link> click (pushState) - unlike page.goto(), so back
+  // navigation stays client-side instead of reloading (which would reset
+  // mobileOpen on its own, regardless of the fix under test).
+  await page.getByRole("link", { name: "My Dogs", exact: true }).click();
+  await expect(page).toHaveURL(/\/user-panel\/my-dogs$/);
+
+  await page.getByRole("button", { name: "open drawer" }).click();
+  await expect(page.locator(".MuiDrawer-paper")).toBeVisible();
+
+  await page.goBack();
+
+  await expect(page.locator(".MuiDrawer-paper")).not.toBeVisible();
+});
+
 test("the bottom nav bar is hidden on login and signup", async ({ page }) => {
   await page.goto("/login");
   await expect(page.getByRole("textbox", { name: "Email", exact: true })).toBeVisible();

@@ -1,17 +1,13 @@
 const UserModel = require("../models/userModel");
+const PushSubscriptionModel = require("../models/pushSubscriptionModel");
 const jwt = require("jsonwebtoken");
 const { CLUBS } = require("../helpers/teams");
+const { findClubUsers } = require("../helpers/clubUsers");
 const { broadcast } = require("../sse");
 
 const createToken = (_id, club) => {
   return jwt.sign({ _id, club }, process.env.SECRET, { expiresIn: "3d" });
 };
-
-// Super-admins aren't real members of any club - keep them out of every club's user list.
-const findClubUsers = (club) =>
-  UserModel.find({ team: club, roles: { $nin: ["SUPER_ADMIN"] } }).sort({
-    createdAt: -1,
-  });
 
 const getUsers = async (req, res) => {
   const users = await findClubUsers(req.club);
@@ -40,6 +36,9 @@ const deleteUser = async (req, res) => {
   const { id } = req.params;
 
   await UserModel.findOneAndDelete({ _id: id, team: req.club });
+  // A departed member's subscriptions would otherwise sit orphaned forever -
+  // findClubUsers already excludes them, so push.js's 404/410 cleanup never fires.
+  await PushSubscriptionModel.deleteMany({ userId: id });
 
   res.status(200).json({ ok: true });
   broadcast(req.club, "users_updated", await findClubUsers(req.club));

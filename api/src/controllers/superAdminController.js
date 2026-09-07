@@ -5,6 +5,7 @@ const EventModel = require("../models/eventModel");
 const TeamModel = require("../models/teamModel");
 const TaskModel = require("../models/taskModel");
 const ResourceModel = require("../models/resourceModel");
+const PushSubscriptionModel = require("../models/pushSubscriptionModel");
 const { CLUBS } = require("../helpers/teams");
 const { broadcast } = require("../sse");
 const { detachTasksFromMatchup, keepOnlyPoolDogsInMatchups } = require("../helpers/lineupCascade");
@@ -189,6 +190,12 @@ const deleteItem = (entity) => async (req, res) => {
     entity === "teams" || entity === "dogs" ? await Model.findById(_id) : null;
 
   await Model.findOneAndDelete({ _id });
+
+  // Same orphaned-subscription gap as userController's deleteUser - this
+  // grid is users' OTHER delete path, so it needs the same cleanup.
+  if (entity === "users") {
+    await PushSubscriptionModel.deleteMany({ userId: _id });
+  }
 
   const tasksChanged =
     entity === "teams" && existing ? await detachRemovedLineups(existing, []) : false;

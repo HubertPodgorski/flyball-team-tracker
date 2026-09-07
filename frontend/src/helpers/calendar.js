@@ -1,9 +1,20 @@
+import { startOfDay, isBefore } from "date-fns";
 import { EventType } from "../components/inputs/consts";
 import theme from "./theme";
 import { formatDate } from "./dateHelpers";
 
 export const sortByNewest = (eventA, eventB) => {
   return new Date(eventB.date) - new Date(eventA.date);
+};
+
+// The next event on/after right now, never one already in the past - shared
+// by the Calendar and trainer's Events pages so both mark the same one.
+export const getNextEvent = (events) => {
+  const today = startOfDay(new Date());
+
+  return events
+    .filter(({ date }) => !isBefore(new Date(date), today))
+    .sort((eventA, eventB) => new Date(eventA.date) - new Date(eventB.date))[0];
 };
 
 export const getFormattedDate = (date) =>

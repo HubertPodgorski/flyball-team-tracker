@@ -22,11 +22,13 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { getColorsByStatus, sortByAttendance } from "../helpers/calendar";
 import DogAttendanceChips from "./DogAttendanceChips";
 
-const EventDetails = ({ users, dogs, id }) => {
+const EventDetails = ({ users, dogs, id, startOpen }) => {
   const theme = useTheme();
   const { t } = useTranslation();
 
-  const [detailsOpen, setDetailsOpen] = useState(false);
+  // Lazy-init only - a deep-linked notification click (see Calendar.jsx)
+  // opens straight to attendance-marking instead of one extra tap to expand.
+  const [detailsOpen, setDetailsOpen] = useState(!!startOpen);
 
   const { data: allDogs = [] } = useDogsQuery();
   const { data: allUsers = [] } = useUsersQuery();

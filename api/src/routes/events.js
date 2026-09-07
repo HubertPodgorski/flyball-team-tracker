@@ -7,6 +7,7 @@ const {
   deleteEvent,
   toggleEventDog,
   toggleEventUser,
+  sendEventReminder,
 } = require("../controllers/eventController");
 
 const router = express.Router();
@@ -19,5 +20,6 @@ router.patch("/", updateEvent);
 router.delete("/:id", deleteEvent);
 router.patch("/:id/dogs/:dogId/toggle", toggleEventDog);
 router.patch("/:id/users/:userId/toggle", toggleEventUser);
+router.post("/:id/send-reminder", sendEventReminder);
 
 module.exports = router;

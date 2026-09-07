@@ -1,9 +1,10 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi, afterEach } from "vitest";
 import {
   getBackgroundColorBasedOnType,
   getColorsByStatus,
   getDogPlanningColor,
   getFormattedDate,
+  getNextEvent,
   sortByAttendance,
   sortByNewest,
 } from "./calendar";
@@ -17,6 +18,48 @@ describe("sortByNewest", () => {
 
     expect(sortByNewest(newer, older)).toBeLessThan(0);
     expect(sortByNewest(older, newer)).toBeGreaterThan(0);
+  });
+});
+
+describe("getNextEvent", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("picks the soonest event that hasn't happened yet", () => {
+    vi.useFakeTimers().setSystemTime(new Date("2026-06-15T12:00:00"));
+
+    const soonest = { _id: "soonest", date: "2026-06-16T10:00:00" };
+    const later = { _id: "later", date: "2026-06-20T10:00:00" };
+
+    expect(getNextEvent([later, soonest])).toBe(soonest);
+  });
+
+  it("ignores events already in the past", () => {
+    vi.useFakeTimers().setSystemTime(new Date("2026-06-15T12:00:00"));
+
+    const past = { _id: "past", date: "2026-06-01T10:00:00" };
+    const future = { _id: "future", date: "2026-06-20T10:00:00" };
+
+    expect(getNextEvent([past, future])).toBe(future);
+  });
+
+  it("includes an event happening later today", () => {
+    vi.useFakeTimers().setSystemTime(new Date("2026-06-15T08:00:00"));
+
+    const laterToday = { _id: "later-today", date: "2026-06-15T20:00:00" };
+
+    expect(getNextEvent([laterToday])).toBe(laterToday);
+  });
+
+  it("returns undefined when every event is in the past", () => {
+    vi.useFakeTimers().setSystemTime(new Date("2026-06-15T12:00:00"));
+
+    expect(getNextEvent([{ _id: "past", date: "2026-06-01T10:00:00" }])).toBeUndefined();
+  });
+
+  it("returns undefined for an empty list", () => {
+    expect(getNextEvent([])).toBeUndefined();
   });
 });
 

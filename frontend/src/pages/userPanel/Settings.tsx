@@ -19,6 +19,7 @@ import { useTranslation } from "react-i18next";
 import { useAuthContext } from "../../hooks/useAuthContext";
 import { useIsSuperAdmin } from "../../hooks/useIsSuperAdmin";
 import { usePwaInstall } from "../../hooks/usePwaInstall";
+import { usePushNotifications } from "../../hooks/usePushNotifications";
 import { useClubFeatures } from "../../hooks/useClubFeatures";
 import { useDogsQuery, useUpdateDogMutation } from "../../queries/dogs";
 import { useChangeOwnPasswordMutation, useUpdateUserMutation } from "../../queries/users";
@@ -36,6 +37,8 @@ const Settings = () => {
   const { user, setUserLanguage } = useAuthContext();
   const isSuperAdmin = useIsSuperAdmin();
   const { isStandalone, isIos, canPromptInstall, promptInstall } = usePwaInstall();
+  const { isSupported: pushSupported, permission: pushPermission, isSubscribed, subscribe, unsubscribe } =
+    usePushNotifications();
   const { crossPasses: crossPassesEnabled } = useClubFeatures();
   const { data: dogs = [] } = useDogsQuery();
   const updateUserMutation = useUpdateUserMutation();
@@ -90,6 +93,22 @@ const Settings = () => {
           enqueueSnackbar(t("settings.saveFailed"), { variant: "error" }),
       }
     );
+  };
+
+  const onPushToggle = async (checked: boolean) => {
+    try {
+      if (checked) {
+        const granted = await subscribe();
+
+        if (!granted) {
+          enqueueSnackbar(t("settings.pushNotificationsDeniedHint"), { variant: "warning" });
+        }
+      } else {
+        await unsubscribe();
+      }
+    } catch {
+      enqueueSnackbar(t("settings.pushSubscribeFailed"), { variant: "error" });
+    }
   };
 
   const onSyncChange = (dogId: string, field: "syncCrossPasses" | "syncCrossPassesWithMyDogs", value: boolean) => {
@@ -149,6 +168,42 @@ const Settings = () => {
               <Typography variant="body2" color="text.secondary">
                 {t("settings.installAppIosHint")}
               </Typography>
+            )}
+          </Box>
+        </>
+      )}
+
+      {pushSupported && (
+        <>
+          <Divider />
+
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, maxWidth: 300 }}>
+            {pushPermission === "denied" ? (
+              <>
+                <Typography variant="h6">{t("settings.pushNotificationsTitle")}</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {t("settings.pushNotificationsDeniedHint")}
+                </Typography>
+              </>
+            ) : (
+              <>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={isSubscribed}
+                      onChange={(event) => onPushToggle(event.target.checked)}
+                    />
+                  }
+                  label={t("settings.pushNotificationsTitle")}
+                />
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ marginLeft: "48px", marginTop: -0.5 }}
+                >
+                  {t("settings.pushNotificationsHint")}
+                </Typography>
+              </>
             )}
           </Box>
         </>

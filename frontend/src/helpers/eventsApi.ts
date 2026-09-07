@@ -58,3 +58,13 @@ export const toggleEventUser = async (
     authHeaders()
   );
 };
+
+export const sendEventReminder = async (id: string): Promise<{ remindedCount: number }> => {
+  const { data } = await axios.post(
+    `${apiSuffix}/events/${id}/send-reminder`,
+    {},
+    authHeaders()
+  );
+
+  return data;
+};

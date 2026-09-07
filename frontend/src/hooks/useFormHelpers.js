@@ -5,11 +5,12 @@ export const useFormHelpers = (initialFormData) => {
   const [editingId, setEditingId] = useState();
   const [formOpen, setFormOpen] = useState(false);
 
-  const onEditClick = async (formEditInitialData, id) => {
-    await setFormInitialData(formEditInitialData);
-
-    await setEditingId(id);
-
+  // Not async - these are plain useState setters, not promises. Awaiting
+  // each one still yields a microtask tick, splitting one batched update
+  // into several renders that briefly expose inconsistent props.
+  const onEditClick = (formEditInitialData, id) => {
+    setFormInitialData(formEditInitialData);
+    setEditingId(id);
     setFormOpen(true);
   };
 

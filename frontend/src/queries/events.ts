@@ -4,6 +4,7 @@ import {
   createEvent,
   deleteEvent,
   fetchEvents,
+  sendEventReminder,
   toggleEventDog,
   toggleEventUser,
   updateEvent,
@@ -39,3 +40,6 @@ export const useToggleEventUserMutation = () =>
     mutationFn: ({ id, userId }: { id: string; userId: string }) =>
       toggleEventUser(id, userId),
   });
+
+export const useSendEventReminderMutation = () =>
+  useMutation({ mutationFn: sendEventReminder });

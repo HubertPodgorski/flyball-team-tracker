@@ -216,3 +216,103 @@ test("the calendar paginates once there are more than 10 regular events", async 
   expect(pageTwoCount).toBeGreaterThanOrEqual(1);
   expect(pageTwoCount).toBeLessThanOrEqual(2);
 });
+
+// A real push notification click can't be simulated - this exercises the
+// same landing behavior directly: Calendar.jsx reading ?eventId=.
+test("a deep-linked eventId scrolls to and highlights that specific event", async ({
+  page,
+}) => {
+  const email = uniqueEmail("trainer");
+
+  await signupAndLoginAsTrainer(page, { email, name: "E2E Trainer", clubCode: "TEST" });
+  await promoteToTrainer(email);
+  await logout(page);
+  await login(page, email);
+
+  await page.goto("/trainer-panel/events");
+
+  const decoyName = `E2E Deep Link Decoy ${Date.now()}`;
+  const targetName = `E2E Deep Link Target ${Date.now()}`;
+
+  // The decoy takes the default date so it (not the target) wins the
+  // pinned "next event" slot - the target must land in the paginated list.
+  await page.getByRole("button", { name: "Add" }).click();
+  await page.getByRole("textbox", { name: "Name", exact: true }).fill(decoyName);
+  await page.getByRole("button", { name: "Submit" }).click();
+  await expect(page.getByText(decoyName)).toBeVisible();
+
+  const [response] = await Promise.all([
+    page.waitForResponse(
+      (res) => res.url().includes("/events") && res.request().method() === "POST"
+    ),
+    (async () => {
+      await page.getByRole("button", { name: "Add" }).click();
+      await page.getByRole("textbox", { name: "Name", exact: true }).fill(targetName);
+      await page.getByRole("gridcell", { name: "28", exact: true }).click();
+      await page.getByRole("button", { name: "Submit" }).click();
+    })(),
+  ]);
+
+  const { _id: eventId } = await response.json();
+
+  await page.goto(`/user-panel/calendar?eventId=${eventId}`);
+
+  const card = page.locator(`#event-${eventId}`);
+  await expect(card).toBeVisible();
+  await expect(card).toContainText(targetName);
+  await expect(card).toHaveCSS("outline-style", "solid");
+  await expect(card.getByText("Next event")).toHaveCount(0);
+
+  // The attendance details section starts expanded too - a notification
+  // click should land straight on attendance-marking, not one tap short of it.
+  await expect(card.getByText("Hide details")).toBeVisible();
+});
+
+// Regression coverage for the page-jump effect. Each e2e run gets a fresh,
+// empty DB (global-setup.ts), so this test builds its own multi-page state.
+test("a deep-linked event buried on another pagination page is navigated to automatically", async ({
+  page,
+}) => {
+  test.slow();
+
+  const email = uniqueEmail("trainer");
+
+  await signupAndLoginAsTrainer(page, { email, name: "E2E Trainer", clubCode: "TEST" });
+  await promoteToTrainer(email);
+  await logout(page);
+  await login(page, email);
+
+  await page.goto("/trainer-panel/events");
+
+  const suffix = Date.now();
+
+  // 11 same-dated decoys: one of them (whichever) becomes the pinned "next
+  // event", leaving exactly 10 in the paginated rest - a full page 1.
+  for (let i = 0; i < 11; i++) {
+    await page.getByRole("button", { name: "Add" }).click();
+    await page.getByRole("textbox", { name: "Name", exact: true }).fill(`Decoy ${suffix}-${i}`);
+    await page.getByRole("button", { name: "Submit" }).click();
+    await expect(page.getByText(`Decoy ${suffix}-${i}`)).toBeVisible();
+  }
+
+  const targetName = `E2E Buried Target ${suffix}`;
+  const token = await page.evaluate(
+    () => JSON.parse(localStorage.getItem("user") || "{}").token
+  );
+
+  // An extreme past date sorts to the end of the list, past that full page 1.
+  const created = await page.request.post("http://localhost:4101/events", {
+    headers: { Authorization: `Bearer ${token}` },
+    data: { name: targetName, date: "2000-01-01T12:00:00.000Z", type: "TRAINING" },
+  });
+  const { _id: eventId } = await created.json();
+
+  await page.goto("/user-panel/calendar");
+  await expect(page.getByText(targetName)).not.toBeVisible();
+
+  await page.goto(`/user-panel/calendar?eventId=${eventId}`);
+
+  const card = page.locator(`#event-${eventId}`);
+  await expect(card).toBeVisible();
+  await expect(card).toContainText(targetName);
+});

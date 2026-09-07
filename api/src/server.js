@@ -11,6 +11,8 @@ const tasksRoutes = require("./routes/tasks");
 const dogsRoutes = require("./routes/dogs");
 const clubSettingsRoutes = require("./routes/clubSettings");
 const resourcesRoutes = require("./routes/resources");
+const pushSubscriptionsRoutes = require("./routes/pushSubscriptions");
+const { startReminderScheduler } = require("./reminderScheduler");
 
 const express = require("express");
 const mongoose = require("mongoose");
@@ -45,6 +47,7 @@ app.use("/tasks", tasksRoutes);
 app.use("/dogs", dogsRoutes);
 app.use("/club-settings", clubSettingsRoutes);
 app.use("/resources", resourcesRoutes);
+app.use("/push-subscriptions", pushSubscriptionsRoutes);
 
 mongoose
   .connect(process.env.MONGO_URL)
@@ -54,6 +57,8 @@ mongoose
     app.listen(process.env.PORT, () => {
       console.log(`Listening on port ${process.env.PORT}`);
     });
+
+    startReminderScheduler();
   })
   .catch((error) => {
     console.log(error);

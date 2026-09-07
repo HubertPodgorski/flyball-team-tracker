@@ -16,13 +16,6 @@ const PwaInstallBanner = () => {
     <Paper
       elevation={4}
       sx={{
-        position: "fixed",
-        left: 8,
-        right: 8,
-        bottom: 8,
-        zIndex: (theme) => theme.zIndex.snackbar,
-        maxWidth: 480,
-        marginX: "auto",
         padding: 1.5,
         display: "flex",
         alignItems: "center",

@@ -113,13 +113,23 @@
     "installAppTitle": "Install app",
     "installAppHint": "Add Flyball Team Tracker to your home screen for quick, full-screen access.",
     "installAppAction": "Install",
-    "installAppIosHint": "Tap the Share icon in Safari, then \"Add to Home Screen\"."
+    "installAppIosHint": "Tap the Share icon in Safari, then \"Add to Home Screen\".",
+    "pushNotificationsTitle": "Push notifications",
+    "pushNotificationsHint": "Get notified about new events and a reminder to mark your attendance.",
+    "pushNotificationsDeniedHint": "Notifications are blocked for this site in your browser settings.",
+    "pushSubscribeFailed": "Failed to enable notifications"
   },
   "pwaInstall": {
     "title": "Install Flyball Team Tracker",
     "body": "Add it to your home screen for quick, full-screen access.",
     "iosHint": "Tap the Share icon, then \"Add to Home Screen\".",
     "action": "Install",
+    "dismiss": "Dismiss"
+  },
+  "pushNotificationsPrompt": {
+    "title": "Turn on notifications?",
+    "body": "Get notified about new events and a reminder to mark your attendance. You can always change this later in Settings.",
+    "action": "Enable",
     "dismiss": "Dismiss"
   },
   "forms": {
@@ -233,7 +243,12 @@
       "selectDogAttendance_one": "Select dog attendance",
       "selectDogAttendance_other": "Select dogs attendance",
       "selectAnyoneAttendance": "Select anyone's attendance",
-      "selectMyAttendance": "Select my attendance"
+      "selectMyAttendance": "Select my attendance",
+      "sendReminder": "Remind unmarked members now",
+      "reminderSent_one": "Reminded {{count}} member",
+      "reminderSent_other": "Reminded {{count}} members",
+      "reminderSentNone": "Everyone's already marked",
+      "reminderFailed": "Failed to send reminder"
     },
     "clubSwitch": {
       "title": "Club switch",
@@ -315,7 +330,8 @@
         "items": [
           "Every event your club has scheduled - trainings, competitions, seminars, meetings - shows up here, newest first, with the soonest upcoming one pinned at the top so it's never buried further down.",
           "Narrow the list to a date range with the From/To filters, and page through it once there are more events than fit on one screen.",
-          "Expand an event's details to mark your own (or your dogs') attendance: tap a name to cycle it through present, absent, and unset."
+          "Expand an event's details to mark your own (or your dogs') attendance: tap a name to cycle it through present, absent, and unset.",
+          "Tapping a push notification about an event jumps straight here and scrolls to it, whatever page it's on."
         ]
       },
       "myDogs": {
@@ -348,7 +364,8 @@
         "items": [
           "Switch the app's language between Polish and English at any time - your choice is saved to your account.",
           "Change your own password here at any time, with your current password to confirm it's really you.",
-          "For each of your own dogs, there are two independent cross-pass syncing options: keep its timing in sync across every lineup it runs in after the same dog, and/or keep it in sync with its standalone My Dogs cross-passes."
+          "For each of your own dogs, there are two independent cross-pass syncing options: keep its timing in sync across every lineup it runs in after the same dog, and/or keep it in sync with its standalone My Dogs cross-passes.",
+          "Turn on push notifications to get a nudge when a new event is created, and a reminder if you haven't marked your attendance ~24h before one starts."
         ]
       }
     },
@@ -358,7 +375,7 @@
       "items": [
         "Tasks - the same drag-and-drop board, plus the ability to create, edit, and delete tasks.",
         "Dogs, Dog tasks, Users - manage your club's dogs (including each dog's jump height), the task types they can be assigned, and your club's members. Open a member's card to reset their password if they're locked out - you'll get a one-time temporary password to pass along to them.",
-        "Events - create trainings, competitions, seminars, and meetings for your club.",
+        "Events - create trainings, competitions, seminars, and meetings for your club; the soonest upcoming one is pinned at the top here too. The bell icon on an event immediately sends an attendance-reminder push to anyone who hasn't marked yet, regardless of the usual ~24h timing.",
         "Teams - build and edit teams and their lineups for your whole club, not just your own dogs.",
         "Features - turn off the parts of the app your club doesn't use, like Teams & Lineups, Cross-passes, Events/Calendar, or the Dog Tasks catalog."
       ]
