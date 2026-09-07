@@ -150,3 +150,58 @@ test("picking an event type prefills the name, but never overwrites one already 
 
   await page.getByRole("button", { name: "Cancel" }).click();
 });
+
+// Regression: cancelling an edit reset the name to blank without re-running
+// the type-based prefill, since type's value itself hadn't changed.
+test("re-opening Add right after cancelling an edit still prefills the name", async ({
+  page,
+}) => {
+  const email = uniqueEmail("trainer");
+  await signupAndLoginAsTrainer(page, { email, name: "Reopen Prefill Trainer", clubCode: "TEST" });
+  await promoteToTrainer(email);
+  await logout(page);
+  await login(page, email);
+
+  await page.goto("/trainer-panel/events");
+
+  const eventName = `E2E Reopen Prefill Event ${Date.now()}`;
+
+  await page.getByRole("button", { name: "Add" }).click();
+  await page.getByRole("textbox", { name: "Name", exact: true }).fill(eventName);
+  await page.getByRole("button", { name: "Submit" }).click();
+  await expect(page.getByText(eventName)).toBeVisible();
+
+  await page.getByText(eventName).click();
+  await expect(page.getByRole("heading", { name: "Editing event" })).toBeVisible();
+  await page.getByRole("button", { name: "Cancel" }).click();
+
+  await page.getByRole("button", { name: "Add" }).click();
+  await expect(page.getByRole("heading", { name: "Adding an event" })).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Name", exact: true })).toHaveValue("Training");
+
+  await page.getByRole("button", { name: "Cancel" }).click();
+});
+
+// Regression: no editing involved at all here - a plain Add -> Cancel never
+// changes initialData's reference, so the prop-watching effect never
+// re-fires to repair the name that handleClose's own reset just blanked.
+test("re-opening Add right after cancelling a fresh, untouched Add still prefills the name", async ({
+  page,
+}) => {
+  const email = uniqueEmail("trainer");
+  await signupAndLoginAsTrainer(page, { email, name: "Plain Reopen Trainer", clubCode: "TEST" });
+  await promoteToTrainer(email);
+  await logout(page);
+  await login(page, email);
+
+  await page.goto("/trainer-panel/events");
+
+  await page.getByRole("button", { name: "Add" }).click();
+  await expect(page.getByRole("textbox", { name: "Name", exact: true })).toHaveValue("Training");
+  await page.getByRole("button", { name: "Cancel" }).click();
+
+  await page.getByRole("button", { name: "Add" }).click();
+  await expect(page.getByRole("textbox", { name: "Name", exact: true })).toHaveValue("Training");
+
+  await page.getByRole("button", { name: "Cancel" }).click();
+});

@@ -2,6 +2,7 @@ const TaskModel = require("../models/taskModel");
 const TeamModel = require("../models/teamModel");
 const UserModel = require("../models/userModel");
 const CrossPassModel = require("../models/crossPassModel");
+const { findClubUsers } = require("./clubUsers");
 const { broadcast } = require("../sse");
 
 const findClubTasks = (club) =>
@@ -9,11 +10,6 @@ const findClubTasks = (club) =>
 
 const findClubTeams = (club) =>
   TeamModel.find({ team: club }).sort({ createdAt: -1 });
-
-const findClubUsers = (club) =>
-  UserModel.find({ team: club, roles: { $nin: ["SUPER_ADMIN"] } }).sort({
-    createdAt: -1,
-  });
 
 const findClubCrossPasses = (club) =>
   CrossPassModel.find({ team: club }).sort({ createdAt: -1 });

@@ -14,9 +14,11 @@ import { useSubmitGuard } from "../../hooks/useSubmitGuard";
 
 // Single source for both useForm's defaultValues and the reset effect below
 // - see DogTaskForm.jsx for why keeping these in sync matters.
+// date arrives as a plain string when editing (straight from the API) -
+// StaticDateTimePicker needs a real Date to render it as selected at all.
 const mapToFormValues = ({ name, date, type, team }) => ({
   name,
-  date,
+  date: date ? new Date(date) : date,
   type,
   team: team ?? "",
 });
@@ -73,17 +75,38 @@ const EventForm = ({
   // See DogForm.jsx for why both flags are needed.
   const isSubmitting = useStore(form.store, (state) => state.isSubmitting);
 
-  useEffect(() => {
-    form.reset(mapToFormValues(initialData));
-  }, [initialData, form]);
-
   const typeOptions = getEventTypeOptions(t);
-  const type = useStore(form.store, (state) => state.values.type);
-  const name = useStore(form.store, (state) => state.values.name);
   const lastAutoNameRef = useRef("");
 
-  // New events only - declared after the reset effect above, so a fresh
-  // mount's reset can't immediately wipe out this one's fill.
+  // Reapplies initialData/editingId directly - form.reset() alone (see
+  // handleClose) can't tell "closed a blank Add" from "cancelled mid-edit",
+  // and a plain Add -> Cancel never changes initialData's reference at all,
+  // so the effect below wouldn't otherwise re-fire to repair the name.
+  const applyInitialValues = () => {
+    const values = mapToFormValues(initialData);
+
+    form.reset(values);
+
+    // Auto-fill a fresh, blank session - from `values` (the incoming data),
+    // not a useStore read, which would still lag one render behind this reset.
+    if (!editingId && !values.name && values.type) {
+      const label = typeOptions.find((option) => option.value === values.type)?.label ?? "";
+
+      form.setFieldValue("name", label);
+      lastAutoNameRef.current = label;
+    }
+  };
+
+  useEffect(() => {
+    applyInitialValues();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialData, editingId, form]);
+
+  const type = useStore(form.store, (state) => state.values.type);
+  const name = useStore(form.store, (state) => state.values.name);
+
+  // New events only - reacts to the type dropdown changing mid-session
+  // (the effect above handles the initial fill on a freshly-opened one).
   useEffect(() => {
     if (editingId || !type) return;
 
@@ -97,7 +120,7 @@ const EventForm = ({
   }, [type]);
 
   const handleClose = () => {
-    form.reset();
+    applyInitialValues();
     onClose();
   };
 

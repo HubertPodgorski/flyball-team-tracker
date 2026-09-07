@@ -31,6 +31,9 @@ const eventSchema = new Schema(
       required: false,
     },
     team: { type: String, required: true },
+    // Set once the attendance-reminder push fires (automatic or manual) -
+    // makes the cron's check exactly-once regardless of how many ticks land in the window.
+    reminderSentAt: { type: Date, required: false },
   },
   {
     timestamps: true,

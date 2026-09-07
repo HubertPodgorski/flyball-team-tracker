@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   AppBar,
   BottomNavigation,
@@ -104,10 +104,18 @@ const UserTabBar = () => {
 const BottomNavBar = () => {
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const { t } = useTranslation();
+  const { pathname, search } = useLocation();
 
   const onDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
+
+  // A click inside the drawer already closes it (its own onClick wrapper),
+  // but a navigation from outside it - browser back/forward, a notification
+  // deep link - doesn't, and would otherwise leave it open over the new page.
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname, search]);
 
   const isTrainer = useIsTrainer();
   const isSuperAdmin = useIsSuperAdmin();

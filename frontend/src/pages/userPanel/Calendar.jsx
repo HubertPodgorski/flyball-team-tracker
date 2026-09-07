@@ -1,10 +1,11 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { useSearch } from "@tanstack/react-router";
 import { useEventsQuery } from "../../queries/events";
 import { Box, Pagination, useTheme } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers";
 import { useTranslation } from "react-i18next";
 import { startOfDay, endOfDay, isBefore, isAfter } from "date-fns";
-import { sortByNewest } from "../../helpers/calendar";
+import { getNextEvent, sortByNewest } from "../../helpers/calendar";
 import EventCard from "../../components/EventCard";
 import EventTypeLegend from "../../components/EventTypeLegend";
 
@@ -14,11 +15,24 @@ const Calendar = () => {
   const theme = useTheme();
   const { t } = useTranslation();
 
+  // Present only when arriving from a push notification's "click" (see
+  // serviceWorker.js) - jumps straight to that specific event below.
+  const { eventId: targetEventId } = useSearch({ from: "/user-panel/calendar" });
+
   const { data: events = [] } = useEventsQuery();
 
   const [fromDate, setFromDate] = useState(null);
   const [toDate, setToDate] = useState(null);
   const [page, setPage] = useState(1);
+
+  // A deep-linked event must never be hidden by a stale filter left over
+  // from a previous visit to this page.
+  useEffect(() => {
+    if (!targetEventId) return;
+
+    setFromDate(null);
+    setToDate(null);
+  }, [targetEventId]);
 
   const filteredEvents = useMemo(() => {
     return events.filter(({ date }) => {
@@ -35,17 +49,9 @@ const Calendar = () => {
     });
   }, [events, fromDate, toDate]);
 
-  // The next event on/after right now - pinned above the paginated list so
-  // it's never buried by however many events the club has piled up. Only
-  // ever the next one, not just "nearest in either direction" - a past event
-  // isn't what you need quick access to.
-  const nextEvent = useMemo(() => {
-    const today = startOfDay(new Date());
-
-    return filteredEvents
-      .filter(({ date }) => !isBefore(new Date(date), today))
-      .sort((eventA, eventB) => new Date(eventA.date) - new Date(eventB.date))[0];
-  }, [filteredEvents]);
+  // Pinned above the paginated list so it's never buried by however many
+  // events the club has piled up.
+  const nextEvent = useMemo(() => getNextEvent(filteredEvents), [filteredEvents]);
 
   const restEvents = useMemo(
     () =>
@@ -61,6 +67,27 @@ const Calendar = () => {
     (currentPage - 1) * PAGE_SIZE,
     currentPage * PAGE_SIZE
   );
+
+  // The deep-linked event might be pinned as nextEvent already (page doesn't
+  // matter then), or buried on some other page of the paginated rest.
+  useEffect(() => {
+    if (!targetEventId || targetEventId === nextEvent?._id) return;
+
+    const targetIndex = restEvents.findIndex((event) => event._id === targetEventId);
+
+    if (targetIndex === -1) return;
+
+    setPage(Math.floor(targetIndex / PAGE_SIZE) + 1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [targetEventId, restEvents]);
+
+  useEffect(() => {
+    if (!targetEventId) return;
+
+    document
+      .getElementById(`event-${targetEventId}`)
+      ?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [targetEventId, pagedEvents]);
 
   const onDateFilterChange = (setter) => (value) => {
     setter(value);
@@ -89,7 +116,15 @@ const Calendar = () => {
         />
       </Box>
 
-      {nextEvent && <EventCard event={nextEvent} highlighted />}
+      {nextEvent && (
+        <EventCard
+          event={nextEvent}
+          highlighted={nextEvent._id !== targetEventId}
+          targeted={nextEvent._id === targetEventId}
+          label={t("pages.calendar.nextEvent")}
+          expandDetails={nextEvent._id === targetEventId}
+        />
+      )}
 
       {filteredEvents.length === 0 && (
         <Box sx={{ color: "text.secondary" }}>{t("pages.calendar.noEventsInRange")}</Box>
@@ -108,7 +143,12 @@ const Calendar = () => {
         }}
       >
         {pagedEvents.map((event) => (
-          <EventCard event={event} key={event._id} />
+          <EventCard
+            event={event}
+            key={event._id}
+            targeted={event._id === targetEventId}
+            expandDetails={event._id === targetEventId}
+          />
         ))}
       </Box>
 

@@ -7,7 +7,7 @@ import { router } from "./router";
 import { queryClient } from "./queryClient";
 import theme from "./helpers/theme";
 import SseHandler from "./components/SseHandler";
-import PwaInstallBanner from "./components/PwaInstallBanner";
+import BottomBanners from "./components/BottomBanners";
 import { PwaInstallProvider } from "./contexts/PwaInstallContext";
 import { AuthContextProvider } from "./contexts/AuthContext";
 import { ConfirmProvider } from "material-ui-confirm";
@@ -44,7 +44,7 @@ const App = () => {
                 >
                   <AppContextProvider>
                     <SseHandler />
-                    <PwaInstallBanner />
+                    <BottomBanners />
 
                     <CssBaseline />
 

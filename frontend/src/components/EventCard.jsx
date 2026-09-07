@@ -1,6 +1,5 @@
 import React from "react";
 import { alpha, Card, Chip, Typography, useTheme } from "@mui/material";
-import { useTranslation } from "react-i18next";
 import { useIsMobile } from "../hooks/useIsMobile";
 import EventDetails from "./EventDetails";
 import {
@@ -8,16 +7,30 @@ import {
   getFormattedDate,
 } from "../helpers/calendar";
 
-const EventCard = ({ event: { _id, name, date, dogs, users, type }, highlighted }) => {
+// `highlighted` marks the pinned "next event" (orange outline + label
+// chip); `targeted` marks a deep-linked notification click instead, in a
+// different color (blue) - the two aren't always the same event.
+const EventCard = ({
+  event: { _id, name, date, dogs, users, type },
+  highlighted,
+  label,
+  expandDetails,
+  targeted,
+}) => {
   const isMobile = useIsMobile();
-  const { t } = useTranslation();
-
   const theme = useTheme();
+
+  const outlineColor = highlighted
+    ? theme.palette.primary.main
+    : targeted
+      ? theme.palette.info.main
+      : undefined;
 
   return (
     <Card
       key={_id}
-      elevation={highlighted ? 8 : 1}
+      id={`event-${_id}`}
+      elevation={outlineColor ? 8 : 1}
       sx={{
         padding: theme.spacing(2),
         display: "grid",
@@ -25,8 +38,8 @@ const EventCard = ({ event: { _id, name, date, dogs, users, type }, highlighted 
         gridGap: theme.spacing(2),
         backgroundColor: alpha(getBackgroundColorBasedOnType(type), 0.75),
         backdropFilter: "blur(6px)",
-        ...(highlighted && {
-          outline: `2px solid ${theme.palette.primary.main}`,
+        ...(outlineColor && {
+          outline: `2px solid ${outlineColor}`,
           outlineOffset: "2px",
         }),
         [theme.breakpoints.down("md")]: {
@@ -35,9 +48,9 @@ const EventCard = ({ event: { _id, name, date, dogs, users, type }, highlighted 
         },
       }}
     >
-      {highlighted && (
+      {label && (
         <Chip
-          label={t("pages.calendar.nextEvent")}
+          label={label}
           color="primary"
           size="small"
           sx={{ justifySelf: "flex-start" }}
@@ -53,7 +66,7 @@ const EventCard = ({ event: { _id, name, date, dogs, users, type }, highlighted 
         {getFormattedDate(date)}
       </Typography>
 
-      <EventDetails users={users} dogs={dogs} id={_id} />
+      <EventDetails users={users} dogs={dogs} id={_id} startOpen={expandDetails} />
     </Card>
   );
 };

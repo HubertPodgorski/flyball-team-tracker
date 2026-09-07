@@ -95,7 +95,7 @@ New users get no `roles`. The trainer panel (`/trainer-panel/*`) is gated on `ro
 **Backend** (`api/`):
 - `yarn dev` — nodemon, restarts on change
 - `yarn start` — plain node
-- `yarn gen_vapid_keys` — generates VAPID keys for web-push (see Known gaps below — not currently wired up to anything)
+- `npx web-push generate-vapid-keys` — generates the `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY` pair push notifications need (see Deploying below)
 
 **Frontend** (`frontend/`):
 - `yarn start` — Vite dev server
@@ -105,7 +105,7 @@ New users get no `roles`. The trainer panel (`/trainer-panel/*`) is gated on `ro
 - `yarn test:watch` — Vitest in watch mode
 - `yarn lint` — ESLint (`react-app` config, run standalone now that CRA's gone — see below)
 
-The API has no unit tests written yet.
+`api/` uses Vitest too, integration-style against `mongodb-memory-server` (`yarn test` from within `api/`) — controllers, cascades, the push-notification pipeline, the attendance-reminder scheduler.
 
 ## Unit tests
 
@@ -122,7 +122,7 @@ yarn test:e2e                                        # from repo root, any time 
 
 Each run spins up an in-memory MongoDB (`mongodb-memory-server`, downloads a real `mongod` binary the first time — needs internet once), boots the API against it on port 4101, boots the Vite dev server on port 3100 with `VITE_HTTPS_PROXY` pointed at that API, runs the tests, then tears everything down. Doesn't touch your real `.env`, your Atlas cluster, or ports 3000/4001, so it's safe to run alongside normal local dev.
 
-Current coverage ([e2e/tests](e2e/tests)): signup, logout/login, and a trainer promoting via direct DB write (there's no UI path, same limitation as real usage — see "Creating a local account" above) then adding a dog through the trainer panel. `e2e/helpers/db.ts` is where that kind of direct-DB test setup lives if you add more tests needing it.
+Current coverage ([e2e/tests](e2e/tests)) spans most of the app - auth, the trainer/super-admin panels, calendar/attendance, drag-and-drop tasks, feature flags, and more. `e2e/helpers/db.ts` is where direct-DB test setup lives (e.g. promoting a user to trainer, since there's no UI path for it, same limitation as real usage — see "Creating a local account" above).
 
 ## Deploying after the Vite migration
 
@@ -131,11 +131,13 @@ The frontend moved from Create React App to Vite. Vercel's project is still conf
 - Output Directory: `build` → `dist` (Vite's default; should auto-fill once the preset's changed)
 - Env var: `REACT_APP_HTTPS_PROXY` → `VITE_HTTPS_PROXY` (same value, new name — see Frontend env above)
 
-## Known gaps
+## Push notifications
 
-Things that look like features but currently do nothing — so you don't lose time chasing them:
+Real web push, two triggers: a new event is created, and a one-time reminder ~24h before an event if you haven't marked your attendance. Opt-in per device via the toggle (or the one-time prompt banner) in Settings.
 
-- **Web push notifications are unwired end to end.** Frontend: `subscribe()` in [serviceWorkerHelpers.js](frontend/src/helpers/serviceWorkerHelpers.js) (which would request permission and create a push subscription) is never called from any component, and the `subscriptionDetails` the app fetches on load is never rendered anywhere. Backend: there's no handler at all for the `save_subscription` / `get_subscription_details` socket events the frontend emits, despite `web-push` being installed and `gen_vapid_keys` existing as a script. Treat it as scaffolding for an unfinished feature, not a bug to fix incidentally.
+**Required in every environment, or sends silently fail:**
+- Generate one VAPID key pair with `npx web-push generate-vapid-keys` (once — reuse the same pair everywhere, don't regenerate per environment) and set `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` (a `mailto:` address) as backend env vars — see `api/.env.example`. Missing keys don't crash the server; pushes just never go out (each failure is caught and logged, not thrown).
+- The reminder scheduler ([reminderScheduler.js](api/src/reminderScheduler.js)) runs as an in-process hourly `setInterval`, started from `server.js` — there's no external cron. A server restart can miss a check by up to an hour; accepted tradeoff, not a bug.
 
 ## Coding conventions
 

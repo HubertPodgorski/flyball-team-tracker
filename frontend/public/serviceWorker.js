@@ -16,6 +16,7 @@ self.addEventListener("push", (event) => {
     data: {
       dateOfArrival: Date.now(),
       primaryKey: 1,
+      eventId: notificationData.eventId,
     },
   };
   event.waitUntil(
@@ -27,18 +28,32 @@ self.addEventListener("notificationclick", function (event) {
   //For root applications: just change "'./'" to "'/'"
   //Very important having the last forward slash on "new URL('./', location)..."
   const rootUrl = new URL("./", location).href;
+  const eventId = event.notification.data?.eventId;
+  // Calendar page is reachable by every role, unlike the trainer-only Events
+  // page - one deep-link target works for both a new-event and a reminder push.
+  const targetUrl = eventId
+    ? `${rootUrl}user-panel/calendar?eventId=${eventId}`
+    : rootUrl;
+
   event.notification.close();
   event.waitUntil(
-    clients.matchAll().then((matchedClients) => {
-      for (let client of matchedClients) {
-        if (client.url.indexOf(rootUrl) >= 0) {
-          return client.focus();
+    clients.matchAll({ type: "window" }).then(async (matchedClients) => {
+      const existing = matchedClients.find((client) => client.url.indexOf(rootUrl) >= 0);
+
+      if (existing) {
+        try {
+          const navigated = await existing.navigate(targetUrl);
+
+          if (navigated) return navigated.focus();
+        } catch (error) {
+          // Some browsers refuse navigate() on an inactive client - fall
+          // through to opening a fresh, correctly-routed tab instead.
         }
       }
 
-      return clients.openWindow(rootUrl).then(function (client) {
-        client.focus();
-      });
+      const opened = await clients.openWindow(targetUrl);
+
+      if (opened) return opened.focus();
     })
   );
 });
