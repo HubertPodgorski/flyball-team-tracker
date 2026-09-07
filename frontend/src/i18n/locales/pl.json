@@ -119,7 +119,10 @@
     "pushNotificationsTitle": "Powiadomienia push",
     "pushNotificationsHint": "Otrzymuj powiadomienia o nowych wydarzeniach i przypomnienie o zaznaczeniu obecności.",
     "pushNotificationsDeniedHint": "Powiadomienia są zablokowane dla tej strony w ustawieniach przeglądarki.",
-    "pushSubscribeFailed": "Nie udało się włączyć powiadomień"
+    "pushSubscribeFailed": "Nie udało się włączyć powiadomień",
+    "pushTestAction": "Wyślij powiadomienie testowe",
+    "pushTestSent": "Wysłano powiadomienie testowe",
+    "pushTestHint": "Nie dotarło po minucie? Sprawdź ustawienia powiadomień tej aplikacji w telefonie."
   },
   "pwaInstall": {
     "title": "Zainstaluj Flyball Team Tracker",

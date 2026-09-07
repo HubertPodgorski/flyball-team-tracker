@@ -3,6 +3,7 @@ import {
   fetchVapidPublicKey,
   subscribeToPush,
   unsubscribeFromPush,
+  sendTestPushNotification,
 } from "../helpers/pushSubscriptionsApi";
 
 // Not a useQuery/SSE pair - there's no live list of this shown anywhere,
@@ -15,3 +16,6 @@ export const useSubscribeToPushMutation = () =>
 
 export const useUnsubscribeFromPushMutation = () =>
   useMutation({ mutationFn: unsubscribeFromPush });
+
+export const useSendTestPushNotificationMutation = () =>
+  useMutation({ mutationFn: sendTestPushNotification });

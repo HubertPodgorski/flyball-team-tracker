@@ -10,6 +10,10 @@ const MESSAGES = {
       body: `Don't forget to mark your attendance for "${eventName}"`,
       eventId,
     }),
+    testNotification: () => ({
+      title: "Test notification",
+      body: "If you can see this, push notifications are working!",
+    }),
   },
   pl: {
     newEvent: (eventName, eventId) => ({ title: "Nowe wydarzenie", body: eventName, eventId }),
@@ -17,6 +21,10 @@ const MESSAGES = {
       title: "Przypomnienie o obecności",
       body: `Nie zapomnij zaznaczyć swojej obecności na "${eventName}"`,
       eventId,
+    }),
+    testNotification: () => ({
+      title: "Powiadomienie testowe",
+      body: "Jeśli to widzisz, powiadomienia push działają!",
     }),
   },
 };

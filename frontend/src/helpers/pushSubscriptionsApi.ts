@@ -25,3 +25,7 @@ export const unsubscribeFromPush = async (endpoint: string): Promise<void> => {
     authHeaders()
   );
 };
+
+export const sendTestPushNotification = async (): Promise<void> => {
+  await axios.post(`${apiSuffix}/push-subscriptions/test`, {}, authHeaders());
+};

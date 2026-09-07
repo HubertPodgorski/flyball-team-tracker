@@ -23,6 +23,7 @@ import { usePushNotifications } from "../../hooks/usePushNotifications";
 import { useClubFeatures } from "../../hooks/useClubFeatures";
 import { useDogsQuery, useUpdateDogMutation } from "../../queries/dogs";
 import { useChangeOwnPasswordMutation, useUpdateUserMutation } from "../../queries/users";
+import { useSendTestPushNotificationMutation } from "../../queries/pushSubscriptions";
 import { getAuthErrorMessage } from "../../helpers/authErrors";
 import FormTextField from "../../components/inputs/FormTextField";
 import FormGrid from "../../components/FormGrid";
@@ -44,8 +45,10 @@ const Settings = () => {
   const updateUserMutation = useUpdateUserMutation();
   const updateDogMutation = useUpdateDogMutation();
   const changePasswordMutation = useChangeOwnPasswordMutation();
+  const sendTestPushMutation = useSendTestPushNotificationMutation();
   const { enqueueSnackbar } = useSnackbar();
   const { t } = useTranslation();
+  const [pushTogglePending, setPushTogglePending] = useState(false);
 
   const changePasswordForm = useForm({
     defaultValues: { currentPassword: "", newPassword: "", repeatNewPassword: "" },
@@ -96,6 +99,8 @@ const Settings = () => {
   };
 
   const onPushToggle = async (checked: boolean) => {
+    setPushTogglePending(true);
+
     try {
       if (checked) {
         const granted = await subscribe();
@@ -108,7 +113,16 @@ const Settings = () => {
       }
     } catch {
       enqueueSnackbar(t("settings.pushSubscribeFailed"), { variant: "error" });
+    } finally {
+      setPushTogglePending(false);
     }
+  };
+
+  const onSendTestPush = () => {
+    sendTestPushMutation.mutate(undefined, {
+      onSuccess: () => enqueueSnackbar(t("settings.pushTestSent"), { variant: "success" }),
+      onError: () => enqueueSnackbar(t("settings.pushSubscribeFailed"), { variant: "error" }),
+    });
   };
 
   const onSyncChange = (dogId: string, field: "syncCrossPasses" | "syncCrossPassesWithMyDogs", value: boolean) => {
@@ -191,6 +205,7 @@ const Settings = () => {
                   control={
                     <Switch
                       checked={isSubscribed}
+                      disabled={pushTogglePending}
                       onChange={(event) => onPushToggle(event.target.checked)}
                     />
                   }
@@ -203,6 +218,23 @@ const Settings = () => {
                 >
                   {t("settings.pushNotificationsHint")}
                 </Typography>
+
+                {isSubscribed && (
+                  <Box sx={{ marginLeft: "48px", marginTop: 1, display: "flex", flexDirection: "column", gap: 0.5 }}>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      disabled={sendTestPushMutation.isPending}
+                      onClick={onSendTestPush}
+                      sx={{ alignSelf: "flex-start" }}
+                    >
+                      {t("settings.pushTestAction")}
+                    </Button>
+                    <Typography variant="body2" color="text.secondary">
+                      {t("settings.pushTestHint")}
+                    </Typography>
+                  </Box>
+                )}
               </>
             )}
           </Box>

@@ -17,9 +17,6 @@ const sendReminderForEvent = async (event) => {
   const unmarkedMembers = clubUsers.filter((user) => !markedUserIds.has(user._id.toString()));
 
   // TEMP DEBUG - remove once the prod remindedCount:0 mystery is solved.
-  // Covers every hypothesis in one pass so this doesn't need a second deploy:
-  // wrong/whitespace-y event.team, the SUPER_ADMIN role filter wrongly
-  // excluding everyone, or being connected to an unexpectedly empty DB/collection.
   try {
     const rawTeamMatches = await UserModel.find({ team: event.team }).lean();
     const allUsersEver = await UserModel.countDocuments({});

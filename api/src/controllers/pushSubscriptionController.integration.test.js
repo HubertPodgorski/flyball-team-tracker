@@ -1,10 +1,12 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import mongoose from "mongoose";
+import webpush from "web-push";
 import pushSubscriptionControllerModule from "./pushSubscriptionController.js";
 import testHelpersModule from "../testHelpers.js";
 
-const { subscribe, unsubscribe } = pushSubscriptionControllerModule;
+const { subscribe, unsubscribe, sendTestNotification } = pushSubscriptionControllerModule;
 const PushSubscriptionModel = mongoose.model("PushSubscription");
+const UserModel = mongoose.model("User");
 const { mockRes } = testHelpersModule;
 
 const CLUB = "TEST_TEAM";
@@ -45,6 +47,47 @@ describe("subscribe", () => {
     const matching = await PushSubscriptionModel.find({ endpoint: "https://push.example.com/b" });
     expect(matching).toHaveLength(1);
     expect(matching[0].keys.p256dh).toBe("new-p256dh");
+  });
+});
+
+describe("sendTestNotification", () => {
+  beforeEach(() => {
+    vi.spyOn(webpush, "sendNotification").mockResolvedValue({ statusCode: 201 });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("sends only to the caller's own subscription, not other club members", async () => {
+    const user = await UserModel.create({
+      name: "Caller",
+      email: "caller@example.com",
+      password: "hash",
+      team: CLUB,
+      language: "en",
+    });
+    const otherUserId = new mongoose.Types.ObjectId().toString();
+
+    await PushSubscriptionModel.create({
+      endpoint: "https://push.example.com/caller",
+      keys: KEYS,
+      userId: user._id.toString(),
+      team: CLUB,
+    });
+    await PushSubscriptionModel.create({
+      endpoint: "https://push.example.com/other",
+      keys: KEYS,
+      userId: otherUserId,
+      team: CLUB,
+    });
+
+    const res = mockRes();
+    await sendTestNotification({ club: CLUB, userId: user._id.toString() }, res);
+
+    expect(res.statusCode).toBe(200);
+    expect(webpush.sendNotification).toHaveBeenCalledTimes(1);
+    expect(webpush.sendNotification.mock.calls[0][0].endpoint).toBe("https://push.example.com/caller");
   });
 });
 

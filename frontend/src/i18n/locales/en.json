@@ -117,7 +117,10 @@
     "pushNotificationsTitle": "Push notifications",
     "pushNotificationsHint": "Get notified about new events and a reminder to mark your attendance.",
     "pushNotificationsDeniedHint": "Notifications are blocked for this site in your browser settings.",
-    "pushSubscribeFailed": "Failed to enable notifications"
+    "pushSubscribeFailed": "Failed to enable notifications",
+    "pushTestAction": "Send test notification",
+    "pushTestSent": "Test notification sent",
+    "pushTestHint": "Didn't get it after a minute? Check your phone's app notification settings for this app."
   },
   "pwaInstall": {
     "title": "Install Flyball Team Tracker",

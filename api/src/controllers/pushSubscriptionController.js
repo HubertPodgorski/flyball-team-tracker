@@ -1,4 +1,6 @@
 const PushSubscriptionModel = require("../models/pushSubscriptionModel");
+const UserModel = require("../models/userModel");
+const { sendPushToMembers } = require("../helpers/push");
 
 const getVapidPublicKey = async (req, res) => {
   res.status(200).json({ publicKey: process.env.VAPID_PUBLIC_KEY });
@@ -29,4 +31,11 @@ const unsubscribe = async (req, res) => {
   res.status(200).json({ ok: true });
 };
 
-module.exports = { getVapidPublicKey, subscribe, unsubscribe };
+// Scoped to the caller's own subscriptions - lets a user self-diagnose a dead push setup.
+const sendTestNotification = async (req, res) => {
+  const user = await UserModel.findById(req.userId);
+  await sendPushToMembers(req.club, [{ _id: req.userId, language: user?.language }], "testNotification");
+  res.status(200).json({ ok: true });
+};
+
+module.exports = { getVapidPublicKey, subscribe, unsubscribe, sendTestNotification };
