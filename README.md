@@ -133,7 +133,7 @@ The frontend moved from Create React App to Vite. Vercel's project is still conf
 
 ## Push notifications
 
-Real web push, two triggers: a new event is created, and a one-time reminder ~24h before an event if you haven't marked your attendance. Opt-in per device via the toggle (or the one-time prompt banner) in Settings.
+Real web push, three triggers: a new event is created, a batch of recurring events is created (one combined push, no deep link), and a one-time reminder ~24h before an event if you haven't marked your attendance. Opt-in per device via the toggle (or the one-time prompt banner) in Settings.
 
 **Required in every environment, or sends silently fail:**
 - Generate one VAPID key pair with `npx web-push generate-vapid-keys` (once — reuse the same pair everywhere, don't regenerate per environment) and set `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` (a `mailto:` address) as backend env vars — see `api/.env.example`. Missing keys don't crash the server; pushes just never go out (each failure is caught and logged, not thrown).

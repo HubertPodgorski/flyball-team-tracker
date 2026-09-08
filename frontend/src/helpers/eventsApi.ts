@@ -2,6 +2,7 @@ import axios from "axios";
 import { apiSuffix } from "./apiCall";
 import { getAuthToken } from "./authToken";
 import { Event } from "./types";
+import { CreateRecurringEventsRequestType } from "../pages/forms/types";
 
 const authHeaders = () => ({
   headers: { Authorization: `Bearer ${getAuthToken()}` },
@@ -57,6 +58,18 @@ export const toggleEventUser = async (
     {},
     authHeaders()
   );
+};
+
+export const createRecurringEvents = async (
+  data: CreateRecurringEventsRequestType
+): Promise<Event[]> => {
+  const { data: created } = await axios.post(
+    `${apiSuffix}/events/recurring`,
+    data,
+    authHeaders()
+  );
+
+  return created;
 };
 
 export const sendEventReminder = async (id: string): Promise<{ remindedCount: number }> => {

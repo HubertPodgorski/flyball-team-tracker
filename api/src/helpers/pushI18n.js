@@ -14,6 +14,11 @@ const MESSAGES = {
       title: "Test notification",
       body: "If you can see this, push notifications are working!",
     }),
+    // No eventId - a batch of events has no single one worth deep-linking to.
+    recurringEventsCreated: (eventName, count) => ({
+      title: "New events",
+      body: `${count} new ${eventName} sessions added`,
+    }),
   },
   pl: {
     newEvent: (eventName, eventId) => ({ title: "Nowe wydarzenie", body: eventName, eventId }),
@@ -25,6 +30,10 @@ const MESSAGES = {
     testNotification: () => ({
       title: "Powiadomienie testowe",
       body: "Jeśli to widzisz, powiadomienia push działają!",
+    }),
+    recurringEventsCreated: (eventName, count) => ({
+      title: "Nowe wydarzenia",
+      body: `Dodano ${count} nowych sesji: ${eventName}`,
     }),
   },
 };

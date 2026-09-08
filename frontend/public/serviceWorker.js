@@ -1,9 +1,11 @@
 self.addEventListener("install", (event) => {
   console.log("Service worker installed");
+  self.skipWaiting(); // without this, an updated file sits idle until every tab closes
 });
 
 self.addEventListener("activate", (event) => {
   console.log("Service worker activated");
+  event.waitUntil(clients.claim()); // take over already-open tabs immediately, not just new ones
 });
 
 self.addEventListener("push", (event) => {
@@ -29,11 +31,10 @@ self.addEventListener("notificationclick", function (event) {
   //Very important having the last forward slash on "new URL('./', location)..."
   const rootUrl = new URL("./", location).href;
   const eventId = event.notification.data?.eventId;
-  // Calendar page is reachable by every role, unlike the trainer-only Events
-  // page - one deep-link target works for both a new-event and a reminder push.
+  // Calendar page is reachable by every role, unlike the trainer-only Events page.
   const targetUrl = eventId
     ? `${rootUrl}user-panel/calendar?eventId=${eventId}`
-    : rootUrl;
+    : `${rootUrl}user-panel/calendar`;
 
   event.notification.close();
   event.waitUntil(

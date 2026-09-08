@@ -3,6 +3,7 @@ const decodeToken = require("../middleware/decodeToken");
 const {
   getEvents,
   createEvent,
+  createRecurringEvents,
   updateEvent,
   deleteEvent,
   toggleEventDog,
@@ -16,6 +17,7 @@ router.use(decodeToken);
 
 router.get("/", getEvents);
 router.post("/", createEvent);
+router.post("/recurring", createRecurringEvents);
 router.patch("/", updateEvent);
 router.delete("/:id", deleteEvent);
 router.patch("/:id/dogs/:dogId/toggle", toggleEventDog);

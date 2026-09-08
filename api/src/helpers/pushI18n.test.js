@@ -34,6 +34,20 @@ describe("buildPushPayload", () => {
     expect(payload.eventId).toBe("event-2");
   });
 
+  it("builds an English recurringEventsCreated payload, naming the count and event", () => {
+    expect(buildPushPayload("en", "recurringEventsCreated", "Training", 6)).toEqual({
+      title: "New events",
+      body: "6 new Training sessions added",
+    });
+  });
+
+  it("builds a Polish recurringEventsCreated payload", () => {
+    expect(buildPushPayload("pl", "recurringEventsCreated", "Trening", 6)).toEqual({
+      title: "Nowe wydarzenia",
+      body: "Dodano 6 nowych sesji: Trening",
+    });
+  });
+
   it("falls back to Polish for an unrecognized language", () => {
     expect(buildPushPayload("fr", "newEvent", "Trening", "event-1")).toEqual({
       title: "Nowe wydarzenie",

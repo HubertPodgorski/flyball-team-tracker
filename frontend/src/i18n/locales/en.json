@@ -177,7 +177,10 @@
     "event": {
       "addTitle": "Adding an event",
       "editTitle": "Editing event",
-      "type": "Event type"
+      "type": "Event type",
+      "repeatsWeekly": "Repeats weekly",
+      "repeatOn": "Repeat on",
+      "repeatUntil": "Repeat until"
     },
     "user": {
       "addTitle": "Adding a user",
@@ -385,7 +388,7 @@
       "items": [
         "Tasks - the same drag-and-drop board, plus the ability to create, edit, and delete tasks.",
         "Dogs, Dog tasks, Users - manage your club's dogs (including each dog's jump height), the task types they can be assigned, and your club's members. Open a member's card to reset their password if they're locked out - you'll get a one-time temporary password to pass along to them.",
-        "Events - create trainings, competitions, seminars, and meetings for your club; the soonest upcoming one is pinned at the top here too. The bell icon on an event immediately sends an attendance-reminder push to anyone who hasn't marked yet, regardless of the usual ~24h timing.",
+        "Events - create trainings, competitions, seminars, and meetings for your club; the soonest upcoming one is pinned at the top here too. The bell icon on an event immediately sends an attendance-reminder push to anyone who hasn't marked yet, regardless of the usual ~24h timing. Toggle \"Repeats weekly\" to create a whole block of sessions at once - pick the weekdays and an end date (up to 3 months out) and each session is created as its own independent event, with its own attendance.",
         "Teams - build and edit teams and their lineups for your whole club, not just your own dogs.",
         "Features - turn off the parts of the app your club doesn't use, like Teams & Lineups, Cross-passes, Events/Calendar, or the Dog Tasks catalog."
       ]
