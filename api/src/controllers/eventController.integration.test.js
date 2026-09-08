@@ -5,7 +5,7 @@ import webpush from "web-push";
 import eventControllerModule from "./eventController.js";
 import testHelpersModule from "../testHelpers.js";
 
-const { createEvent, sendEventReminder } = eventControllerModule;
+const { createEvent, createRecurringEvents, sendEventReminder } = eventControllerModule;
 const { mockRes } = testHelpersModule;
 const UserModel = mongoose.model("User");
 const EventModel = mongoose.model("Event");
@@ -133,5 +133,91 @@ describe("sendEventReminder", () => {
 
     const stored = await EventModel.findById(event._id);
     expect(stored.reminderSentAt).toBeUndefined();
+  });
+});
+
+describe("createRecurringEvents", () => {
+  // 2026-09-07 is a Monday.
+  const START_DATE = "2026-09-07T17:30:00.000Z";
+
+  it("creates one independent event per matching weekday, and sends exactly one combined push", async () => {
+    const creator = await makeUser({ name: "Creator" });
+    const other = await makeUser({ name: "Other" });
+    await makeSubscription(creator);
+    await makeSubscription(other);
+
+    const res = mockRes();
+
+    await createRecurringEvents(
+      {
+        club: CLUB,
+        userId: creator._id.toString(),
+        body: {
+          name: "Training",
+          date: START_DATE,
+          type: "TRAINING",
+          weekdays: [2, 4], // Tue + Thu
+          until: "2026-09-17T00:00:00.000Z",
+        },
+      },
+      res
+    );
+    await waitForPush();
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toHaveLength(4);
+    // Independent attendance - no shared "series" state on any of them.
+    expect(res.body.every((event) => event.users.length === 0 && event.dogs.length === 0)).toBe(true);
+
+    expect(webpush.sendNotification).toHaveBeenCalledTimes(1);
+    const [subscription, payload] = webpush.sendNotification.mock.calls[0];
+    expect(subscription.endpoint).toBe(`https://push.example.com/${other._id}`);
+
+    // "other" defaults to pl (userModel.js's default language).
+    const parsed = JSON.parse(payload);
+    expect(parsed.body).toBe("Dodano 4 nowych sesji: Training");
+    expect(parsed.eventId).toBeUndefined(); // no single event worth deep-linking to
+  });
+
+  it("rejects an empty weekday selection without creating anything", async () => {
+    const creator = await makeUser();
+    const res = mockRes();
+
+    await createRecurringEvents(
+      {
+        club: CLUB,
+        userId: creator._id.toString(),
+        body: { name: "Training", date: START_DATE, type: "TRAINING", weekdays: [], until: "2026-09-17T00:00:00.000Z" },
+      },
+      res
+    );
+
+    expect(res.statusCode).toBe(400);
+    expect(await EventModel.countDocuments({ team: CLUB })).toBe(0);
+    expect(webpush.sendNotification).not.toHaveBeenCalled();
+  });
+
+  it("rejects a series running past the 3-month cap without creating anything", async () => {
+    const creator = await makeUser();
+    const res = mockRes();
+
+    await createRecurringEvents(
+      {
+        club: CLUB,
+        userId: creator._id.toString(),
+        body: {
+          name: "Training",
+          date: START_DATE,
+          type: "TRAINING",
+          weekdays: [2],
+          until: "2027-01-01T00:00:00.000Z", // ~4 months out
+        },
+      },
+      res
+    );
+
+    expect(res.statusCode).toBe(400);
+    expect(await EventModel.countDocuments({ team: CLUB })).toBe(0);
+    expect(webpush.sendNotification).not.toHaveBeenCalled();
   });
 });

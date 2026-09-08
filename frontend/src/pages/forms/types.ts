@@ -1,4 +1,5 @@
 import { Dog, LineupRef, Position } from "../../helpers/types";
+import { EventType } from "../../components/inputs/consts";
 
 export interface CreateEditTaskFormType {
   description: string;
@@ -12,4 +13,38 @@ export interface CreateEditTaskRequestType {
   dogs: Dog[];
   position: Position;
   matchupRef?: LineupRef;
+}
+
+// What EventForm's callers pass in - not the full Event (no _id/dogs/users on a fresh Add).
+export interface EventFormInitialData {
+  name: string;
+  date: Date | string;
+  type: EventType;
+  team?: string;
+}
+
+export interface CreateEditEventFormType {
+  name: string;
+  date: Date | null;
+  type: EventType | "";
+  team: string;
+  // Transient create-only UI state, never part of a persisted Event.
+  repeatsWeekly: boolean;
+  weekdays: string[];
+  until: Date | null;
+}
+
+export interface CreateEditEventRequestType {
+  name: string;
+  date: Date | null;
+  type: EventType | "";
+  team?: string;
+}
+
+export interface CreateRecurringEventsRequestType {
+  name: string;
+  date: Date | null;
+  type: EventType | "";
+  weekdays: number[];
+  until: Date | null;
 }

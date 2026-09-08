@@ -2,6 +2,7 @@ import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
 import { getCurrentClub } from "../helpers/authToken";
 import {
   createEvent,
+  createRecurringEvents,
   deleteEvent,
   fetchEvents,
   sendEventReminder,
@@ -22,6 +23,9 @@ export const useEventsQuery = () => useQuery(eventsQueryOptions());
 // No cache update on success - events_updated (SSE) is the source of truth.
 export const useCreateEventMutation = () =>
   useMutation({ mutationFn: createEvent });
+
+export const useCreateRecurringEventsMutation = () =>
+  useMutation({ mutationFn: createRecurringEvents });
 
 export const useUpdateEventMutation = () =>
   useMutation({ mutationFn: updateEvent });

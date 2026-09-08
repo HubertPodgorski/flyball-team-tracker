@@ -205,3 +205,51 @@ test("re-opening Add right after cancelling a fresh, untouched Add still prefill
 
   await page.getByRole("button", { name: "Cancel" }).click();
 });
+
+test("recurring events are created independently, with their own attendance", async ({
+  page,
+}) => {
+  const email = uniqueEmail("trainer");
+  await signupAndLoginAsTrainer(page, { email, name: "Recurring Trainer", clubCode: "TEST" });
+  await promoteToTrainer(email);
+  await logout(page);
+  await login(page, email);
+
+  await page.goto("/trainer-panel/events");
+
+  const eventName = `E2E Recurring ${Date.now()}`;
+
+  const [response] = await Promise.all([
+    page.waitForResponse(
+      (res) => res.url().includes("/events/recurring") && res.request().method() === "POST"
+    ),
+    (async () => {
+      await page.getByRole("button", { name: "Add" }).click();
+      await page.getByRole("textbox", { name: "Name", exact: true }).fill(eventName);
+      // Toggling on defaults to today's weekday + a month out - enough sessions to prove independence.
+      await page.getByRole("switch", { name: "Repeats weekly" }).click();
+      await page.getByRole("button", { name: "Submit" }).click();
+    })(),
+  ]);
+
+  const created = await response.json();
+  expect(created.length).toBeGreaterThanOrEqual(4);
+
+  await expect(page.locator(".MuiCard-root", { hasText: eventName })).toHaveCount(created.length);
+
+  // Mark the first instance present, then confirm a sibling instance stays untouched.
+  await page.goto(`/user-panel/calendar?eventId=${created[0]._id}`);
+
+  const firstCard = page.locator(`#event-${created[0]._id}`);
+  await firstCard.getByRole("button", { name: "Recurring Trainer", exact: true }).click();
+  await expect(firstCard.getByRole("button", { name: "Recurring Trainer", exact: true })).toHaveClass(
+    /colorSuccess/
+  );
+
+  await page.goto(`/user-panel/calendar?eventId=${created[1]._id}`);
+
+  const secondCard = page.locator(`#event-${created[1]._id}`);
+  await expect(secondCard.getByRole("button", { name: "Recurring Trainer", exact: true })).not.toHaveClass(
+    /colorSuccess/
+  );
+});

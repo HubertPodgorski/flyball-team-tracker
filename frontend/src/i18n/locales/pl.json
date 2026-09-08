@@ -179,7 +179,10 @@
     "event": {
       "addTitle": "Dodawanie wydarzenia",
       "editTitle": "Edycja wydarzenia",
-      "type": "Typ wydarzenia"
+      "type": "Typ wydarzenia",
+      "repeatsWeekly": "Powtarzaj co tydzień",
+      "repeatOn": "Powtarzaj w",
+      "repeatUntil": "Powtarzaj do"
     },
     "user": {
       "addTitle": "Dodawanie użytkownika",
@@ -391,7 +394,7 @@
       "items": [
         "Zadania - ta sama tablica z przeciąganiem, plus możliwość tworzenia, edycji i usuwania zadań.",
         "Psy, Zadania psów, Użytkownicy - zarządzaj psami klubu (w tym wysokością hopek każdego psa), rodzajami zadań, które można im przypisać, oraz członkami klubu. Otwórz kartę członka, aby zresetować jego hasło, jeśli nie może się zalogować - otrzymasz jednorazowe tymczasowe hasło do przekazania mu.",
-        "Wydarzenia - twórz treningi, zawody, seminaria i zebrania dla klubu; najbliższe nadchodzące jest przypięte na górze także tutaj. Ikona dzwonka przy wydarzeniu od razu wysyła przypomnienie o obecności każdemu, kto jeszcze się nie zaznaczył, niezależnie od zwykłego czasu ~24h.",
+        "Wydarzenia - twórz treningi, zawody, seminaria i zebrania dla klubu; najbliższe nadchodzące jest przypięte na górze także tutaj. Ikona dzwonka przy wydarzeniu od razu wysyła przypomnienie o obecności każdemu, kto jeszcze się nie zaznaczył, niezależnie od zwykłego czasu ~24h. Włącz \"Powtarzaj co tydzień\", aby utworzyć od razu całą serię sesji - wybierz dni tygodnia i datę końcową (maksymalnie 3 miesiące naprzód), a każda sesja powstanie jako niezależne wydarzenie, z własną obecnością.",
         "Drużyny - buduj i edytuj drużyny oraz ich składy dla całego klubu, nie tylko dla własnych psów.",
         "Funkcje - wyłącz części aplikacji, których Twój klub nie używa, np. Drużyny i składy, Crossy, Wydarzenia/Kalendarz czy katalog zadań dla psów."
       ]

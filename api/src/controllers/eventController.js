@@ -3,6 +3,7 @@ const { broadcast } = require("../sse");
 const { findClubUsers } = require("../helpers/clubUsers");
 const { sendPushToMembers } = require("../helpers/push");
 const { sendReminderForEvent } = require("../reminderScheduler");
+const { getRecurringDates, maxRecurringUntil } = require("../helpers/recurringEvents");
 
 const findClubEvents = (club) =>
   EventModel.find({ team: club }).sort({ createdAt: -1 });
@@ -29,6 +30,43 @@ const createEvent = async (req, res) => {
       sendPushToMembers(req.club, recipients, "newEvent", event.name, event._id.toString())
     )
     .catch((error) => console.error("New-event push failed:", error));
+};
+
+// Each generated event is fully independent - no "series" link is stored anywhere.
+const createRecurringEvents = async (req, res) => {
+  const { name, date, type, weekdays, until } = req.body;
+
+  if (!Array.isArray(weekdays) || weekdays.length === 0) {
+    return res.status(400).json({ error: "NO_WEEKDAYS_SELECTED" });
+  }
+
+  const startDate = new Date(date);
+  const untilDate = new Date(until);
+
+  if (untilDate.getTime() > maxRecurringUntil(startDate).getTime()) {
+    return res.status(400).json({ error: "RECURRENCE_TOO_LONG" });
+  }
+
+  const dates = getRecurringDates(startDate, weekdays, untilDate);
+
+  if (dates.length === 0) {
+    return res.status(400).json({ error: "NO_MATCHING_DATES" });
+  }
+
+  const events = await EventModel.insertMany(
+    dates.map((eventDate) => ({ name, date: eventDate, type, team: req.club }))
+  );
+
+  res.status(200).json(events);
+  broadcast(req.club, "events_updated", await findClubEvents(req.club));
+
+  // Fire-and-forget, one combined push for the whole batch, not one per event.
+  findClubUsers(req.club)
+    .then((members) => members.filter((member) => member._id.toString() !== req.userId))
+    .then((recipients) =>
+      sendPushToMembers(req.club, recipients, "recurringEventsCreated", name, events.length)
+    )
+    .catch((error) => console.error("Recurring events push failed:", error));
 };
 
 const updateEvent = async (req, res) => {
@@ -133,6 +171,7 @@ const sendEventReminder = async (req, res) => {
 module.exports = {
   getEvents,
   createEvent,
+  createRecurringEvents,
   updateEvent,
   deleteEvent,
   toggleEventDog,
