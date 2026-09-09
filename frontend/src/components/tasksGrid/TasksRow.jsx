@@ -16,14 +16,15 @@ const ColumnsStyled = styled(Box, {
   },
 }));
 
-const TasksRow = ({ children, userPanel }) => {
+// noBorder - the print view separates rows with its own Divider instead, so a wrapping box here would double up.
+const TasksRow = ({ children, userPanel, noBorder }) => {
   const theme = useTheme();
 
   return (
     <ColumnsStyled
       userPanel={userPanel}
       sx={{
-        border: userPanel ? `1px solid ${theme.palette.secondary.main}` : "none",
+        border: userPanel && !noBorder ? `1px solid ${theme.palette.secondary.main}` : "none",
       }}
     >
       {children}

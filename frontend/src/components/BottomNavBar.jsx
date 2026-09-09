@@ -20,6 +20,7 @@ import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
 import TextSnippetIcon from "@mui/icons-material/TextSnippet";
 import GroupsIcon from "@mui/icons-material/Groups";
+import QueryStatsIcon from "@mui/icons-material/QueryStats";
 
 import { Link, useLocation } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
@@ -158,6 +159,13 @@ const BottomNavBar = () => {
                 label={t("nav.events")}
               />
             )}
+            {features.eventsCalendar && (
+              <NavListItem
+                to={trainerRoutes.ejsStats}
+                icon={<QueryStatsIcon />}
+                label={t("nav.ejsStats")}
+              />
+            )}
             <NavListItem
               to={trainerRoutes.users}
               icon={<PersonIcon />}
@@ -259,6 +267,10 @@ const BottomNavBar = () => {
         top: "auto",
         bottom: 0,
         backgroundColor: (theme) => theme.palette.background.paper,
+        // iOS's real safe-area inset varies by device (~20-34px) - env() gives the true value, 4px floors the rest.
+        paddingBottom: "max(4px, env(safe-area-inset-bottom))",
+        paddingLeft: "env(safe-area-inset-left)",
+        paddingRight: "env(safe-area-inset-right)",
       }}
     >
       <Box component="nav">

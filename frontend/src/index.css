@@ -146,3 +146,53 @@ body,
 .sortable-ghost {
   opacity: 0.85;
 }
+
+/* Print: only .print-area's own subtree renders, ignoring the rest of the app shell (nav, banners, background) -
+   the !important beats emotion's normal-specificity `display:none` regardless of stylesheet insertion order. */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .print-area,
+  .print-area * {
+    visibility: visible;
+  }
+
+  .print-area {
+    display: block !important;
+    position: absolute;
+    inset: 0;
+    /* @page's margin is 0 (below) so the browser has no room left for its own header/footer - this is our own margin. */
+    padding: 12mm;
+  }
+
+  .print-area .MuiCard-root {
+    break-inside: avoid;
+  }
+}
+
+@page {
+  size: A4;
+  margin: 0;
+}
+
+/* DataGrid v7+ paints itself from its own hardcoded-light "--DataGrid-t-*" tokens via a runtime <style> tag that
+   theme.js's styleOverrides never reach - only a plain !important CSS rule here gets past it. Values are theme.js's own dark palette, copied by hand since CSS can't read the JS theme object. */
+.MuiDataGrid-root {
+  --DataGrid-t-color-border-base: rgba(242, 242, 240, 0.12) !important;
+  --DataGrid-t-color-background-base: #222526 !important;
+  --DataGrid-t-color-background-overlay: #222526 !important;
+  --DataGrid-t-color-background-backdrop: rgba(23, 25, 26, 0.38) !important;
+  --DataGrid-t-color-foreground-base: #f2f2f0 !important;
+  --DataGrid-t-color-foreground-muted: rgba(242, 242, 240, 0.6) !important;
+  --DataGrid-t-color-foreground-accent: #ff8500 !important;
+  --DataGrid-t-color-foreground-disabled: rgba(242, 242, 240, 0.26) !important;
+  --DataGrid-t-color-foreground-error: #e57373 !important;
+  --DataGrid-t-color-interactive-hover: rgba(242, 242, 240, 0.04) !important;
+  --DataGrid-t-color-interactive-focus: rgba(242, 242, 240, 0.12) !important;
+  --DataGrid-t-color-interactive-disabled: rgba(242, 242, 240, 0.12) !important;
+  --DataGrid-t-color-interactive-selected: #ff8500 !important;
+  --DataGrid-t-header-background-base: #222526 !important;
+  --DataGrid-t-cell-background-pinned: #222526 !important;
+}

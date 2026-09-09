@@ -86,6 +86,57 @@ describe("signup", () => {
     expect(second.statusCode).toBe(400);
     expect(second.body.error).toBe("EMAIL_ALREADY_IN_USE");
   });
+
+  // Email matching is case-insensitive end to end - a second signup can't sneak past the dupe check via casing alone.
+  it("rejects a second signup whose email only differs from an existing one by case", async () => {
+    const first = mockRes();
+
+    await signup(
+      { body: { name: "First", email: "CaseDup@example.com", password: "password123", clubCode: "TEST" } },
+      first
+    );
+
+    expect(first.statusCode).toBe(200);
+
+    const second = mockRes();
+
+    await signup(
+      { body: { name: "Second", email: "casedup@EXAMPLE.com", password: "password123", clubCode: "TEST" } },
+      second
+    );
+
+    expect(second.statusCode).toBe(400);
+    expect(second.body.error).toBe("EMAIL_ALREADY_IN_USE");
+  });
+});
+
+describe("login", () => {
+  it("logs in regardless of case differences between the entered and stored email", async () => {
+    const signupRes = mockRes();
+
+    await signup(
+      { body: { name: "Case Login", email: "Mixed.Case@Example.com", password: "password123", clubCode: "TEST" } },
+      signupRes
+    );
+
+    expect(signupRes.statusCode).toBe(200);
+
+    const loginRes = mockRes();
+
+    await login({ body: { email: "mixed.case@example.com", password: "password123" } }, loginRes);
+
+    expect(loginRes.statusCode).toBe(200);
+    expect(loginRes.body.user.email).toBe("Mixed.Case@Example.com");
+  });
+
+  it("still rejects a login whose email doesn't exist under any casing", async () => {
+    const res = mockRes();
+
+    await login({ body: { email: "nobody-here@example.com", password: "password123" } }, res);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.error).toBe("INCORRECT_EMAIL");
+  });
 });
 
 // The frontend used to keep its own separate hardcoded list of valid signup

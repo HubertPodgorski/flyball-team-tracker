@@ -288,7 +288,7 @@ test("disabling Cross-passes leaves a dog's own My Dogs cross-passes unaffected"
   await page.getByRole("combobox", { name: "Dog", exact: true }).click();
   await page.getByRole("option", { name: realDogName }).click();
   await page.keyboard.press("Escape");
-  await expect(page.getByText("Cross Passes")).toBeVisible();
+  await expect(page.getByText("Cross Passes", { exact: true })).toBeVisible();
 
   await gotoFeaturesLoaded(page);
   await crossPassesSwitch.click();

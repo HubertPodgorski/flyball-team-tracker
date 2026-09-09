@@ -6,10 +6,10 @@ import { useAuthContext } from "../hooks/useAuthContext";
 import { isMyDog } from "../helpers/tasks";
 import { useIsMobile } from "../hooks/useIsMobile";
 import { Dog, Task } from "../helpers/types";
-import NoteModal from "./modals/NoteModal";
 import { findLinkedLineup } from "../helpers/lineupLink";
 import { useTeamsQuery } from "../queries/teams";
 import TaskLineupModal from "./teams/TaskLineupModal";
+import DogDetailsModal from "./modals/DogDetailsModal";
 
 // TODO: type me
 interface Props {
@@ -20,7 +20,7 @@ interface Props {
 const DogsTaskCell = ({ item, index }: Props) => {
   const { _id, dogs, description } = item;
   const { t } = useTranslation();
-  const [isNoteModalOpen, setIsNoteModalOpen] = useState<Dog | undefined>();
+  const [dogDetailsId, setDogDetailsId] = useState<string | undefined>();
   const [isLineupModalOpen, setIsLineupModalOpen] = useState(false);
 
   const isMobile = useIsMobile();
@@ -28,15 +28,6 @@ const DogsTaskCell = ({ item, index }: Props) => {
   const { data: teams = [] } = useTeamsQuery();
 
   const linked = findLinkedLineup(item, teams);
-
-  const onDogClick = (dog: Dog) => {
-    if (linked) {
-      setIsLineupModalOpen(true);
-      return;
-    }
-
-    setIsNoteModalOpen(dog);
-  };
 
   return (
     <>
@@ -63,8 +54,12 @@ const DogsTaskCell = ({ item, index }: Props) => {
                   label={`${name}`}
                   key={_id}
                   color={isMyDog(_id, user!.dogs) ? "success" : "default"}
-                  onClick={() => onDogClick(dog)}
-                  sx={{ alignSelf: "flex-start" }}
+                  // Stopped from bubbling - a linked task's own click (TaskCell above) opens the lineup, not this.
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setDogDetailsId(_id);
+                  }}
+                  sx={{ alignSelf: "flex-start", minHeight: 36, height: "auto" }}
                 />
               );
             })}
@@ -74,11 +69,7 @@ const DogsTaskCell = ({ item, index }: Props) => {
         {dogs.length === 0 && <Typography>{t("tasksGrid.noDogsSelected")}</Typography>}
       </TaskCell>
 
-      <NoteModal
-        dog={isNoteModalOpen}
-        onClose={() => setIsNoteModalOpen(undefined)}
-        open={!!isNoteModalOpen}
-      />
+      <DogDetailsModal dogId={dogDetailsId} onClose={() => setDogDetailsId(undefined)} />
 
       {linked && (
         <TaskLineupModal

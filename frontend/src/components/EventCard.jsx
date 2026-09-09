@@ -11,7 +11,7 @@ import {
 // chip); `targeted` marks a deep-linked notification click instead, in a
 // different color (blue) - the two aren't always the same event.
 const EventCard = ({
-  event: { _id, name, date, dogs, users, type },
+  event: { _id, name, date, endDate, dogs, users, type },
   highlighted,
   label,
   expandDetails,
@@ -63,7 +63,7 @@ const EventCard = ({
         variant={isMobile ? "body2" : "body1"}
         sx={{ textTransform: "uppercase" }}
       >
-        {getFormattedDate(date)}
+        {getFormattedDate(date, endDate)}
       </Typography>
 
       <EventDetails users={users} dogs={dogs} id={_id} startOpen={expandDetails} />

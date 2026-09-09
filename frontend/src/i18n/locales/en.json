@@ -51,6 +51,7 @@
     "dogs": "Dogs",
     "dogTasks": "Dog tasks",
     "events": "Events",
+    "ejsStats": "EJS Stats",
     "users": "Users",
     "superAdminSection": "Super Admin",
     "clubSwitch": "Club switch",
@@ -180,7 +181,9 @@
       "type": "Event type",
       "repeatsWeekly": "Repeats weekly",
       "repeatOn": "Repeat on",
-      "repeatUntil": "Repeat until"
+      "repeatUntil": "Repeat until",
+      "startDate": "From",
+      "endDate": "To"
     },
     "user": {
       "addTitle": "Adding a user",
@@ -202,12 +205,6 @@
     }
   },
   "modals": {
-    "note": {
-      "title": "{{name}}'s notes",
-      "fallbackName": "Dog",
-      "notes": "Notes",
-      "save": "Save notes"
-    },
     "crossPass": {
       "edit": "Edit cross pass",
       "create": "Create cross pass",
@@ -246,7 +243,6 @@
       "netTime": "Net time: {{time}}s",
       "lineupName": "Lineup name",
       "noDogsYet": "No dogs yet",
-      "addDog": "Add dog",
       "teamFull": "Team is full ({{max}} dogs max)"
     },
     "events": {
@@ -262,6 +258,63 @@
       "reminderSent_other": "Reminded {{count}} members",
       "reminderSentNone": "Everyone's already marked",
       "reminderFailed": "Failed to send reminder"
+    },
+    "ejsStats": {
+      "title": "EJS Stats",
+      "competition": "Competition",
+      "newCompetition": "Create competition",
+      "chooseFiles": "Choose EJS file(s)",
+      "filesChosen_one": "{{count}} file chosen",
+      "filesChosen_other": "{{count}} files chosen",
+      "uploadAndPreview": "Upload EJS",
+      "pickOurTeams": "Which of these teams are yours?",
+      "reviewMatches": "Review dog matches",
+      "reviewMatchesHint": "Check each dog matched correctly - pick a different one where it didn't.",
+      "notOneOfOurs": "— not one of ours —",
+      "unmatched": "Unmatched",
+      "confirmImport": "Confirm import",
+      "confirmReplacesAllWarning": "This replaces ALL of this competition's existing data - upload every day's file together if you have more than one.",
+      "importSuccess_one": "Imported {{count}} entry",
+      "importSuccess_other": "Imported {{count}} entries",
+      "importFailed": "Import failed",
+      "parseFailed": "Couldn't read that file",
+      "statsTitleClub": "Club stats",
+      "statsTitleTeam": "Team stats",
+      "statsTitleDog": "Dog stats",
+      "lineup": "Lineup",
+      "allLineups": "All lineups",
+      "filterByDog": "Filter by dog:",
+      "pickTeamHint": "Pick a team above to see its dogs",
+      "pickDog": "Pick a dog to see its stats:",
+      "pickDogHint": "Pick a dog above to see its stats",
+      "noChartData": "No data for this metric yet",
+      "showMore_one": "Show {{count}} more",
+      "showMore_other": "Show {{count}} more",
+      "showLess": "Show less",
+      "outcomeTitle": "Pass outcomes",
+      "metricsChartTitle": "Dog comparison",
+      "chartFaultCount": "Faults",
+      "chartOkCount": "Ok",
+      "chartCleanCount": "Effective runs",
+      "chartScrollHint": "scroll for more",
+      "metricsChartPercentTitle": "Dog comparison (%)",
+      "byMetric": "Dogs",
+      "byLineup": "Lineups",
+      "dogTrendTitle": "Stats",
+      "outcome": {
+        "fault": "Fault",
+        "ok": "{{text}}",
+        "clean": "Clean runs"
+      },
+      "columns": {
+        "dog": "Dog",
+        "passes": "Number of runs",
+        "faultRate": "Fault %",
+        "okOfAll": "Ok % (ok, Ok, OK)",
+        "effectiveness": "Effectiveness %",
+        "avgRunTime": "Average time",
+        "avgLightsTime": "Average time on lights"
+      }
     },
     "clubSwitch": {
       "title": "Club switch",
@@ -280,13 +333,18 @@
       "from": "From",
       "to": "To",
       "nextEvent": "Next event",
-      "noEventsInRange": "No events in this range"
+      "noEventsInRange": "No events in this range",
+      "upcomingTab": "Upcoming events",
+      "pastTab": "Past events"
     },
     "myDogs": {
       "dogLabel": "Dog",
       "notes": "Notes",
-      "noNotesPlaceholder": "Click button to add notes",
+      "notesPlaceholder": "Add notes...",
+      "noNotesPlaceholder": "No notes yet",
       "crossPasses": "Cross Passes",
+      "noCrossPasses": "No cross passes yet",
+      "addCrossPass": "Add cross pass",
       "runningOn": "Running on",
       "actions": "Actions",
       "jumpHeight": "Jump height: {{height}}cm"
@@ -308,14 +366,18 @@
     "legend": "Legend",
     "presentPlanned": "Present & planned",
     "presentNotPlanned": "Present, not planned yet",
-    "plannedNotPresent": "Planned, not present"
+    "plannedNotPresent": "Planned, not present",
+    "present": "Present",
+    "absent": "Absent",
+    "unset": "Not marked yet"
   },
   "tasksGrid": {
     "addTaskHere": "Add task here",
     "removeRowConfirm": "Remove all tasks in this row?",
     "noDogsSelected": "No dogs selected",
     "eventLabel": "Event",
-    "noneOption": "None"
+    "noneOption": "None",
+    "downloadPdf": "Download PDF"
   },
   "confirm": {
     "title": "Are you sure?",
@@ -334,14 +396,14 @@
         "items": [
           "Tasks are laid out on a grid of rows and columns - drag a card to reorder it, or move it into a different cell.",
           "Pick an event at the top to see which dogs are marked present, and to plan tasks against that event's attendance.",
-          "A task can list dogs directly, or link to a team lineup instead - tap a linked task to see (and edit) that lineup's cross-pass timing.",
-          "Tap a dog's name on a task to add a note, or to open the linked lineup's cross-pass details."
+          "A task can list dogs directly, or link to a team lineup instead - tap a linked task itself (not one of its dogs) to see and edit that lineup's cross-pass timing.",
+          "Tap any dog on a task to see its notes and cross-passes, same as on My Dogs - edit them if it's your own dog or you're a trainer, otherwise just view."
         ]
       },
       "calendar": {
         "title": "Calendar",
         "items": [
-          "Every event your club has scheduled - trainings, competitions, seminars, meetings - shows up here, newest first, with the soonest upcoming one pinned at the top so it's never buried further down.",
+          "Every event your club has scheduled - trainings, competitions, seminars, meetings - shows up under two tabs: Upcoming (soonest first) and Past (most recent first).",
           "Narrow the list to a date range with the From/To filters, and page through it once there are more events than fit on one screen.",
           "Expand an event's details to mark your own (or your dogs') attendance: tap a name to cycle it through present, absent, and unset.",
           "Tapping a push notification about an event jumps straight here and scrolls to it, whatever page it's on."
@@ -386,10 +448,11 @@
       "title": "Trainer tools",
       "intro": "As a trainer, you also get a dedicated panel for managing your club's data:",
       "items": [
-        "Tasks - the same drag-and-drop board, plus the ability to create, edit, and delete tasks.",
+        "Tasks - the same drag-and-drop board, plus the ability to create, edit, and delete tasks. Use \"Download PDF\" to open an A4-formatted, printable copy of the plain board members see (no drag handles or edit controls) - pick \"Save as PDF\" in the print dialog to download it, or print it directly.",
         "Dogs, Dog tasks, Users - manage your club's dogs (including each dog's jump height), the task types they can be assigned, and your club's members. Open a member's card to reset their password if they're locked out - you'll get a one-time temporary password to pass along to them.",
         "Events - create trainings, competitions, seminars, and meetings for your club; the soonest upcoming one is pinned at the top here too. The bell icon on an event immediately sends an attendance-reminder push to anyone who hasn't marked yet, regardless of the usual ~24h timing. Toggle \"Repeats weekly\" to create a whole block of sessions at once - pick the weekdays and an end date (up to 3 months out) and each session is created as its own independent event, with its own attendance.",
         "Teams - build and edit teams and their lineups for your whole club, not just your own dogs.",
+        "EJS Stats - upload a competition's EJS export file(s) to see your club's stats by club, team, or dog: run counts, fault/ok rates, effectiveness, average times, comparison charts, and a pass-outcome breakdown. In Team mode, switch between comparing individual dogs or whole lineups. Confirming an import replaces ALL of that competition's existing data, so upload every day's file together if there's more than one.",
         "Features - turn off the parts of the app your club doesn't use, like Teams & Lineups, Cross-passes, Events/Calendar, or the Dog Tasks catalog."
       ]
     },
@@ -444,6 +507,14 @@
         "title": "Everyone sees it live",
         "body": "A lineup or attendance change shows up for everyone with the app open, right away."
       }
+    },
+    "alsoIncludes": {
+      "title": "Also included",
+      "items": [
+        "Click any dog on a task to see (and, if it's yours or you're a trainer, edit) its notes and cross-passes.",
+        "Trainers can import a competition's EJS export for club/team/dog stats, comparison charts, and a pass-outcome breakdown.",
+        "Trainers can download the task board as a printable A4 PDF."
+      ]
     },
     "needCode": "You'll need a club code from your trainer to sign up.",
     "login": "Log in",

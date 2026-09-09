@@ -60,14 +60,19 @@ test("trainer can create an event, cycle attendance, and delete it", async ({ pa
   const calendarEventCard = page.locator(".MuiCard-root", { hasText: eventName });
   await calendarEventCard.getByText("Show details").click();
 
+  // EventAttendanceLegend - lives inside this event's own details, not above the whole list.
+  await expect(calendarEventCard.getByText("Present", { exact: true })).toBeVisible();
+  await expect(calendarEventCard.getByText("Absent", { exact: true })).toBeVisible();
+  await expect(calendarEventCard.getByText("Not marked yet", { exact: true })).toBeVisible();
+
   const dogButton = calendarEventCard.getByRole("button", { name: dogName, exact: true });
   await expect(dogButton).toBeVisible();
 
-  // Three-state cycle: default -> PRESENT -> ABSENT -> default. Just confirm
-  // it can be clicked repeatedly without erroring - color-state assertions
-  // belong at a lower level, this is the click-through happy path.
+  // Three-state cycle: default -> PRESENT -> ABSENT -> default.
   await dogButton.click();
   await dogButton.click();
+  // Regression: Absent must render ATTENDANCE_ABSENT_RED, not the theme's own muted/pink error.main.
+  await expect(dogButton).toHaveCSS("background-color", /239, 83, 80/);
   await dogButton.click();
   await expect(dogButton).toBeVisible();
 

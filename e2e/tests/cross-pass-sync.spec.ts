@@ -58,14 +58,12 @@ test("syncCrossPasses propagates cross-pass timing between two lineups sharing t
   await expect(page.getByText(teamName)).toBeVisible();
 
   await page.getByText(teamName).click();
-  await page.getByRole("combobox", { name: "Add dog" }).click();
-  await page.getByRole("option", { name: predecessorName }).click();
-  await expect(page.getByText(`1. ${predecessorName}`)).toBeVisible();
-  await page.getByRole("combobox", { name: "Add dog" }).click();
-  await page.getByRole("option", { name: runnerName }).click();
-  await expect(page.getByText(`2. ${runnerName}`)).toBeVisible();
 
   const teamCard = page.locator(".MuiCard-root", { hasText: teamName });
+  await teamCard.getByRole("button", { name: predecessorName, exact: true }).click();
+  await expect(teamCard.locator(".MuiChip-filled", { hasText: predecessorName })).toBeVisible();
+  await teamCard.getByRole("button", { name: runnerName, exact: true }).click();
+  await expect(teamCard.locator(".MuiChip-filled", { hasText: runnerName })).toBeVisible();
 
   const createLineup = async () => {
     await page.getByRole("button", { name: "Add lineup" }).click();
@@ -168,19 +166,18 @@ test("syncCrossPassesWithMyDogs pushes a lineup's cross-pass timing into My Dogs
   await expect(page.getByText(teamName)).toBeVisible();
 
   await page.getByText(teamName).click();
-  await page.getByRole("combobox", { name: "Add dog" }).click();
-  await page.getByRole("option", { name: predecessorName }).click();
-  await expect(page.getByText(`1. ${predecessorName}`)).toBeVisible();
-  await page.getByRole("combobox", { name: "Add dog" }).click();
-  await page.getByRole("option", { name: runnerName }).click();
-  await expect(page.getByText(`2. ${runnerName}`)).toBeVisible();
+
+  const teamCard = page.locator(".MuiCard-root", { hasText: teamName });
+  await teamCard.getByRole("button", { name: predecessorName, exact: true }).click();
+  await expect(teamCard.locator(".MuiChip-filled", { hasText: predecessorName })).toBeVisible();
+  await teamCard.getByRole("button", { name: runnerName, exact: true }).click();
+  await expect(teamCard.locator(".MuiChip-filled", { hasText: runnerName })).toBeVisible();
 
   await page.getByRole("button", { name: "Add lineup" }).click();
   await page.getByRole("checkbox").nth(0).check();
   await page.getByRole("checkbox").nth(1).check();
   await page.getByRole("button", { name: "Create" }).click();
 
-  const teamCard = page.locator(".MuiCard-root", { hasText: teamName });
   const lineupHeading = teamCard.getByRole("heading", { level: 3 });
   await expect(lineupHeading).toContainText("Lineup");
   await lineupHeading.click();

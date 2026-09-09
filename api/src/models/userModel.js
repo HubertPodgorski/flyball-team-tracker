@@ -19,6 +19,10 @@ const clubCodeMap = {
 
 const getClubFromClubCode = (clubCode) => clubCodeMap[clubCode];
 
+// Email lookups are case-insensitive ("user@x.com" and "User@X.com" are the same account) - stored casing is untouched.
+const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const emailExactCaseInsensitive = (email) => new RegExp(`^${escapeRegExp(email.trim())}$`, "i");
+
 const userSchema = new Schema(
   {
     dogs: {
@@ -54,7 +58,7 @@ userSchema.statics.signup = async function (email, password, name, clubCode) {
     throw Error("ALL_FIELDS_MUST_BE_FILLED");
   }
 
-  const exists = await this.findOne({ email });
+  const exists = await this.findOne({ email: emailExactCaseInsensitive(email) });
 
   if (exists) {
     throw Error("EMAIL_ALREADY_IN_USE");
@@ -88,7 +92,7 @@ userSchema.statics.login = async function (email, password) {
     throw Error("ALL_FIELDS_MUST_BE_FILLED");
   }
 
-  const user = await this.findOne({ email });
+  const user = await this.findOne({ email: emailExactCaseInsensitive(email) });
 
   if (!user) {
     throw Error("INCORRECT_EMAIL");

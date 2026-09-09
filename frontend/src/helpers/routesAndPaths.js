@@ -34,6 +34,7 @@ export const trainerRoutes = {
   dogTasks: "/trainer-panel/dog-tasks",
   teams: "/trainer-panel/teams",
   features: "/trainer-panel/features",
+  ejsStats: "/trainer-panel/ejs-stats",
 };
 
 export const trainerPaths = {
@@ -45,4 +46,5 @@ export const trainerPaths = {
   dogTasks: "dog-tasks",
   teams: "teams",
   features: "features",
+  ejsStats: "ejs-stats",
 };

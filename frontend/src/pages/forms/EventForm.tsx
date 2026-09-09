@@ -9,7 +9,7 @@ import FormSwitch from "../../components/inputs/FormSwitch";
 import FormModal from "../../components/FormModal";
 import FormGrid from "../../components/FormGrid";
 import FormDatePicker from "../../components/inputs/FormDatePicker";
-import { getEventTypeOptions, getWeekdayOptions } from "../../components/inputs/consts";
+import { EventType, getEventTypeOptions, getWeekdayOptions } from "../../components/inputs/consts";
 import FormSelect from "../../components/inputs/FormSelect";
 import { useClubsQuery } from "../../queries/clubs";
 import {
@@ -24,10 +24,14 @@ import {
   EventFormInitialData,
 } from "./types";
 
+// Multi-day date range (no time-of-day) - only these two types run over several days.
+const isMultiDayEventType = (type: EventType | "") => type === EventType.COMPETITION || type === EventType.SEMINARY;
+
 // Single source for useForm's defaultValues and the reset effect below - see DogTaskForm.jsx.
-const mapToFormValues = ({ name, date, type, team }: EventFormInitialData): CreateEditEventFormType => ({
+const mapToFormValues = ({ name, date, endDate, type, team }: EventFormInitialData): CreateEditEventFormType => ({
   name,
   date: date ? new Date(date) : null,
+  endDate: endDate ? new Date(endDate) : null,
   type,
   team: team ?? "",
   repeatsWeekly: false,
@@ -68,6 +72,7 @@ const EventForm = ({ open, onClose, initialData, editingId, onSubmitOverride }: 
           {
             name: values.name,
             date: values.date,
+            endDate: isMultiDayEventType(values.type) ? values.endDate : null,
             type: values.type,
             team: values.team,
           },
@@ -94,6 +99,7 @@ const EventForm = ({ open, onClose, initialData, editingId, onSubmitOverride }: 
       const data: CreateEditEventRequestType = {
         name: values.name,
         date: values.date,
+        endDate: isMultiDayEventType(values.type) ? values.endDate : null,
         type: values.type,
       };
 
@@ -133,6 +139,7 @@ const EventForm = ({ open, onClose, initialData, editingId, onSubmitOverride }: 
 
   const type = useStore(form.store, (state) => state.values.type);
   const name = useStore(form.store, (state) => state.values.name);
+  const isMultiDay = isMultiDayEventType(type);
 
   // New events only - reacts to the type dropdown changing mid-session, not the initial fill.
   useEffect(() => {
@@ -188,11 +195,11 @@ const EventForm = ({ open, onClose, initialData, editingId, onSubmitOverride }: 
 
         <FormTextField form={form} name="name" label={t("common.name")} required />
 
-        {!editingId && !onSubmitOverride && (
+        {!editingId && !onSubmitOverride && !isMultiDay && (
           <FormSwitch form={form} name="repeatsWeekly" label={t("forms.event.repeatsWeekly")} />
         )}
 
-        {!editingId && !onSubmitOverride && repeatsWeekly && (
+        {!editingId && !onSubmitOverride && !isMultiDay && repeatsWeekly && (
           <>
             <form.Field name="weekdays">
               {(field: AnyFieldApi) => (
@@ -233,12 +240,38 @@ const EventForm = ({ open, onClose, initialData, editingId, onSubmitOverride }: 
           </>
         )}
 
-        <FormDatePicker
-          form={form}
-          name="date"
-          label={t("common.date")}
-          views={repeatsWeekly ? ["hours", "minutes"] : undefined}
-        />
+        {isMultiDay ? (
+          <>
+            <form.Field name="date">
+              {(field: AnyFieldApi) => (
+                <DatePicker
+                  label={t("forms.event.startDate")}
+                  value={field.state.value}
+                  onChange={(value: Date | null) => field.handleChange(value)}
+                />
+              )}
+            </form.Field>
+
+            <form.Field name="endDate">
+              {(field: AnyFieldApi) => (
+                <DatePicker
+                  label={t("forms.event.endDate")}
+                  value={field.state.value}
+                  onChange={(value: Date | null) => field.handleChange(value)}
+                  minDate={dateValue instanceof Date ? dateValue : undefined}
+                  slotProps={{ field: { clearable: true } }}
+                />
+              )}
+            </form.Field>
+          </>
+        ) : (
+          <FormDatePicker
+            form={form}
+            name="date"
+            label={t("common.date")}
+            views={repeatsWeekly ? ["hours", "minutes"] : undefined}
+          />
+        )}
 
         {onSubmitOverride && (
           <FormSelect form={form} name="team" label={t("common.team")} multi={false} options={teamOptions} />

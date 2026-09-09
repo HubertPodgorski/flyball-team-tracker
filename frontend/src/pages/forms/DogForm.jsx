@@ -1,13 +1,14 @@
 import React, { useEffect } from "react";
-import { Button, DialogActions } from "@mui/material";
+import { Button, DialogActions, Divider } from "@mui/material";
 import { useForm, useStore } from "@tanstack/react-form";
 import { useTranslation } from "react-i18next";
 import FormTextField from "../../components/inputs/FormTextField";
 import FormModal from "../../components/FormModal";
 import FormGrid from "../../components/FormGrid";
 import FormSelect from "../../components/inputs/FormSelect";
+import DogDetailsCard from "../../components/DogDetailsCard";
 import { useClubsQuery } from "../../queries/clubs";
-import { useCreateDogMutation, useUpdateDogMutation } from "../../queries/dogs";
+import { useCreateDogMutation, useDogsQuery, useUpdateDogMutation } from "../../queries/dogs";
 import { useSubmitGuard } from "../../hooks/useSubmitGuard";
 
 // useForm's `defaultValues` and this form's own `form.reset()` calls must
@@ -26,10 +27,14 @@ const parseJumpHeight = (value) =>
 const DogForm = ({ open, onClose, initialData, editingId, onSubmitOverride }) => {
   const { t } = useTranslation();
   const { data: clubs = [] } = useClubsQuery();
+  const { data: dogs = [] } = useDogsQuery();
   const teamOptions = clubs.map((club) => ({ value: club, label: club }));
   const createDogMutation = useCreateDogMutation();
   const updateDogMutation = useUpdateDogMutation();
   const submitGuard = useSubmitGuard();
+
+  // Trainer view only - super-admin's own onSubmitOverride mode already has its own note/team fields for this.
+  const editingDog = !onSubmitOverride && editingId ? dogs.find(({ _id }) => _id === editingId) : undefined;
 
   const form = useForm({
     defaultValues: mapToFormValues(initialData),
@@ -103,6 +108,13 @@ const DogForm = ({ open, onClose, initialData, editingId, onSubmitOverride }) =>
               multi={false}
               options={teamOptions}
             />
+          </>
+        )}
+
+        {editingDog && (
+          <>
+            <Divider />
+            <DogDetailsCard dog={editingDog} canEdit showName={false} />
           </>
         )}
 

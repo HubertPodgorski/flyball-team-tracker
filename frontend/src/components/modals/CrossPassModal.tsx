@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { Button, DialogActions } from "@mui/material";
 import {
   useCreateCrossPassMutation,
+  useDeleteCrossPassMutation,
   useUpdateCrossPassMutation,
 } from "../../queries/crossPasses";
 import { useForm, useStore } from "@tanstack/react-form";
@@ -9,6 +10,7 @@ import { useTranslation } from "react-i18next";
 import FormModal from "../FormModal.jsx";
 import FormGrid from "../FormGrid.jsx";
 import { useDogsQuery } from "../../queries/dogs";
+import { useConfirmModal } from "../../hooks/useConfirmModal";
 import { CrossPass, Dog } from "../../helpers/types";
 import FormSwitch from "../inputs/FormSwitch";
 import FormSelect from "../inputs/FormSelect";
@@ -87,6 +89,8 @@ const CrossPassModal = ({
   const { data: dogs = [] } = useDogsQuery();
   const createCrossPassMutation = useCreateCrossPassMutation();
   const updateCrossPassMutation = useUpdateCrossPassMutation();
+  const deleteCrossPassMutation = useDeleteCrossPassMutation();
+  const confirm = useConfirmModal();
   const submitGuard = useSubmitGuard();
 
   const isEdit = !!crossPass?._id;
@@ -95,6 +99,17 @@ const CrossPassModal = ({
     form.reset(getFormValues(undefined));
 
     handleClose();
+  };
+
+  // No inline delete icon on the cross-pass list any more - the edit modal is the only place left to remove one.
+  const onDelete = async () => {
+    try {
+      await confirm();
+    } catch {
+      return;
+    }
+
+    deleteCrossPassMutation.mutate(crossPass!._id, { onSuccess: onClose });
   };
 
   const form = useForm({
@@ -148,6 +163,7 @@ const CrossPassModal = ({
               label: name,
             }))}
             multi={false}
+            required
             name="runningOnDogId"
             label={t("modals.crossPass.runningOnDog")}
           />
@@ -169,6 +185,12 @@ const CrossPassModal = ({
         <FormTextSelect form={form} name="note" label={t("common.note")} options={[]} />
 
         <DialogActions sx={{ padding: 0 }}>
+          {isEdit && (
+            <Button size="medium" color="error" disabled={deleteCrossPassMutation.isPending} onClick={onDelete} sx={{ marginRight: "auto" }}>
+              {t("common.delete")}
+            </Button>
+          )}
+
           <Button size="medium" variant="outlined" onClick={onClose}>
             {t("common.cancel")}
           </Button>

@@ -19,8 +19,9 @@ import { useAuthContext } from "../hooks/useAuthContext";
 import { useIsMobile } from "../hooks/useIsMobile";
 import { useIsSuperAdmin } from "../hooks/useIsSuperAdmin";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import { getColorsByStatus, sortByAttendance } from "../helpers/calendar";
+import { getAttendanceButtonProps, getColorsByStatus, sortByAttendance } from "../helpers/calendar";
 import DogAttendanceChips from "./DogAttendanceChips";
+import EventAttendanceLegend from "./EventAttendanceLegend";
 
 const EventDetails = ({ users, dogs, id, startOpen }) => {
   const theme = useTheme();
@@ -77,34 +78,18 @@ const EventDetails = ({ users, dogs, id, startOpen }) => {
 
   const sortedUsersByAttendance = usersWithAttendance.sort(sortByAttendance);
 
-  const getUserButtonColorById = (_id) => {
-    const defaultColor = "warning";
-
+  const getUserButtonPropsById = (_id) => {
     const userFound = users.find(
       ({ _id: currentEventUserId }) => currentEventUserId === _id
     );
 
-    if (!userFound) return defaultColor;
-
-    if (userFound?.status === "PRESENT") return "success";
-
-    if (userFound?.status === "ABSENT") return "error";
-
-    return defaultColor;
+    return getAttendanceButtonProps(userFound?.status);
   };
 
-  const getDogButtonColorById = (_id) => {
-    const defaultColor = "warning";
-
+  const getDogButtonPropsById = (_id) => {
     const dogFound = dogs.find(({ _id: currentDogId }) => currentDogId === _id);
 
-    if (!dogFound) return defaultColor;
-
-    if (dogFound?.status === "PRESENT") return "success";
-
-    if (dogFound?.status === "ABSENT") return "error";
-
-    return defaultColor;
+    return getAttendanceButtonProps(dogFound?.status);
   };
 
   return (
@@ -147,6 +132,8 @@ const EventDetails = ({ users, dogs, id, startOpen }) => {
           },
         }}
       >
+        <EventAttendanceLegend />
+
         <DogAttendanceChips dogsWithAttendance={dogsWithAttendance} />
 
         <ChipsGrid people>
@@ -178,9 +165,8 @@ const EventDetails = ({ users, dogs, id, startOpen }) => {
               <Button
                 variant="contained"
                 key={dogId}
-                color={getDogButtonColorById(dogId)}
+                {...getDogButtonPropsById(dogId)}
                 onClick={() => onDogPresenceUpdateClick(dogId)}
-                sx={{ minWidth: "150px" }}
               >
                 {name}
               </Button>
@@ -199,9 +185,8 @@ const EventDetails = ({ users, dogs, id, startOpen }) => {
             <Button
               variant="contained"
               key={userId}
-              color={getUserButtonColorById(userId)}
+              {...getUserButtonPropsById(userId)}
               onClick={() => onUserPresenceUpdateClick(userId)}
-              sx={{ minWidth: "150px" }}
             >
               {name}
             </Button>

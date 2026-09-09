@@ -104,8 +104,8 @@ const theme = createTheme({
         },
       },
     },
-    // Opaque by default - every other surface in the app is this same
-    // frosted-glass treatment (alpha + blur) over the flashy background.
+    // Opaque by default - every other surface in the app is this same frosted-glass treatment (alpha + blur) over
+    // the flashy background. Dark-mode color tokens live in index.css instead - DataGrid's own runtime <style> tag never sees these.
     MuiDataGrid: {
       styleOverrides: {
         root: ({ theme }) => ({
@@ -149,6 +149,22 @@ const theme = createTheme({
         notchedOutline: {
           borderWidth: 1,
         },
+      },
+    },
+    // Unifies every Select/TextField/FormControl to the same compact height project-wide.
+    MuiFormControl: {
+      defaultProps: {
+        size: "small",
+      },
+    },
+    MuiTextField: {
+      defaultProps: {
+        size: "small",
+      },
+    },
+    MuiSelect: {
+      defaultProps: {
+        size: "small",
       },
     },
     MuiTabs: {

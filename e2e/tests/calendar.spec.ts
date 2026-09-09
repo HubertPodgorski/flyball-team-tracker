@@ -3,9 +3,8 @@ import { uniqueEmail } from "../helpers/testData";
 import { promoteToTrainer } from "../helpers/db";
 import { signupAndLoginAsTrainer, login, logout } from "../helpers/auth";
 
-// Calendar.jsx's own contribution beyond EventCard/EventDetails (both
-// exercised elsewhere): sortByNewest ordering of the event list itself.
-test("calendar lists events newest-first", async ({ page }) => {
+// Calendar.jsx's own contribution beyond EventCard/EventDetails: the Upcoming tab (default) sorts soonest-first.
+test("the Upcoming tab lists events soonest-first", async ({ page }) => {
   const email = uniqueEmail("trainer");
 
   await signupAndLoginAsTrainer(page, { email, name: "E2E Trainer", clubCode: "TEST" });
@@ -14,36 +13,34 @@ test("calendar lists events newest-first", async ({ page }) => {
   await login(page, email);
 
   const suffix = Date.now();
-  const olderEvent = `Older Event ${suffix}`;
-  const newerEvent = `Newer Event ${suffix}`;
+  const soonerEvent = `Sooner Event ${suffix}`;
+  const laterEvent = `Later Event ${suffix}`;
+  const token = await page.evaluate(() => JSON.parse(localStorage.getItem("user") || "{}").token);
 
-  await page.goto("/trainer-panel/events");
+  // Two distinct times on today's own date - "upcoming" only cares about the calendar day, not the exact clock time.
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const postEvent = (name: string, time: string) =>
+    page.request.post("http://localhost:4101/events", {
+      headers: { Authorization: `Bearer ${token}` },
+      data: { name, date: `${todayIso}T${time}:00.000Z`, type: "TRAINING" },
+    });
 
-  const createEvent = async (name: string) => {
-    await page.getByRole("button", { name: "Add" }).click();
-    await page.getByRole("textbox", { name: "Name", exact: true }).fill(name);
-    await page.getByRole("button", { name: "Submit" }).click();
-    await expect(page.getByText(name)).toBeVisible();
-  };
-
-  // Both default to "now" at their own creation moment - created in this
-  // order, the second is naturally the later date.
-  await createEvent(olderEvent);
-  await createEvent(newerEvent);
+  await postEvent(soonerEvent, "01:00");
+  await postEvent(laterEvent, "23:00");
 
   await page.goto("/user-panel/calendar");
 
   // allTextContents() has no auto-wait - without this, it can read the DOM
   // before the events query has finished loading and see nothing at all.
-  await expect(page.getByText(newerEvent)).toBeVisible();
+  await expect(page.getByText(laterEvent)).toBeVisible();
 
   const allHeadings = await page.getByRole("heading", { level: 5 }).allTextContents();
-  const olderIndex = allHeadings.indexOf(olderEvent);
-  const newerIndex = allHeadings.indexOf(newerEvent);
+  const soonerIndex = allHeadings.indexOf(soonerEvent);
+  const laterIndex = allHeadings.indexOf(laterEvent);
 
-  expect(olderIndex).toBeGreaterThan(-1);
-  expect(newerIndex).toBeGreaterThan(-1);
-  expect(newerIndex).toBeLessThan(olderIndex);
+  expect(soonerIndex).toBeGreaterThan(-1);
+  expect(laterIndex).toBeGreaterThan(-1);
+  expect(soonerIndex).toBeLessThan(laterIndex);
 });
 
 // This club accumulates events across the whole shared e2e run (see other
@@ -158,11 +155,10 @@ test("the 'To' date filter includes the whole picked day, not just up to its mid
   await expect(eventCard).not.toBeVisible();
 });
 
-test("the calendar paginates once there are more than 10 regular events", async ({
+// Past-dated events never mix into the Upcoming tab's own list/pagination - they land on the separate Past tab.
+test("past events land on the Past tab, sorted newest-first, and paginate once there are more than 10", async ({
   page,
 }) => {
-  // 12 full create-event round trips plus assertions is well past the
-  // default per-test budget.
   test.slow();
 
   const email = uniqueEmail("trainer");
@@ -173,53 +169,43 @@ test("the calendar paginates once there are more than 10 regular events", async 
   await login(page, email);
 
   const suffix = Date.now();
+  const token = await page.evaluate(() => JSON.parse(localStorage.getItem("user") || "{}").token);
 
-  await page.goto("/trainer-panel/events");
+  // 12 distinctly-dated past events, well clear of any other spec's own past-dated fixtures (e.g. 2000-01-01).
+  const names: string[] = [];
 
-  // 12 events: 1 becomes the pinned "next event", leaving 11 for the
-  // paginated list - one page of 10 plus a second page of 1.
   for (let i = 0; i < 12; i++) {
-    await page.getByRole("button", { name: "Add" }).click();
-    await page.getByRole("textbox", { name: "Name", exact: true }).fill(`Page Event ${suffix}-${i}`);
-    await page.getByRole("button", { name: "Submit" }).click();
-    // Name and date render combined in one text node (see
-    // event-date-picker.spec.ts) - not an exact match.
-    await expect(page.getByText(`Page Event ${suffix}-${i}`)).toBeVisible();
+    const name = `Past Page Event ${suffix}-${i}`;
+
+    names.push(name);
+    await page.request.post("http://localhost:4101/events", {
+      headers: { Authorization: `Bearer ${token}` },
+      data: { name, date: `2021-01-${String(i + 1).padStart(2, "0")}T12:00:00.000Z`, type: "TRAINING" },
+    });
   }
 
   await page.goto("/user-panel/calendar");
+  await page.getByRole("tab", { name: "Past events" }).click();
 
-  await expect(page.getByText("Next event")).toBeVisible();
-  // BottomNavBar.jsx also renders a <nav> - scope to MUI Pagination's own.
-  await expect(page.getByRole("navigation", { name: "pagination navigation" })).toBeVisible();
+  const newestName = names[names.length - 1];
+  const oldestName = names[0];
 
-  // At most one event club-wide is ever pinned as "next event" (the global
-  // earliest upcoming one, whether or not it's one of these 12) - it stays
-  // visible on both pages regardless, so counts are scoped to the paginated
-  // grid itself (data-testid="calendar-page"), not the whole page. Page 1
-  // is always exactly a full page of 10 regardless of which event got
-  // pinned, and the rest (11 or 12, depending on whether the pinned one is
-  // one of these) land on page 2 - not asserting an exact page-2 count,
-  // since some other test's own today-dated event could be the one pinned.
+  // Newest-first: the last-created (2021-01-12) event is on page 1, the first-created (2021-01-01) only on page 2.
+  await expect(page.getByText(newestName)).toBeVisible();
+
   const calendarPage = page.getByTestId("calendar-page");
+  const pageOneCount = await calendarPage.getByText(new RegExp(`Past Page Event ${suffix}-`)).count();
 
-  const pageOneCount = await calendarPage
-    .getByText(new RegExp(`Page Event ${suffix}-`))
-    .count();
   expect(pageOneCount).toBe(10);
+  await expect(page.getByText(oldestName)).not.toBeVisible();
 
   await page.getByRole("button", { name: "Go to page 2" }).click();
-
-  const pageTwoCount = await calendarPage
-    .getByText(new RegExp(`Page Event ${suffix}-`))
-    .count();
-  expect(pageTwoCount).toBeGreaterThanOrEqual(1);
-  expect(pageTwoCount).toBeLessThanOrEqual(2);
+  await expect(page.getByText(oldestName)).toBeVisible();
 });
 
 // A real push notification click can't be simulated - this exercises the
 // same landing behavior directly: Calendar.jsx reading ?eventId=.
-test("a deep-linked eventId scrolls to and highlights that specific event", async ({
+test("a deep-linked upcoming eventId scrolls to and highlights that specific event", async ({
   page,
 }) => {
   const email = uniqueEmail("trainer");
@@ -235,7 +221,7 @@ test("a deep-linked eventId scrolls to and highlights that specific event", asyn
   const targetName = `E2E Deep Link Target ${Date.now()}`;
 
   // The decoy takes the default date so it (not the target) wins the
-  // pinned "next event" slot - the target must land in the paginated list.
+  // pinned "next event" slot - the target must land further down the tab.
   await page.getByRole("button", { name: "Add" }).click();
   await page.getByRole("textbox", { name: "Name", exact: true }).fill(decoyName);
   await page.getByRole("button", { name: "Submit" }).click();
@@ -268,11 +254,8 @@ test("a deep-linked eventId scrolls to and highlights that specific event", asyn
   await expect(card.getByText("Hide details")).toBeVisible();
 });
 
-// Regression coverage for the page-jump effect. Each e2e run gets a fresh,
-// empty DB (global-setup.ts), so this test builds its own multi-page state.
-test("a deep-linked event buried on another pagination page is navigated to automatically", async ({
-  page,
-}) => {
+// Regression coverage for the tab-switch + page-jump effect together, on its own fresh multi-page state.
+test("a deep-linked past event switches to the Past tab and is navigated to automatically", async ({ page }) => {
   test.slow();
 
   const email = uniqueEmail("trainer");
@@ -282,35 +265,27 @@ test("a deep-linked event buried on another pagination page is navigated to auto
   await logout(page);
   await login(page, email);
 
-  await page.goto("/trainer-panel/events");
-
   const suffix = Date.now();
+  const token = await page.evaluate(() => JSON.parse(localStorage.getItem("user") || "{}").token);
 
-  // 11 same-dated decoys: one of them (whichever) becomes the pinned "next
-  // event", leaving exactly 10 in the paginated rest - a full page 1.
-  for (let i = 0; i < 11; i++) {
-    await page.getByRole("button", { name: "Add" }).click();
-    await page.getByRole("textbox", { name: "Name", exact: true }).fill(`Decoy ${suffix}-${i}`);
-    await page.getByRole("button", { name: "Submit" }).click();
-    await expect(page.getByText(`Decoy ${suffix}-${i}`)).toBeVisible();
+  // 10 recent-past decoys fill the Past tab's page 1 (newest-first); the target's far-older date sorts it onto page 2.
+  for (let i = 0; i < 10; i++) {
+    await page.request.post("http://localhost:4101/events", {
+      headers: { Authorization: `Bearer ${token}` },
+      data: { name: `Buried Decoy ${suffix}-${i}`, date: `2022-02-${String(i + 1).padStart(2, "0")}T12:00:00.000Z`, type: "TRAINING" },
+    });
   }
 
   const targetName = `E2E Buried Target ${suffix}`;
-  const token = await page.evaluate(
-    () => JSON.parse(localStorage.getItem("user") || "{}").token
-  );
-
-  // An extreme past date sorts to the end of the list, past that full page 1.
   const created = await page.request.post("http://localhost:4101/events", {
     headers: { Authorization: `Bearer ${token}` },
-    data: { name: targetName, date: "2000-01-01T12:00:00.000Z", type: "TRAINING" },
+    data: { name: targetName, date: "1999-01-01T12:00:00.000Z", type: "TRAINING" },
   });
   const { _id: eventId } = await created.json();
 
-  await page.goto("/user-panel/calendar");
-  await expect(page.getByText(targetName)).not.toBeVisible();
-
   await page.goto(`/user-panel/calendar?eventId=${eventId}`);
+
+  await expect(page.getByRole("tab", { name: "Past events", selected: true })).toBeVisible();
 
   const card = page.locator(`#event-${eventId}`);
   await expect(card).toBeVisible();

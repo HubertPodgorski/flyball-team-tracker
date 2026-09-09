@@ -2,21 +2,8 @@ import { test, expect } from "../helpers/fixtures";
 import { uniqueEmail } from "../helpers/testData";
 import { promoteToTrainer } from "../helpers/db";
 
-// Regression test for a real production crash: react-sortablejs clones each
-// child internally via React.cloneElement, which throws
-// "Cannot read properties of null (reading 'props')" if a child is `null` -
-// unlike React's own reconciliation, which tolerates `null` children fine.
-// TeamDogsEditor/LineupDogsOrder kept a local `items` list synced to the
-// `dogs` prop via a `useEffect` (which runs a tick after render/commit), so
-// any render where a fresh SSE-driven `dogs` update landed before that effect
-// caught up briefly produced a `null` entry - crashing the whole team card,
-// on both directions (adding a dog, removing a dog). Fixed by never mapping
-// an unmatched item to `null` (helpers/sortableDogs.ts's matchSortableDogs
-// filters it out before any JSX is built), plus remounting the sortable
-// outright when the *set* of dog ids changes. Only a real browser + the real
-// react-sortablejs library reproduces this timing, so this needs to live
-// here rather than as a unit test.
-test("adding then removing a dog from a team's pool does not crash the UI", async ({ page }) => {
+// A team's own dog pool is unordered - adding/removing is a plain chip toggle now, not a drag-sortable list.
+test("adding then removing a dog from a team's pool toggles it via its chip", async ({ page }) => {
   const pageErrors: string[] = [];
   page.on("pageerror", (error) => pageErrors.push(error.message));
 
@@ -65,22 +52,17 @@ test("adding then removing a dog from a team's pool does not crash the UI", asyn
 
   await page.getByText(teamName).click();
 
-  // Add the dog to the pool - one of the two reported crash directions.
-  await page.getByRole("combobox", { name: "Add dog" }).click();
-  await page.getByRole("option", { name: dogName }).click();
-  await expect(page.getByText(`1. ${dogName}`)).toBeVisible();
-
-  // Remove it again - the other reported crash direction. Scoped to this
-  // team's own card: this club accumulates other tests' teams/lineups in the
-  // shared e2e DB, each with their own DeleteIcon still in the DOM (MUI's
-  // Accordion doesn't unmount collapsed content), so an unscoped lookup is
-  // ambiguous once enough of them exist.
+  // This club accumulates other tests' teams with their own same-named dog chips, so scope every lookup to this team's own card.
   const teamCard = page.locator(".MuiCard-root", { hasText: teamName });
-  await teamCard.getByTestId("DeleteIcon").click();
-  await expect(page.getByText(`1. ${dogName}`)).not.toBeVisible();
+  const dogChip = teamCard.getByRole("button", { name: dogName, exact: true });
 
-  // The UI must still be alive - a crashed card would have unmounted this
-  // along with everything else on the page.
+  await dogChip.click();
+  await expect(teamCard.locator(".MuiChip-filled", { hasText: dogName })).toBeVisible();
+
+  await dogChip.click();
+  await expect(teamCard.locator(".MuiChip-filled", { hasText: dogName })).not.toBeVisible();
+
+  // The UI must still be alive - a crashed card would have unmounted this along with everything else on the page.
   await expect(page.getByText(teamName)).toBeVisible();
 
   expect(pageErrors).toEqual([]);

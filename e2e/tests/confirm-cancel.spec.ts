@@ -105,12 +105,12 @@ test("backing out of a delete confirmation (either variant) leaves the data unto
   await expect(page.getByText(teamName)).toBeVisible();
 
   await page.getByText(teamName).click();
-  await page.getByRole("combobox", { name: "Add dog" }).click();
-  await page.getByRole("option", { name: dogAName }).click();
-  await expect(page.getByText(`1. ${dogAName}`)).toBeVisible();
-  await page.getByRole("combobox", { name: "Add dog" }).click();
-  await page.getByRole("option", { name: dogBName }).click();
-  await expect(page.getByText(`2. ${dogBName}`)).toBeVisible();
+
+  const teamCardForPool = page.locator(".MuiCard-root", { hasText: teamName });
+  await teamCardForPool.getByRole("button", { name: dogAName, exact: true }).click();
+  await expect(teamCardForPool.locator(".MuiChip-filled", { hasText: dogAName })).toBeVisible();
+  await teamCardForPool.getByRole("button", { name: dogBName, exact: true }).click();
+  await expect(teamCardForPool.locator(".MuiChip-filled", { hasText: dogBName })).toBeVisible();
 
   await page.getByRole("button", { name: "Add lineup" }).click();
   await page.getByRole("checkbox").nth(0).check();

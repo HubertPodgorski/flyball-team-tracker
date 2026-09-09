@@ -148,21 +148,20 @@ test("trainer can link a task to a team's lineup instead of picking dogs directl
   await expect(page.getByText(teamName)).toBeVisible();
 
   await page.getByText(teamName).click();
-  await page.getByRole("combobox", { name: "Add dog" }).click();
-  await page.getByRole("option", { name: dogAName }).click();
-  await expect(page.getByText(`1. ${dogAName}`)).toBeVisible();
-  await page.getByRole("combobox", { name: "Add dog" }).click();
-  await page.getByRole("option", { name: dogBName }).click();
-  await expect(page.getByText(`2. ${dogBName}`)).toBeVisible();
+
+  // Scoped to this team's own card: other not-yet-deleted teams elsewhere in
+  // this shared e2e DB have their own lineup headings still in the DOM too
+  // (MUI's Accordion doesn't unmount collapsed content).
+  const teamCard = page.locator(".MuiCard-root", { hasText: teamName });
+  await teamCard.getByRole("button", { name: dogAName, exact: true }).click();
+  await expect(teamCard.locator(".MuiChip-filled", { hasText: dogAName })).toBeVisible();
+  await teamCard.getByRole("button", { name: dogBName, exact: true }).click();
+  await expect(teamCard.locator(".MuiChip-filled", { hasText: dogBName })).toBeVisible();
 
   await page.getByRole("button", { name: "Add lineup" }).click();
   await page.getByRole("checkbox").nth(0).check();
   await page.getByRole("checkbox").nth(1).check();
   await page.getByRole("button", { name: "Create" }).click();
-  // Scoped to this team's own card: other not-yet-deleted teams elsewhere in
-  // this shared e2e DB have their own lineup headings still in the DOM too
-  // (MUI's Accordion doesn't unmount collapsed content).
-  const teamCard = page.locator(".MuiCard-root", { hasText: teamName });
   await expect(teamCard.getByRole("heading", { level: 3 })).toContainText("Lineup");
 
   await page.goto("/trainer-panel/tasks");
@@ -390,18 +389,17 @@ test("trainer can switch an existing task from picked dogs to a team lineup", as
   await expect(page.getByText(teamName)).toBeVisible();
 
   await page.getByText(teamName).click();
-  await page.getByRole("combobox", { name: "Add dog" }).click();
-  await page.getByRole("option", { name: dogAName }).click();
-  await expect(page.getByText(`1. ${dogAName}`)).toBeVisible();
-  await page.getByRole("combobox", { name: "Add dog" }).click();
-  await page.getByRole("option", { name: dogBName }).click();
-  await expect(page.getByText(`2. ${dogBName}`)).toBeVisible();
+
+  const teamCard = page.locator(".MuiCard-root", { hasText: teamName });
+  await teamCard.getByRole("button", { name: dogAName, exact: true }).click();
+  await expect(teamCard.locator(".MuiChip-filled", { hasText: dogAName })).toBeVisible();
+  await teamCard.getByRole("button", { name: dogBName, exact: true }).click();
+  await expect(teamCard.locator(".MuiChip-filled", { hasText: dogBName })).toBeVisible();
 
   await page.getByRole("button", { name: "Add lineup" }).click();
   await page.getByRole("checkbox").nth(0).check();
   await page.getByRole("checkbox").nth(1).check();
   await page.getByRole("button", { name: "Create" }).click();
-  const teamCard = page.locator(".MuiCard-root", { hasText: teamName });
   await expect(teamCard.getByRole("heading", { level: 3 })).toContainText("Lineup");
 
   await page.goto("/trainer-panel/tasks");

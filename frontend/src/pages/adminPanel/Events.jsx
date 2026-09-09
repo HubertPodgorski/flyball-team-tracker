@@ -86,7 +86,7 @@ const Events = () => {
       >
         <EventTypeLegend />
 
-        {events.map(({ name, _id, date, type }) => {
+        {events.map(({ name, _id, date, endDate, type }) => {
           const isNextEvent = _id === nextEvent?._id;
 
           return (
@@ -94,7 +94,7 @@ const Events = () => {
               key={_id}
               elevation={isNextEvent ? 8 : 1}
               onClick={() =>
-                onEditClick({ name, date, type: type ?? EventType.TRAINING }, _id)
+                onEditClick({ name, date, endDate, type: type ?? EventType.TRAINING }, _id)
               }
               sx={{
                 display: "flex",
@@ -121,7 +121,10 @@ const Events = () => {
                 )}
 
                 <Typography>
-                  {name}: {formatDate(date, "dd/MM/yyyy HH:mm")}
+                  {name}:{" "}
+                  {endDate
+                    ? `${formatDate(date, "dd/MM/yyyy")} - ${formatDate(endDate, "dd/MM/yyyy")}`
+                    : formatDate(date, "dd/MM/yyyy HH:mm")}
                 </Typography>
               </Box>
 

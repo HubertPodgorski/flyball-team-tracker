@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
-  Autocomplete,
   Box,
   Button,
   Divider,
@@ -10,25 +9,24 @@ import {
   MenuItem,
   Select,
   Switch,
-  TextField,
   Typography,
 } from "@mui/material";
 import { useForm } from "@tanstack/react-form";
 import { useSnackbar } from "notistack";
 import { useTranslation } from "react-i18next";
 import { useAuthContext } from "../../hooks/useAuthContext";
-import { useIsSuperAdmin } from "../../hooks/useIsSuperAdmin";
 import { usePwaInstall } from "../../hooks/usePwaInstall";
 import { usePushNotifications } from "../../hooks/usePushNotifications";
 import { useClubFeatures } from "../../hooks/useClubFeatures";
-import { useDogsQuery, useUpdateDogMutation } from "../../queries/dogs";
+import { useDogsToShow } from "../../hooks/useDogsToShow";
+import { useUpdateDogMutation } from "../../queries/dogs";
 import { useChangeOwnPasswordMutation, useUpdateUserMutation } from "../../queries/users";
 import { useSendTestPushNotificationMutation } from "../../queries/pushSubscriptions";
 import { registerServiceWorker } from "../../helpers/serviceWorkerHelpers";
 import { getAuthErrorMessage } from "../../helpers/authErrors";
 import FormTextField from "../../components/inputs/FormTextField";
 import FormGrid from "../../components/FormGrid";
-import { Dog } from "../../helpers/types";
+import SuperAdminDogPicker from "../../components/SuperAdminDogPicker";
 
 const LANGUAGE_OPTIONS = [
   { value: "pl", label: "Polski" },
@@ -37,12 +35,11 @@ const LANGUAGE_OPTIONS = [
 
 const Settings = () => {
   const { user, setUserLanguage } = useAuthContext();
-  const isSuperAdmin = useIsSuperAdmin();
+  const { allDogs, dogsToShow, isSuperAdmin, pickedDogs, setPickedDogIds } = useDogsToShow();
   const { isStandalone, isIos, canPromptInstall, promptInstall } = usePwaInstall();
   const { isSupported: pushSupported, permission: pushPermission, isSubscribed, subscribe, unsubscribe } =
     usePushNotifications();
   const { crossPasses: crossPassesEnabled } = useClubFeatures();
-  const { data: dogs = [] } = useDogsQuery();
   const updateUserMutation = useUpdateUserMutation();
   const updateDogMutation = useUpdateDogMutation();
   const changePasswordMutation = useChangeOwnPasswordMutation();
@@ -66,28 +63,6 @@ const Settings = () => {
       }
     },
   });
-
-  const [pickedDogIds, setPickedDogIds] = useState<string[]>([]);
-  const [ownDogs, setOwnDogs] = useState<Dog[]>(user?.dogs ?? []);
-
-  // Derived fresh from the live query every render (not a snapshot taken at
-  // pick time) - otherwise a toggle here wouldn't visibly flip until reload,
-  // since it'd be reading a stale copy instead of the just-updated cache.
-  const pickedDogs = dogs.filter(({ _id }) => pickedDogIds.includes(_id));
-
-  // Mirrors MyDogs.tsx - re-derive from the live dogs list rather than
-  // trusting `user.dogs` alone, so a jump-height/sync edit elsewhere shows
-  // up here without needing a fresh login.
-  useEffect(() => {
-    if (!user) return;
-
-    const ownDogIds = user.dogs.map(({ _id }) => _id);
-
-    setOwnDogs(dogs.filter(({ _id }) => ownDogIds.includes(_id)));
-  }, [user, dogs]);
-
-  // Super-admins have no dogs of their own - let them pick any dogs instead.
-  const dogsToShow = isSuperAdmin ? pickedDogs : ownDogs;
 
   const onLanguageChange = (language: "en" | "pl") => {
     setUserLanguage(language);
@@ -365,7 +340,7 @@ const Settings = () => {
         </FormGrid>
       </Box>
 
-      {crossPassesEnabled && (isSuperAdmin || ownDogs.length > 0) && (
+      {crossPassesEnabled && (isSuperAdmin || dogsToShow.length > 0) && (
         <>
           <Divider />
 
@@ -377,17 +352,7 @@ const Settings = () => {
             </Typography>
 
             {isSuperAdmin && (
-              <Autocomplete
-                multiple
-                options={dogs}
-                getOptionLabel={(dog) => dog.name}
-                isOptionEqualToValue={(option, value) => option._id === value._id}
-                value={pickedDogs}
-                onChange={(_event, newDogs) => setPickedDogIds(newDogs.map(({ _id }) => _id))}
-                renderInput={(params) => (
-                  <TextField {...params} label={t("pages.myDogs.dogLabel")} />
-                )}
-              />
+              <SuperAdminDogPicker allDogs={allDogs} pickedDogs={pickedDogs} onChange={setPickedDogIds} />
             )}
 
             {dogsToShow.map((dog) => (

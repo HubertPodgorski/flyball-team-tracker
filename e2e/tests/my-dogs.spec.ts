@@ -24,7 +24,12 @@ test("user can add a note and a cross-pass to their own dog from My Dogs", async
   // dog isn't auto-assigned to its creator, so assign both to self first.
   await page.goto("/trainer-panel/users");
   await page.getByText(trainerName, { exact: true }).click();
-  await page.getByRole("combobox", { name: "Dogs" }).click();
+
+  // Non-freeSolo multi-select - readOnly by design (PickListInput), so mobile never pops a keyboard.
+  const dogsCombobox = page.getByRole("combobox", { name: "Dogs" });
+  await expect(dogsCombobox).toHaveAttribute("readonly", "");
+
+  await dogsCombobox.click();
   await page.getByRole("option", { name: runnerName }).click();
   await page.getByRole("option", { name: predecessorName }).click();
   await page.keyboard.press("Escape");
@@ -42,23 +47,29 @@ test("user can add a note and a cross-pass to their own dog from My Dogs", async
 
   const runnerCard = page.locator(".MuiCard-root", { hasText: runnerName });
 
-  // Note - the card's first button, before any cross-pass rows exist.
-  await runnerCard.getByRole("button").first().click();
+  // Notes is now a plain inline field (no button, no dialog) - fill it, blur to save.
   const noteText = `Loves the box turn ${Date.now()}`;
-  await page.getByRole("textbox", { name: "Notes" }).fill(noteText);
-  await page.getByRole("button", { name: "Save" }).click();
-  await expect(runnerCard.getByText(noteText)).toBeVisible();
-  await page.locator(".MuiDialog-container").waitFor({ state: "detached" });
+  const notesField = runnerCard.getByRole("textbox", { name: "Notes" });
 
-  // Reopen and check it actually prefilled, not just that the card's own
-  // summary text updated (see CrossPassModal.tsx's real bug for why that
-  // distinction matters).
-  await runnerCard.getByRole("button").first().click();
-  await expect(page.getByRole("textbox", { name: "Notes" })).toHaveValue(noteText);
-  await page.getByRole("button", { name: "Cancel" }).click();
+  await notesField.fill(noteText);
+  await notesField.blur();
+  await expect(notesField).toHaveValue(noteText);
+
+  // Regression: Card defaults to overflow: hidden, which clipped the Notes field's floating label.
+  const cardOverflow = await runnerCard.evaluate((el) => getComputedStyle(el).overflow);
+  expect(cardOverflow).not.toBe("hidden");
+
+  // Confirm it actually persisted server-side, not just held in the field's own local state.
+  await page.reload();
+  await expect(runnerCard.getByRole("textbox", { name: "Notes" })).toHaveValue(noteText);
 
   // Cross-pass, behind the predecessor dog.
-  await runnerCard.locator('[data-testid="AddIcon"]').click();
+  await runnerCard.getByRole("button", { name: "Add cross pass" }).click();
+
+  // Regression: "running on lights" OR "running on dog" is required.
+  await page.getByRole("button", { name: "Save" }).click();
+  await expect(page.getByText("This field is required")).toBeVisible();
+
   await page.getByRole("combobox", { name: "Running on dog" }).click();
   await page.getByRole("option", { name: predecessorName }).click();
   // Note is a freeSolo Autocomplete (combobox), not a plain textbox.
@@ -67,14 +78,15 @@ test("user can add a note and a cross-pass to their own dog from My Dogs", async
   await expect(runnerCard.getByText(predecessorName)).toBeVisible();
   await expect(runnerCard.getByText("Trails closely")).toBeVisible();
 
-  // Delete the cross-pass.
-  await runnerCard.getByTestId("DeleteIcon").click();
+  // Delete the cross-pass - now via its own edit modal (tap the row), not an inline delete icon.
+  await runnerCard.getByText("Trails closely").click();
+  await page.getByRole("button", { name: "Delete", exact: true }).click();
   await page.getByRole("button", { name: "Delete forever" }).click();
   await expect(runnerCard.getByText("Trails closely")).not.toBeVisible();
 
   // A second cross-pass, this time "running on lights" (no predecessor dog)
   // with a starting position picked from the meters select.
-  await runnerCard.locator('[data-testid="AddIcon"]').click();
+  await runnerCard.getByRole("button", { name: "Add cross pass" }).click();
   await page.getByRole("switch", { name: "Running on lights" }).click();
   await page.getByRole("combobox", { name: "Starting position", exact: true }).click();
   await page.getByRole("option", { name: "16m", exact: true }).click();
@@ -84,10 +96,8 @@ test("user can add a note and a cross-pass to their own dog from My Dogs", async
   await expect(runnerCard.getByText("16m")).toBeVisible();
   await expect(runnerCard.getByText("Off the box")).toBeVisible();
 
-  // Edit that same cross-pass via its own row action (distinct from
-  // reopening a lineup's cross-pass by clicking the row itself - this one's
-  // an explicit Edit icon).
-  await runnerCard.getByTestId("EditIcon").click();
+  // Edit that same cross-pass by tapping its row.
+  await runnerCard.getByText("Off the box", { exact: true }).click();
   await expect(page.getByRole("heading", { name: "Edit cross pass" })).toBeVisible();
 
   // Regression coverage for a real bug: reopening a "running on lights"

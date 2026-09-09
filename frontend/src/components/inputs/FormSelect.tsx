@@ -1,23 +1,32 @@
 import React, { useId } from "react";
-import { Autocomplete, Box, Chip, FormControl, InputLabel, MenuItem, Select, TextField } from "@mui/material";
+import { Autocomplete, Box, Chip, FormControl, FormHelperText, InputLabel, MenuItem, Select } from "@mui/material";
 import type { AnyFieldApi } from "@tanstack/react-form";
-import { FormFieldProps } from "./utils";
+import { useTranslation } from "react-i18next";
+import { FormFieldProps, getFieldErrorMessage } from "./utils";
 import { SelectOption } from "./types";
+import PickListInput from "./PickListInput";
 
 interface Props extends FormFieldProps {
   options: SelectOption[];
   label: string;
   multi?: boolean;
+  required?: boolean;
 }
 
-const FormSelect = ({ form, name, options, label, multi = true }: Props) => {
+const FormSelect = ({ form, name, options, label, multi = true, required = false }: Props) => {
+  const { t } = useTranslation();
   // Was a copy-pasted "demo-simple-select-label" never wired to the Select
   // via labelId - the Select had no accessible name at all (screen readers
   // and role-based test locators alike had nothing to match on).
   const labelId = useId();
 
   return (
-    <form.Field name={name}>
+    <form.Field
+      name={name}
+      validators={{
+        onChange: ({ value }: { value: unknown }) => (required && !value ? t("common.requiredField") : undefined),
+      }}
+    >
       {(field: AnyFieldApi) => {
         // Autocomplete instead of a plain multi-select Select - closes like a normal combobox, doesn't cover the screen.
         if (multi) {
@@ -74,13 +83,13 @@ const FormSelect = ({ form, name, options, label, multi = true }: Props) => {
                   </Box>
                 );
               }}
-              renderInput={(params) => <TextField {...params} label={label} />}
+              renderInput={(params) => <PickListInput params={params} label={label} />}
             />
           );
         }
 
         return (
-          <FormControl fullWidth>
+          <FormControl fullWidth error={field.state.meta.errors.length > 0}>
             <InputLabel id={labelId}>{label}</InputLabel>
             <Select
               labelId={labelId}
@@ -96,6 +105,8 @@ const FormSelect = ({ form, name, options, label, multi = true }: Props) => {
                 </MenuItem>
               ))}
             </Select>
+
+            {field.state.meta.errors.length > 0 && <FormHelperText>{getFieldErrorMessage(field)}</FormHelperText>}
           </FormControl>
         );
       }}

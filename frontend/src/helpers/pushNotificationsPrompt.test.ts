@@ -4,7 +4,7 @@ import { dismissPushPrompt, isPushPromptDismissed } from "./pushNotificationsPro
 // See authToken.test.ts for why localStorage is stubbed by hand here -
 // this project's vitest environment is "node", not jsdom.
 const stubLocalStorage = () => {
-  let store: Record<string, string> = {};
+  const store: Record<string, string> = {};
 
   (globalThis as any).localStorage = {
     getItem: (key: string) => store[key] ?? null,

@@ -34,12 +34,12 @@ test("the read-only /user-panel/teams view hides every structural control", asyn
   await expect(page.getByText(teamName)).toBeVisible();
 
   await page.getByText(teamName).click();
-  await page.getByRole("combobox", { name: "Add dog" }).click();
-  await page.getByRole("option", { name: dogAName }).click();
-  await expect(page.getByText(`1. ${dogAName}`)).toBeVisible();
-  await page.getByRole("combobox", { name: "Add dog" }).click();
-  await page.getByRole("option", { name: dogBName }).click();
-  await expect(page.getByText(`2. ${dogBName}`)).toBeVisible();
+
+  const trainerTeamCardForPool = page.locator(".MuiCard-root", { hasText: teamName });
+  await trainerTeamCardForPool.getByRole("button", { name: dogAName, exact: true }).click();
+  await expect(trainerTeamCardForPool.locator(".MuiChip-filled", { hasText: dogAName })).toBeVisible();
+  await trainerTeamCardForPool.getByRole("button", { name: dogBName, exact: true }).click();
+  await expect(trainerTeamCardForPool.locator(".MuiChip-filled", { hasText: dogBName })).toBeVisible();
 
   await page.getByRole("button", { name: "Add lineup" }).click();
   await page.getByRole("checkbox").nth(0).check();

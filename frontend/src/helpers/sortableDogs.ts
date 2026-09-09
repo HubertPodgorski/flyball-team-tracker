@@ -18,8 +18,7 @@ export interface MatchedSortableDog {
 // (reading 'props')` on a `null` child - unlike React's own children
 // reconciliation, which tolerates `null` children fine. Filtering here, before
 // any JSX is built, is what actually prevents that crash - see
-// TeamDogsEditor.tsx / LineupDogsOrder.tsx, both of which hit this in
-// production (once on remove, once on add).
+// LineupDogsOrder.tsx, which hit this in production (on add).
 export const matchSortableDogs = (
   items: ItemInterface[],
   dogs: Dog[]

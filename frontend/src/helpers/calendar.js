@@ -1,27 +1,44 @@
 import { startOfDay, isBefore } from "date-fns";
+import { alpha } from "@mui/material";
+import { red } from "@mui/material/colors";
 import { EventType } from "../components/inputs/consts";
 import theme from "./theme";
 import { formatDate } from "./dateHelpers";
+
+// MUI's own red[400] - theme.error.main is a deliberately muted shade that reads as pink instead.
+export const ATTENDANCE_ABSENT_RED = red[400];
 
 export const sortByNewest = (eventA, eventB) => {
   return new Date(eventB.date) - new Date(eventA.date);
 };
 
-// The next event on/after right now, never one already in the past - shared
-// by the Calendar and trainer's Events pages so both mark the same one.
-export const getNextEvent = (events) => {
-  const today = startOfDay(new Date());
+export const sortByOldest = (eventA, eventB) => new Date(eventA.date) - new Date(eventB.date);
 
-  return events
-    .filter(({ date }) => !isBefore(new Date(date), today))
-    .sort((eventA, eventB) => new Date(eventA.date) - new Date(eventB.date))[0];
+// Not over yet - a multi-day event counts as "still upcoming" through its own endDate, not just its start date.
+export const isUpcomingEvent = (event, now = new Date()) => {
+  const today = startOfDay(now);
+
+  return !isBefore(new Date(event.endDate || event.date), today);
 };
 
-export const getFormattedDate = (date) =>
-  `${formatDate(date, "eeee")} ${formatDate(
-    date,
-    "dd/MM/yyyy HH:mm"
-  )}`.toUpperCase();
+// The next event on/after right now - a multi-day event counts as "not over yet" through its own endDate.
+export const getNextEvent = (events) => {
+  return events.filter((event) => isUpcomingEvent(event)).sort(sortByOldest)[0];
+};
+
+// Two disjoint, ready-to-render lists - upcoming soonest-first, past most-recent-first - for the calendar's own two tabs.
+export const splitUpcomingAndPast = (events, now = new Date()) => {
+  const upcoming = events.filter((event) => isUpcomingEvent(event, now)).sort(sortByOldest);
+  const past = events.filter((event) => !isUpcomingEvent(event, now)).sort(sortByNewest);
+
+  return { upcoming, past };
+};
+
+// Multi-day (Competition/Seminary) events have no meaningful time-of-day - just a date range.
+export const getFormattedDate = (date, endDate) =>
+  endDate
+    ? `${formatDate(date, "dd/MM/yyyy")} - ${formatDate(endDate, "dd/MM/yyyy")}`.toUpperCase()
+    : `${formatDate(date, "eeee")} ${formatDate(date, "dd/MM/yyyy HH:mm")}`.toUpperCase();
 
 export const sortByAttendance = (objectA, objectB) => {
   if (objectA.status === objectB.status) return 0;
@@ -72,8 +89,8 @@ export const getColorsByStatus = (status) => {
 
     case "ABSENT":
       return {
-        background: theme.palette.error.main,
-        color: theme.palette.error.contrastText,
+        background: ATTENDANCE_ABSENT_RED,
+        color: "#ffffff",
       };
 
     default:
@@ -90,4 +107,19 @@ export const getDogPlanningColor = (isPlanned, status) => {
   if (!isPlanned && isPresent) return "warning";
 
   return null;
+};
+
+// Attendance-toggle button props - same reasoning as getColorsByStatus, theme.error.main reads pink on a solid fill.
+export const getAttendanceButtonProps = (status) => {
+  if (status === "ABSENT")
+    return {
+      sx: {
+        minWidth: "150px",
+        backgroundColor: ATTENDANCE_ABSENT_RED,
+        color: "#ffffff",
+        "&:hover": { backgroundColor: alpha(ATTENDANCE_ABSENT_RED, 0.85) },
+      },
+    };
+
+  return { color: status === "PRESENT" ? "success" : "warning", sx: { minWidth: "150px" } };
 };

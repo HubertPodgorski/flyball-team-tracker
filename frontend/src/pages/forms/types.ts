@@ -19,6 +19,7 @@ export interface CreateEditTaskRequestType {
 export interface EventFormInitialData {
   name: string;
   date: Date | string;
+  endDate?: string | null;
   type: EventType;
   team?: string;
 }
@@ -26,6 +27,8 @@ export interface EventFormInitialData {
 export interface CreateEditEventFormType {
   name: string;
   date: Date | null;
+  // Competition/Seminary only - optional, date-only (no time-of-day meaning).
+  endDate: Date | null;
   type: EventType | "";
   team: string;
   // Transient create-only UI state, never part of a persisted Event.
@@ -37,6 +40,7 @@ export interface CreateEditEventFormType {
 export interface CreateEditEventRequestType {
   name: string;
   date: Date | null;
+  endDate?: Date | null;
   type: EventType | "";
   team?: string;
 }

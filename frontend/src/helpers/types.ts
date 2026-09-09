@@ -1,3 +1,5 @@
+import { EventType } from "../components/inputs/consts";
+
 export enum Roles {
   TRAINER = "TRAINER",
   SUPER_ADMIN = "SUPER_ADMIN",
@@ -58,7 +60,9 @@ export interface Dog {
 export interface Event {
   _id: string;
   date: string;
+  endDate?: string;
   name: string;
+  type: EventType;
   dogs: { status: string; _id: string }[];
   users: {
     status: string;
@@ -141,4 +145,68 @@ export interface ClubFeatures {
 export interface ClubSettings {
   _id: string;
   features: ClubFeatures;
+}
+
+export interface EjsDog {
+  name: string | null;
+  matchedDogId: string | null;
+  runningOnLights: boolean;
+  runningOnDogId: string | null;
+  lightsTime: number | string | null;
+  crossTime: number | string | null;
+  time: number | null;
+  faulted: boolean;
+  suggestions: { dogId: string; name: string; distance: number }[];
+}
+
+export interface EjsExtraPass {
+  time: number;
+  dogIndex: number | null;
+}
+
+export interface EjsEntry {
+  sourceFile: string;
+  race: number;
+  division: number;
+  match: number;
+  teamName: string;
+  opponentName: string;
+  teamTime: number | null;
+  teamNetTime: number | null;
+  resultFlag: string | null;
+  result: string | null;
+  jumpHeight: number;
+  ourTeam: boolean;
+  matchedLineupId: string | null;
+  dogs: EjsDog[];
+  extraPasses: EjsExtraPass[];
+}
+
+export interface EjsPreviewResult {
+  teamNames: string[];
+  entries?: EjsEntry[];
+}
+
+export interface CompetitionDogStats {
+  dogId: string;
+  name: string | null;
+  // Lineup-comparison rows only - the lineup's own dog order, shown under its name in a smaller font.
+  nameSubLabel?: string | null;
+  totalPasses: number;
+  faultCount: number;
+  faultRate: number | null;
+  cleanCount: number;
+  okCount: number;
+  // Exact ok text ("ok"/"Ok"/"OK") -> count, for the outcome pie's ok sub-slices.
+  okByText: Record<string, number>;
+  okPercentOfAllPasses: number | null;
+  okPercentOfCleanPasses: number | null;
+  avgCrossTime: number | null;
+  avgLightsTime: number | null;
+  avgRunTime: number | null;
+}
+
+export interface CompetitionStatsResult {
+  sourceFiles: string[];
+  dogs: CompetitionDogStats[];
 }
