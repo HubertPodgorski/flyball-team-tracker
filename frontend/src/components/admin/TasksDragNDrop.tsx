@@ -18,6 +18,7 @@ import { getDogPlanningColor } from "../../helpers/calendar";
 import { Task } from "../../helpers/types";
 import { findLinkedLineup } from "../../helpers/lineupLink";
 import { useTeamsQuery } from "../../queries/teams";
+import DogDetailsModal from "../modals/DogDetailsModal";
 
 export type MappedTasks = Record<string, Record<string, Task[]>>;
 
@@ -91,7 +92,7 @@ const CardContentStyled = styled(Box)(({ theme }) => ({
   display: "grid",
   gridAutoFlow: "row",
   padding: theme.spacing(1),
-  gridGap: theme.spacing(2),
+  gridGap: theme.spacing(1),
   alignItems: "center",
   position: "relative",
 }));
@@ -151,6 +152,7 @@ const TasksDragNDrop = ({
   const [cellLists, setCellLists] = useState<Record<string, CellItem[]>>(() =>
     buildCellLists(mappedTasks)
   );
+  const [dogDetailsId, setDogDetailsId] = useState<string | undefined>();
 
   useEffect(() => {
     setRowList(buildRowList(mappedTasks));
@@ -173,6 +175,7 @@ const TasksDragNDrop = ({
   };
 
   return (
+    <>
     <ReactSortable
       list={rowList}
       setList={setRowList}
@@ -356,7 +359,12 @@ const TasksDragNDrop = ({
                                         label={name}
                                         key={_id}
                                         color={isMisplanned ? "error" : "default"}
-                                        sx={{ alignSelf: "flex-start" }}
+                                        // Stopped from bubbling - the card's own click (below) opens the task editor.
+                                        onClick={(event) => {
+                                          event.stopPropagation();
+                                          setDogDetailsId(_id);
+                                        }}
+                                        sx={{ alignSelf: "flex-start", minHeight: 36, height: "auto" }}
                                       />
                                     );
                                   })}
@@ -398,6 +406,9 @@ const TasksDragNDrop = ({
         );
       })}
     </ReactSortable>
+
+    <DogDetailsModal dogId={dogDetailsId} onClose={() => setDogDetailsId(undefined)} />
+    </>
   );
 };
 

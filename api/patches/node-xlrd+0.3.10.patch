@@ -1,0 +1,64 @@
+diff --git a/node_modules/node-xlrd/lib/sheet.js b/node_modules/node-xlrd/lib/sheet.js
+index f44dbdb..a743957 100644
+--- a/node_modules/node-xlrd/lib/sheet.js
++++ b/node_modules/node-xlrd/lib/sheet.js
+@@ -590,7 +590,7 @@ module.exports = function Sheet(book, position, name, index) {
+   // XF index of the cell in the given row and column.
+   // This is an index into Book.{@link #Book.xfList}.
+   self.cell.getXFIndex = function (rowx, colx) {
+-    self.reqFmtInfo();
++    /* reqFmtInfo undefined upstream - caller already guarantees formattingInfo */
+     var xfx = _cellXFIndexes[rowx][colx];
+     if (xfx > -1) {
+       self._xf_index_stats[0] += 1;
+@@ -728,7 +728,7 @@ module.exports = function Sheet(book, position, name, index) {
+           xfIndex
+         );
+         if (doSstRichText) {
+-          var runList = bk._richTextRunlistMap.get(sstIndex);
++          var runList = bk._richTextRunlistMap[sstIndex];
+           if (runList) {
+             var row = self.richTextRunlistMap[rowx];
+             if (!row) row = self.richTextRunlistMap[rowx] = [];
+@@ -748,7 +748,7 @@ module.exports = function Sheet(book, position, name, index) {
+             bk.encoding || bk.deriveEncoding(),
+             2
+           );
+-        else strg = unpackUnicode(data, 6, 2);
++        else strg = comm.unpackUnicode(data, 6, 2);
+         putCell(rowx, colx, comm.XL_CELL_TEXT, strg, xfIndex);
+       } else if (rc == comm.XL_RSTRING) {
+         var rowx = data.readUInt16LE(0),
+@@ -820,9 +820,9 @@ module.exports = function Sheet(book, position, name, index) {
+           continue;
+         }
+ 
+-        var r = rowInfoSharingDict.get(bits1, bits2);
++        var r = null;
+         if (!r) {
+-          rowInfoSharingDict[bits1][bits2] = r = Rowinfo();
++          r = {};
+           // Using upkbits() is far too slow on a file
+           // with 30 sheets each with 10K rows :-(
+           //    upkbits(r, bits1, (
+@@ -1058,7 +1058,7 @@ module.exports = function Sheet(book, position, name, index) {
+         if (!fmtInf) continue;
+         var nitems = dataLen >> 1;
+         var result = [];
+-        for (i = 0; i < nitems; i += 2) result.push(data.readUInt16LE(i));
++        for (var i = 0; i < dataLen; i += 2) result.push(data.readUInt16LE(i));
+         var rowx = result[0],
+           mul_first = result[1];
+         var mulLast = result[result.length - 1];
+diff --git a/node_modules/node-xlrd/lib/workbook.js b/node_modules/node-xlrd/lib/workbook.js
+index f2d9fcd..e7c4a69 100644
+--- a/node_modules/node-xlrd/lib/workbook.js
++++ b/node_modules/node-xlrd/lib/workbook.js
+@@ -18,6 +18,7 @@ exports.openWorkbook = function (fd, options, callback) {
+   var opts = options || {}; //todo: default 값으로 병합
+   var interObj = {};
+   var bk = new Workbook(interObj);
++  bk.formattingInfo = !!opts.formattingInfo;
+ 
+   interObj.loadBiffN(fd);
+ 

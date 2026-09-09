@@ -70,6 +70,24 @@ describe("createEvent", () => {
     expect(parsed.eventId).toBe(res.body._id.toString());
   });
 
+  it("persists endDate for a multi-day Competition/Seminary event", async () => {
+    const creator = await makeUser({ name: "Creator" });
+    const res = mockRes();
+
+    await createEvent(
+      {
+        club: CLUB,
+        userId: creator._id.toString(),
+        body: { name: "Nationals", date: "2026-09-08", endDate: "2026-09-10", type: "COMPETITION" },
+      },
+      res
+    );
+
+    const stored = await EventModel.findById(res.body._id);
+
+    expect(stored.endDate).toBe("2026-09-10");
+  });
+
   it("excludes a super-admin from the recipient list", async () => {
     const creator = await makeUser({ name: "Creator" });
     const superAdmin = await makeUser({ name: "Super Admin", roles: ["SUPER_ADMIN"] });

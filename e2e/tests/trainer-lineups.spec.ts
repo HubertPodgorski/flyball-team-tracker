@@ -30,25 +30,23 @@ test("trainer can build a team's lineup, add a cross-pass, then tear it down", a
 
   await page.getByText(teamName).click();
 
-  // Pool the two dogs.
-  await page.getByRole("combobox", { name: "Add dog" }).click();
-  await page.getByRole("option", { name: dogAName }).click();
-  await expect(page.getByText(`1. ${dogAName}`)).toBeVisible();
+  // Scoped to this team's own card throughout: other not-yet-deleted teams
+  // elsewhere in this shared e2e DB keep their own headings/buttons in the
+  // DOM too (MUI's Accordion/Collapse don't unmount collapsed content).
+  const teamCard = page.locator(".MuiCard-root", { hasText: teamName });
 
-  await page.getByRole("combobox", { name: "Add dog" }).click();
-  await page.getByRole("option", { name: dogBName }).click();
-  await expect(page.getByText(`2. ${dogBName}`)).toBeVisible();
+  // Pool the two dogs.
+  await teamCard.getByRole("button", { name: dogAName, exact: true }).click();
+  await expect(teamCard.locator(".MuiChip-filled", { hasText: dogAName })).toBeVisible();
+
+  await teamCard.getByRole("button", { name: dogBName, exact: true }).click();
+  await expect(teamCard.locator(".MuiChip-filled", { hasText: dogBName })).toBeVisible();
 
   // Build a lineup from both.
   await page.getByRole("button", { name: "Add lineup" }).click();
   await page.getByRole("checkbox").nth(0).check();
   await page.getByRole("checkbox").nth(1).check();
   await page.getByRole("button", { name: "Create" }).click();
-
-  // Scoped to this team's own card throughout: other not-yet-deleted teams
-  // elsewhere in this shared e2e DB keep their own headings/buttons in the
-  // DOM too (MUI's Accordion/Collapse don't unmount collapsed content).
-  const teamCard = page.locator(".MuiCard-root", { hasText: teamName });
 
   // Label includes the pool's jump height, e.g. "Lineup (35cm)" - match the
   // accordion heading itself rather than exact fallback text.

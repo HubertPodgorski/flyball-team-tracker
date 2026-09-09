@@ -7,6 +7,8 @@ const Schema = mongoose.Schema;
 const eventSchema = new Schema(
   {
     date: { type: String, required: true },
+    // Multi-day Competition/Seminary only - optional, no time-of-day meaning, just the last calendar day it runs through.
+    endDate: { type: String, required: false },
     name: { type: String, required: true },
     dogs: {
       type: [

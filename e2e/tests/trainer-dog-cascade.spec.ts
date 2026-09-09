@@ -39,21 +39,20 @@ test("deleting a dog live-removes it from an open task board and team lineup via
   await expect(page.getByText(teamName)).toBeVisible();
 
   await page.getByText(teamName).click();
-  await page.getByRole("combobox", { name: "Add dog" }).click();
-  await page.getByRole("option", { name: dogToDelete }).click();
-  await expect(page.getByText(`1. ${dogToDelete}`)).toBeVisible();
-  await page.getByRole("combobox", { name: "Add dog" }).click();
-  await page.getByRole("option", { name: otherDog }).click();
-  await expect(page.getByText(`2. ${otherDog}`)).toBeVisible();
+
+  // Scoped to this team's own card: other not-yet-deleted teams elsewhere in
+  // this shared e2e DB have their own lineup headings still in the DOM too
+  // (MUI's Accordion doesn't unmount collapsed content).
+  const teamCard = page.locator(".MuiCard-root", { hasText: teamName });
+  await teamCard.getByRole("button", { name: dogToDelete, exact: true }).click();
+  await expect(teamCard.locator(".MuiChip-filled", { hasText: dogToDelete })).toBeVisible();
+  await teamCard.getByRole("button", { name: otherDog, exact: true }).click();
+  await expect(teamCard.locator(".MuiChip-filled", { hasText: otherDog })).toBeVisible();
 
   await page.getByRole("button", { name: "Add lineup" }).click();
   await page.getByRole("checkbox").nth(0).check();
   await page.getByRole("checkbox").nth(1).check();
   await page.getByRole("button", { name: "Create" }).click();
-  // Scoped to this team's own card: other not-yet-deleted teams elsewhere in
-  // this shared e2e DB have their own lineup headings still in the DOM too
-  // (MUI's Accordion doesn't unmount collapsed content).
-  const teamCard = page.locator(".MuiCard-root", { hasText: teamName });
   await expect(teamCard.getByRole("heading", { level: 3 })).toContainText("Lineup");
 
   // A task with the dog, on the page this test watches for the live update.

@@ -4,25 +4,24 @@ import { Box, Typography } from "@mui/material";
 export interface LegendItem {
   label: string;
   color: string;
-  borderColor?: string;
 }
 
 interface Props {
   items: LegendItem[];
 }
 
-// Swatches, not Chips - illustrating a background, not a label.
+// Dots, not squares - a bordered square reads as an (unrelated) checkbox, not a color key.
 const Legend = ({ items }: Props) => (
   <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
-    {items.map(({ label, color, borderColor }) => (
+    {items.map(({ label, color }) => (
       <Box key={label} sx={{ display: "flex", alignItems: "center", gap: 1 }}>
         <Box
           sx={{
-            width: 16,
-            height: 16,
-            borderRadius: "4px",
-            border: borderColor ? `1px solid ${borderColor}` : "none",
+            width: 12,
+            height: 12,
+            borderRadius: "50%",
             backgroundColor: color,
+            flexShrink: 0,
           }}
         />
 

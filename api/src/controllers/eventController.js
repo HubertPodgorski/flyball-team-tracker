@@ -15,9 +15,9 @@ const getEvents = async (req, res) => {
 };
 
 const createEvent = async (req, res) => {
-  const { name, date, type } = req.body;
+  const { name, date, endDate, type } = req.body;
 
-  const event = await EventModel.create({ name, date, type, team: req.club });
+  const event = await EventModel.create({ name, date, endDate, type, team: req.club });
 
   res.status(200).json(event);
   broadcast(req.club, "events_updated", await findClubEvents(req.club));

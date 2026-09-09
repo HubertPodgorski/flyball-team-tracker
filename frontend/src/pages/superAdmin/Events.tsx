@@ -17,6 +17,12 @@ const getColumns = (t: (key: string) => string): GridColDef[] => [
     sortComparator: (a: any, b: any) =>
       new Date(a).getTime() - new Date(b).getTime(),
   },
+  {
+    field: "endDate",
+    headerName: t("forms.event.endDate"),
+    flex: 1,
+    valueFormatter: (value: any) => (value ? formatDate(value, "dd/MM/yyyy") : ""),
+  },
   { field: "type", headerName: t("pages.superAdmin.typeColumn"), flex: 1 },
 ];
 
@@ -37,6 +43,7 @@ const SuperAdminEvents = () => {
       getEditFormData={(row) => ({
         name: row.name,
         date: row.date,
+        endDate: row.endDate,
         type: row.type ?? EventType.TRAINING,
         team: row.team,
       })}

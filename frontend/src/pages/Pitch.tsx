@@ -5,6 +5,9 @@ import {
   Card,
   CardContent,
   Divider,
+  List,
+  ListItem,
+  ListItemText,
   ToggleButton,
   ToggleButtonGroup,
   Typography,
@@ -73,6 +76,22 @@ const Pitch = () => {
           <Box sx={{ marginTop: 1 }}>
             <WorkflowSteps namespace="pitch.workflow" steps={WORKFLOW} />
           </Box>
+        </Box>
+
+        <Divider />
+
+        <Box>
+          <Typography variant="overline" color="text.secondary">
+            {t("pitch.alsoIncludes.title")}
+          </Typography>
+
+          <List dense sx={{ pl: 2 }}>
+            {(t("pitch.alsoIncludes.items", { returnObjects: true }) as string[]).map((item) => (
+              <ListItem key={item} sx={{ display: "list-item", listStyleType: "disc", pl: 0 }}>
+                <ListItemText primary={item} />
+              </ListItem>
+            ))}
+          </List>
         </Box>
 
         <Divider />

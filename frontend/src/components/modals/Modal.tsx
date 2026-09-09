@@ -30,6 +30,8 @@ const Modal = ({ open, onClose, children, title }: Props) => {
       onClose={onClose}
       sx={{
         [theme.breakpoints.down("md")]: {
+          // Top-anchored here only - a tall form (dogs picker, cross-passes grid) shouldn't center-overflow a small screen.
+          ".MuiDialog-container": { alignItems: "flex-start" },
           ".MuiDialog-paper": {
             margin: theme.spacing(1),
             width: "100%",

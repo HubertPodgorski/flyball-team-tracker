@@ -51,6 +51,7 @@
     "dogs": "Psy",
     "dogTasks": "Zadania psów",
     "events": "Wydarzenia",
+    "ejsStats": "Statystyki EJS",
     "users": "Użytkownicy",
     "superAdminSection": "Super Admin",
     "clubSwitch": "Zmiana klubu",
@@ -182,7 +183,9 @@
       "type": "Typ wydarzenia",
       "repeatsWeekly": "Powtarzaj co tydzień",
       "repeatOn": "Powtarzaj w",
-      "repeatUntil": "Powtarzaj do"
+      "repeatUntil": "Powtarzaj do",
+      "startDate": "Od",
+      "endDate": "Do"
     },
     "user": {
       "addTitle": "Dodawanie użytkownika",
@@ -204,17 +207,11 @@
     }
   },
   "modals": {
-    "note": {
-      "title": "Notatki – {{name}}",
-      "fallbackName": "Pies",
-      "notes": "Notatki",
-      "save": "Zapisz notatki"
-    },
     "crossPass": {
       "edit": "Edytuj cross",
       "create": "Utwórz cross",
-      "runningOnLights": "Bieg na światłach",
-      "runningOnDog": "Bieg na psie",
+      "runningOnLights": "Bieg na światła",
+      "runningOnDog": "Bieg na psa",
       "startingPosition": "Pozycja startowa",
       "time": "Czas (s)"
     },
@@ -248,7 +245,6 @@
       "netTime": "Czas netto: {{time}}s",
       "lineupName": "Nazwa składu",
       "noDogsYet": "Brak psów",
-      "addDog": "Dodaj psa",
       "teamFull": "Drużyna jest pełna (maks. {{max}} psów)"
     },
     "events": {
@@ -269,6 +265,69 @@
       "selectAnyoneAttendance": "Zaznacz obecność dowolnej osoby",
       "selectMyAttendance": "Zaznacz moją obecność"
     },
+    "ejsStats": {
+      "title": "Statystyki EJS",
+      "competition": "Zawody",
+      "newCompetition": "Stwórz zawody",
+      "chooseFiles": "Wybierz plik(i) EJS",
+      "filesChosen_one": "Wybrano {{count}} plik",
+      "filesChosen_few": "Wybrano {{count}} pliki",
+      "filesChosen_many": "Wybrano {{count}} plików",
+      "filesChosen_other": "Wybrano {{count}} pliku",
+      "uploadAndPreview": "Wgraj EJSa",
+      "pickOurTeams": "Które z tych drużyn są Twoje?",
+      "reviewMatches": "Sprawdź dopasowania psów",
+      "reviewMatchesHint": "Sprawdź, czy każdy pies dopasował się poprawnie - wybierz innego tam, gdzie dopasowanie było niepoprawne.",
+      "notOneOfOurs": "— nie nasz pies —",
+      "unmatched": "Niedopasowany",
+      "confirmImport": "Zatwierdź import",
+      "confirmReplacesAllWarning": "To zastąpi WSZYSTKIE dotychczasowe dane tych zawodów - jeśli masz więcej niż jeden dzień, wgraj wszystkie pliki naraz.",
+      "importSuccess_one": "Zaimportowano {{count}} wpis",
+      "importSuccess_few": "Zaimportowano {{count}} wpisy",
+      "importSuccess_many": "Zaimportowano {{count}} wpisów",
+      "importSuccess_other": "Zaimportowano {{count}} wpisu",
+      "importFailed": "Import nie powiódł się",
+      "parseFailed": "Nie udało się odczytać pliku",
+      "statsTitleClub": "Statystyki klubu",
+      "statsTitleTeam": "Statystyki drużyny",
+      "statsTitleDog": "Statystyki psa",
+      "lineup": "Skład",
+      "allLineups": "Wszystkie składy",
+      "filterByDog": "Filtruj wg psa:",
+      "pickTeamHint": "Wybierz drużynę powyżej, aby zobaczyć jej psy",
+      "pickDog": "Wybierz psa, aby zobaczyć jego statystyki:",
+      "pickDogHint": "Wybierz psa powyżej, aby zobaczyć jego statystyki",
+      "noChartData": "Brak jeszcze danych dla tej metryki",
+      "showMore_one": "Pokaż {{count}} więcej",
+      "showMore_few": "Pokaż {{count}} więcej",
+      "showMore_many": "Pokaż {{count}} więcej",
+      "showMore_other": "Pokaż {{count}} więcej",
+      "showLess": "Pokaż mniej",
+      "outcomeTitle": "Wyniki przebiegów",
+      "metricsChartTitle": "Porównanie psów",
+      "chartFaultCount": "Błędy",
+      "chartOkCount": "Ok",
+      "chartCleanCount": "Skuteczne przebiegi",
+      "chartScrollHint": "przewiń, aby zobaczyć więcej",
+      "metricsChartPercentTitle": "Porównanie psów (%)",
+      "byMetric": "Psy",
+      "byLineup": "Składy",
+      "dogTrendTitle": "Statystyki",
+      "outcome": {
+        "fault": "Błąd",
+        "ok": "{{text}}",
+        "clean": "Czyste przebiegi"
+      },
+      "columns": {
+        "dog": "Pies",
+        "passes": "Liczba biegów",
+        "faultRate": "% błędów",
+        "okOfAll": "% ok (ok, Ok i OK)",
+        "effectiveness": "Skuteczność %",
+        "avgRunTime": "Średni czas",
+        "avgLightsTime": "Średni czas na światła"
+      }
+    },
     "clubSwitch": {
       "title": "Zmiana klubu",
       "currentlyActingAs": "Obecnie działasz jako"
@@ -286,13 +345,18 @@
       "from": "Od",
       "to": "Do",
       "nextEvent": "Najbliższe wydarzenie",
-      "noEventsInRange": "Brak wydarzeń w tym zakresie"
+      "noEventsInRange": "Brak wydarzeń w tym zakresie",
+      "upcomingTab": "Nadchodzące wydarzenia",
+      "pastTab": "Przeszłe wydarzenia"
     },
     "myDogs": {
       "dogLabel": "Pies",
       "notes": "Notatki",
-      "noNotesPlaceholder": "Kliknij przycisk, aby dodać notatki",
+      "notesPlaceholder": "Dodaj notatki...",
+      "noNotesPlaceholder": "Brak notatek",
       "crossPasses": "Crossy",
+      "noCrossPasses": "Brak crossów",
+      "addCrossPass": "Dodaj cross",
       "runningOn": "Bieg na",
       "actions": "Akcje",
       "jumpHeight": "Wysokość hopek: {{height}}cm"
@@ -314,14 +378,18 @@
     "legend": "Legenda",
     "presentPlanned": "Obecny i zaplanowany",
     "presentNotPlanned": "Obecny, jeszcze nie zaplanowany",
-    "plannedNotPresent": "Zaplanowany, nieobecny"
+    "plannedNotPresent": "Zaplanowany, nieobecny",
+    "present": "Obecny",
+    "absent": "Nieobecny",
+    "unset": "Jeszcze nieoznaczony"
   },
   "tasksGrid": {
     "addTaskHere": "Dodaj zadanie tutaj",
     "removeRowConfirm": "Usunąć wszystkie zadania w tym wierszu?",
     "noDogsSelected": "Nie wybrano psów",
     "eventLabel": "Wydarzenie",
-    "noneOption": "Brak"
+    "noneOption": "Brak",
+    "downloadPdf": "Pobierz PDF"
   },
   "confirm": {
     "title": "Czy na pewno?",
@@ -340,14 +408,14 @@
         "items": [
           "Zadania są ułożone na siatce wierszy i kolumn - przeciągnij kartę, aby zmienić jej kolejność, albo przenieś ją do innej komórki.",
           "Wybierz wydarzenie u góry, aby zobaczyć, które psy są zaznaczone jako obecne, i planować zadania na podstawie tej obecności.",
-          "Zadanie może zawierać psy bezpośrednio albo być powiązane ze składem drużyny - dotknij powiązanego zadania, aby zobaczyć (i edytować) czasy crossów tego składu.",
-          "Dotknij imienia psa w zadaniu, aby dodać notatkę albo otworzyć szczegóły crossów powiązanego składu."
+          "Zadanie może zawierać psy bezpośrednio albo być powiązane ze składem drużyny - dotknij samego zadania (nie psa), aby zobaczyć i edytować czasy crossów tego składu.",
+          "Dotknij dowolnego psa na zadaniu, aby zobaczyć jego notatki i crossy, tak jak w Moje psy - edytujesz je, jeśli to Twój pies albo jesteś trenerem, w innym wypadku tylko podgląd."
         ]
       },
       "calendar": {
         "title": "Kalendarz",
         "items": [
-          "Wszystkie zaplanowane wydarzenia klubu - treningi, zawody, seminaria, zebrania - pojawiają się tutaj, od najnowszych, z najbliższym nadchodzącym przypiętym na górze, żeby nie zgubiło się niżej na liście.",
+          "Wszystkie zaplanowane wydarzenia klubu - treningi, zawody, seminaria, zebrania - są w dwóch zakładkach: Nadchodzące (od najbliższego) i Przeszłe (od najnowszego).",
           "Zawęź listę do zakresu dat filtrami Od/Do i przeglądaj ją stronami, gdy wydarzeń jest więcej niż mieści się na jednym ekranie.",
           "Rozwiń szczegóły wydarzenia, aby zaznaczyć swoją obecność (lub obecność swoich psów): dotknij imienia, aby przełączać między obecny, nieobecny i nieustawiony.",
           "Dotknięcie powiadomienia push o wydarzeniu przenosi tutaj i przewija od razu do niego, niezależnie na której jest stronie."
@@ -392,10 +460,11 @@
       "title": "Narzędzia trenera",
       "intro": "Jako trener masz dostęp do osobnego panelu do zarządzania danymi klubu:",
       "items": [
-        "Zadania - ta sama tablica z przeciąganiem, plus możliwość tworzenia, edycji i usuwania zadań.",
+        "Zadania - ta sama tablica z przeciąganiem, plus możliwość tworzenia, edycji i usuwania zadań. Przyciskiem \"Pobierz PDF\" otworzysz gotową do druku wersję A4 zwykłej tablicy, jaką widzą członkowie (bez uchwytów do przeciągania i edycji) - w oknie drukowania wybierz \"Zapisz jako PDF\", żeby ją pobrać, albo wydrukuj od razu.",
         "Psy, Zadania psów, Użytkownicy - zarządzaj psami klubu (w tym wysokością hopek każdego psa), rodzajami zadań, które można im przypisać, oraz członkami klubu. Otwórz kartę członka, aby zresetować jego hasło, jeśli nie może się zalogować - otrzymasz jednorazowe tymczasowe hasło do przekazania mu.",
         "Wydarzenia - twórz treningi, zawody, seminaria i zebrania dla klubu; najbliższe nadchodzące jest przypięte na górze także tutaj. Ikona dzwonka przy wydarzeniu od razu wysyła przypomnienie o obecności każdemu, kto jeszcze się nie zaznaczył, niezależnie od zwykłego czasu ~24h. Włącz \"Powtarzaj co tydzień\", aby utworzyć od razu całą serię sesji - wybierz dni tygodnia i datę końcową (maksymalnie 3 miesiące naprzód), a każda sesja powstanie jako niezależne wydarzenie, z własną obecnością.",
         "Drużyny - buduj i edytuj drużyny oraz ich składy dla całego klubu, nie tylko dla własnych psów.",
+        "Statystyki EJS - wgraj plik(i) eksportu EJS z zawodów, aby zobaczyć statystyki klubu według klubu, drużyny albo psa: liczbę biegów, odsetek błędów/ok, skuteczność, średnie czasy, wykresy porównawcze i podział wyników przebiegów. W trybie Drużyna przełączysz się między porównaniem pojedynczych psów a całych składów. Zatwierdzenie importu zastępuje WSZYSTKIE dotychczasowe dane tych zawodów - jeśli masz więcej niż jeden dzień, wgraj wszystkie pliki naraz.",
         "Funkcje - wyłącz części aplikacji, których Twój klub nie używa, np. Drużyny i składy, Crossy, Wydarzenia/Kalendarz czy katalog zadań dla psów."
       ]
     },
@@ -450,6 +519,14 @@
         "title": "Wszyscy widzą to na żywo",
         "body": "Zmiana w składzie albo obecności pojawia się od razu u każdego, kto ma otwartą aplikację."
       }
+    },
+    "alsoIncludes": {
+      "title": "Zawiera też",
+      "items": [
+        "Kliknij dowolnego psa na zadaniu, aby zobaczyć (a jeśli to Twój pies albo jesteś trenerem - edytować) jego notatki i crossy.",
+        "Trener może wgrać eksport EJS z zawodów, żeby zobaczyć statystyki klubu/drużyny/psa, wykresy porównawcze i podział wyników przebiegów.",
+        "Trener może pobrać tablicę zadań jako gotowy do druku PDF w formacie A4."
+      ]
     },
     "needCode": "Do rejestracji potrzebujesz kodu klubu od trenera.",
     "login": "Zaloguj się",

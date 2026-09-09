@@ -1,5 +1,8 @@
 require("dotenv").config();
 
+// node-xlrd (EJS .xls parsing) can throw synchronously inside an fs completion callback on a malformed file - that escapes any try/catch and would otherwise kill the whole process for every user over one bad upload.
+process.on("uncaughtException", (error) => console.error("Uncaught exception (process kept alive):", error));
+
 const usersRoutes = require("./routes/users");
 const superAdminRoutes = require("./routes/superAdmin");
 const teamsRoutes = require("./routes/teams");
@@ -12,6 +15,7 @@ const dogsRoutes = require("./routes/dogs");
 const clubSettingsRoutes = require("./routes/clubSettings");
 const resourcesRoutes = require("./routes/resources");
 const pushSubscriptionsRoutes = require("./routes/pushSubscriptions");
+const competitionsRoutes = require("./routes/competitions");
 const { startReminderScheduler } = require("./reminderScheduler");
 
 const express = require("express");
@@ -48,6 +52,7 @@ app.use("/dogs", dogsRoutes);
 app.use("/club-settings", clubSettingsRoutes);
 app.use("/resources", resourcesRoutes);
 app.use("/push-subscriptions", pushSubscriptionsRoutes);
+app.use("/competitions", competitionsRoutes);
 
 mongoose
   .connect(process.env.MONGO_URL)

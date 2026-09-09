@@ -51,5 +51,5 @@ test("super-admin picks an arbitrary club dog on Settings and My Dogs", async ({
 
   const dogCard = page.locator(".MuiCard-root", { hasText: dogName });
   await expect(dogCard).toBeVisible();
-  await expect(dogCard.getByText("Cross Passes")).toBeVisible();
+  await expect(dogCard.getByText("Cross Passes", { exact: true })).toBeVisible();
 });

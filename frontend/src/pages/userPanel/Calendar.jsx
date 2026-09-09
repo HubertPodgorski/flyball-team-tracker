@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useSearch } from "@tanstack/react-router";
 import { useEventsQuery } from "../../queries/events";
-import { Box, Pagination, useTheme } from "@mui/material";
+import { Box, Pagination, Tab, Tabs, useTheme } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers";
 import { useTranslation } from "react-i18next";
 import { startOfDay, endOfDay, isBefore, isAfter } from "date-fns";
-import { getNextEvent, sortByNewest } from "../../helpers/calendar";
+import { splitUpcomingAndPast } from "../../helpers/calendar";
 import EventCard from "../../components/EventCard";
 import EventTypeLegend from "../../components/EventTypeLegend";
 
@@ -23,6 +23,7 @@ const Calendar = () => {
 
   const [fromDate, setFromDate] = useState(null);
   const [toDate, setToDate] = useState(null);
+  const [activeTab, setActiveTab] = useState("upcoming");
   const [page, setPage] = useState(1);
 
   // A deep-linked event must never be hidden by a stale filter left over
@@ -49,37 +50,35 @@ const Calendar = () => {
     });
   }, [events, fromDate, toDate]);
 
-  // Pinned above the paginated list so it's never buried by however many
-  // events the club has piled up.
-  const nextEvent = useMemo(() => getNextEvent(filteredEvents), [filteredEvents]);
+  const { upcoming, past } = useMemo(() => splitUpcomingAndPast(filteredEvents), [filteredEvents]);
+  const activeEvents = activeTab === "upcoming" ? upcoming : past;
 
-  const restEvents = useMemo(
-    () =>
-      filteredEvents
-        .filter((event) => event._id !== nextEvent?._id)
-        .sort(sortByNewest),
-    [filteredEvents, nextEvent]
-  );
+  // A deep-linked event can land on either tab - switch to whichever one actually has it.
+  useEffect(() => {
+    if (!targetEventId) return;
 
-  const pageCount = Math.max(1, Math.ceil(restEvents.length / PAGE_SIZE));
+    if (upcoming.some((event) => event._id === targetEventId)) setActiveTab("upcoming");
+    else if (past.some((event) => event._id === targetEventId)) setActiveTab("past");
+  }, [targetEventId, upcoming, past]);
+
+  const pageCount = Math.max(1, Math.ceil(activeEvents.length / PAGE_SIZE));
   const currentPage = Math.min(page, pageCount);
-  const pagedEvents = restEvents.slice(
+  const pagedEvents = activeEvents.slice(
     (currentPage - 1) * PAGE_SIZE,
     currentPage * PAGE_SIZE
   );
 
-  // The deep-linked event might be pinned as nextEvent already (page doesn't
-  // matter then), or buried on some other page of the paginated rest.
+  // The deep-linked event might be right on this page already, or buried further into the now-active tab's list.
   useEffect(() => {
-    if (!targetEventId || targetEventId === nextEvent?._id) return;
+    if (!targetEventId) return;
 
-    const targetIndex = restEvents.findIndex((event) => event._id === targetEventId);
+    const targetIndex = activeEvents.findIndex((event) => event._id === targetEventId);
 
     if (targetIndex === -1) return;
 
     setPage(Math.floor(targetIndex / PAGE_SIZE) + 1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [targetEventId, restEvents]);
+  }, [targetEventId, activeEvents]);
 
   useEffect(() => {
     if (!targetEventId) return;
@@ -91,6 +90,11 @@ const Calendar = () => {
 
   const onDateFilterChange = (setter) => (value) => {
     setter(value);
+    setPage(1);
+  };
+
+  const onTabChange = (_event, value) => {
+    setActiveTab(value);
     setPage(1);
   };
 
@@ -116,17 +120,12 @@ const Calendar = () => {
         />
       </Box>
 
-      {nextEvent && (
-        <EventCard
-          event={nextEvent}
-          highlighted={nextEvent._id !== targetEventId}
-          targeted={nextEvent._id === targetEventId}
-          label={t("pages.calendar.nextEvent")}
-          expandDetails={nextEvent._id === targetEventId}
-        />
-      )}
+      <Tabs value={activeTab} onChange={onTabChange}>
+        <Tab value="upcoming" label={t("pages.calendar.upcomingTab")} />
+        <Tab value="past" label={t("pages.calendar.pastTab")} />
+      </Tabs>
 
-      {filteredEvents.length === 0 && (
+      {activeEvents.length === 0 && (
         <Box sx={{ color: "text.secondary" }}>{t("pages.calendar.noEventsInRange")}</Box>
       )}
 
@@ -142,14 +141,21 @@ const Calendar = () => {
           },
         }}
       >
-        {pagedEvents.map((event) => (
-          <EventCard
-            event={event}
-            key={event._id}
-            targeted={event._id === targetEventId}
-            expandDetails={event._id === targetEventId}
-          />
-        ))}
+        {pagedEvents.map((event, index) => {
+          // The soonest upcoming event (page 1 of that tab only) keeps the pinned "Next event" treatment.
+          const isNext = activeTab === "upcoming" && currentPage === 1 && index === 0;
+
+          return (
+            <EventCard
+              event={event}
+              key={event._id}
+              highlighted={isNext && event._id !== targetEventId}
+              targeted={event._id === targetEventId}
+              label={isNext ? t("pages.calendar.nextEvent") : undefined}
+              expandDetails={event._id === targetEventId}
+            />
+          );
+        })}
       </Box>
 
       {pageCount > 1 && (

@@ -94,6 +94,74 @@ test("editing an event pre-fills its actual saved date and time, not a blank pic
   await expect(toolbar).toContainText("PM");
 });
 
+test("a Competition event gets a date-only From/To range instead of a time picker", async ({
+  page,
+}) => {
+  const email = uniqueEmail("trainer");
+
+  await signupAndLoginAsTrainer(page, { email, name: "E2E Trainer", clubCode: "TEST" });
+  await promoteToTrainer(email);
+  await logout(page);
+  await login(page, email);
+
+  await page.goto("/trainer-panel/events");
+
+  const eventName = `E2E Multi-Day Event ${Date.now()}`;
+
+  await page.getByRole("button", { name: "Add" }).click();
+  await page.getByRole("textbox", { name: "Name", exact: true }).fill(eventName);
+  await page.getByRole("combobox", { name: "Event type" }).click();
+  await page.getByRole("option", { name: "Competition", exact: true }).click();
+
+  await expect(page.getByRole("group", { name: "From" })).toBeVisible();
+  await expect(page.getByRole("group", { name: "To" })).toBeVisible();
+
+  const toField = page.getByRole("group", { name: "To" });
+
+  await toField.getByRole("button", { name: "Choose date" }).click();
+  await page.getByRole("gridcell", { name: "28", exact: true }).click();
+
+  await page.getByRole("button", { name: "Submit" }).click();
+
+  const eventCard = page.locator(".MuiCard-root", { hasText: eventName });
+
+  await expect(eventCard).toBeVisible();
+  // A range shows as "dd/MM/yyyy - dd/MM/yyyy", no weekday and no time - unlike a single-day event.
+  await expect(eventCard.getByText(/\d{2}\/\d{2}\/\d{4} - 28\/\d{2}\/\d{4}/)).toBeVisible();
+});
+
+test("editing a multi-day Competition event pre-fills its saved From/To range", async ({
+  page,
+}) => {
+  const email = uniqueEmail("trainer");
+
+  await signupAndLoginAsTrainer(page, { email, name: "E2E Trainer", clubCode: "TEST" });
+  await promoteToTrainer(email);
+  await logout(page);
+  await login(page, email);
+
+  await page.goto("/trainer-panel/events");
+
+  const eventName = `E2E Range Edit Event ${Date.now()}`;
+
+  await page.getByRole("button", { name: "Add" }).click();
+  await page.getByRole("textbox", { name: "Name", exact: true }).fill(eventName);
+  await page.getByRole("combobox", { name: "Event type" }).click();
+  await page.getByRole("option", { name: "Competition", exact: true }).click();
+  await page.getByRole("group", { name: "To" }).getByRole("button", { name: "Choose date" }).click();
+  await page.getByRole("gridcell", { name: "28", exact: true }).click();
+  await page.getByRole("button", { name: "Submit" }).click();
+
+  const eventCard = page.locator(".MuiCard-root", { hasText: eventName });
+
+  await expect(eventCard).toBeVisible();
+  await eventCard.click();
+
+  const toField = page.getByRole("group", { name: "To" });
+
+  await expect(toField).toContainText("28");
+});
+
 // The trainer's own Events page used to have no "next event" marker at all
 // - only the member-facing Calendar page did.
 test("marks the soonest upcoming event on the trainer's Events page", async ({
