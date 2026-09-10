@@ -36,8 +36,8 @@ const competitionEntrySchema = new Schema(
     eventId: { type: Schema.Types.ObjectId, required: true },
     // The uploaded file's own name - the only thing distinguishing rows from a multi-day competition split across separate .xls files.
     sourceFile: { type: String },
-    // Set only when all 4 dogs are matched and their exact running order matches one of the club's registered Team.matchups[] lineups.
-    matchedLineupId: { type: Schema.Types.ObjectId },
+    // A "lineup" for stats is just a distinct 4-dog running order within the imported data - the ordered join of this row's own dog names (our-team rows only). Not tied to any registered Team.matchups.
+    lineupKey: { type: String },
     race: { type: Number },
     division: { type: Number },
     match: { type: Number },

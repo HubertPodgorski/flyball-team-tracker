@@ -7,10 +7,9 @@ import { signupAndLoginAsTrainer, login, logout } from "../helpers/auth";
 // (also a trainer, per how the app treats them) sees every drawer section at
 // once, so this one session covers every route in BottomNavBar.jsx. The
 // drawer closes itself on every click (onClick={onDrawerToggle} on its own
-// wrapping Box), so each link needs a fresh "open drawer" first. Several
-// labels ("Tasks", "Teams") are shared between the drawer and the always-
-// visible bottom tab bar for different routes - scoped locators avoid the
-// resulting ambiguity.
+// wrapping Box), so each link needs a fresh "open drawer" first. "Teams" is
+// shared between the drawer (trainer route) and the always-visible bottom tab
+// bar (user route) - scoped locators avoid the resulting ambiguity.
 test("every drawer and bottom-tab nav link goes to its own route", async ({ page }) => {
   const email = uniqueEmail("super-admin");
 
@@ -29,7 +28,7 @@ test("every drawer and bottom-tab nav link goes to its own route", async ({ page
   };
 
   // Trainer section.
-  await clickDrawerLink("Tasks", /\/trainer-panel\/tasks$/);
+  await clickDrawerLink("Training planning", /\/trainer-panel\/tasks$/);
   await clickDrawerLink("Dogs", /\/trainer-panel\/dogs$/);
   await clickDrawerLink("Dog tasks", /\/trainer-panel\/dog-tasks$/);
   await clickDrawerLink("Events", /\/trainer-panel\/events$/);
@@ -44,8 +43,10 @@ test("every drawer and bottom-tab nav link goes to its own route", async ({ page
   await clickDrawerLink("All events", /\/super-admin\/events$/);
   await clickDrawerLink("All teams", /\/super-admin\/teams$/);
   await clickDrawerLink("All resources", /\/super-admin\/resources$/);
+  await clickDrawerLink("App errors", /\/super-admin\/errors$/);
 
   // Shared bottom section.
+  await clickDrawerLink("EJS Stats", /\/user-panel\/ejs-stats$/);
   await clickDrawerLink("Resources", /\/user-panel\/resources$/);
   await clickDrawerLink("Settings", /\/user-panel\/settings$/);
   await clickDrawerLink("About", /\/user-panel\/about$/);
@@ -54,7 +55,7 @@ test("every drawer and bottom-tab nav link goes to its own route", async ({ page
   // colliding with the drawer's same-labelled trainer-panel links.
   const bottomNav = page.locator(".MuiBottomNavigation-root");
 
-  await bottomNav.getByRole("link", { name: "Tasks", exact: true }).click();
+  await bottomNav.getByRole("link", { name: "Training", exact: true }).click();
   await expect(page).toHaveURL(/\/user-panel\/tasks$/);
 
   await bottomNav.getByRole("link", { name: "Calendar", exact: true }).click();

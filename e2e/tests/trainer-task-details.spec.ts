@@ -22,10 +22,6 @@ test("trainer can assign multiple dogs to a task, reorder them, then delete the 
 
   await page.goto("/trainer-panel/tasks");
 
-  // LineupTaskLegend, always shown above the board.
-  await expect(page.getByText("Regular task", { exact: true })).toBeVisible();
-  await expect(page.getByText("Lineup task", { exact: true })).toBeVisible();
-
   const description = `Multi-dog drill ${suffix}`;
 
   const addTaskButtons = page.getByText("Add task here");

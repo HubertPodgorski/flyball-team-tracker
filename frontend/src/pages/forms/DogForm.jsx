@@ -126,7 +126,7 @@ const DogForm = ({ open, onClose, initialData, editingId, onSubmitOverride }) =>
           <Button
             size="medium"
             variant="contained"
-            disabled={
+            loading={
               isSubmitting || createDogMutation.isPending || updateDogMutation.isPending
             }
             onClick={() => submitGuard(() => form.handleSubmit())}

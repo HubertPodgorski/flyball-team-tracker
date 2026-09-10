@@ -40,7 +40,8 @@
     }
   },
   "nav": {
-    "tasks": "Tasks",
+    "tasks": "Training",
+    "trainerTasks": "Training planning",
     "calendar": "Calendar",
     "myDogs": "My Dogs",
     "teams": "Teams",
@@ -61,6 +62,7 @@
     "allEvents": "All events",
     "allTeams": "All teams",
     "allResources": "All resources",
+    "appErrors": "App errors",
     "openDrawer": "open drawer",
     "features": "Features"
   },
@@ -262,23 +264,40 @@
     "ejsStats": {
       "title": "EJS Stats",
       "competition": "Competition",
-      "newCompetition": "Create competition",
+      "pickWithData": "Competition with imported data",
+      "pickWithDataHint": "Pick a competition with imported data, or import a new EJS file.",
+      "noDataHint": "No EJS data imported yet - import a file to get started.",
+      "or": "or",
+      "allCompetitions": "All competitions together",
+      "importData": "Import EJS data",
+      "myClub": "My club",
       "chooseFiles": "Choose EJS file(s)",
       "filesChosen_one": "{{count}} file chosen",
       "filesChosen_other": "{{count}} files chosen",
-      "uploadAndPreview": "Upload EJS",
       "pickOurTeams": "Which of these teams are yours?",
-      "reviewMatches": "Review dog matches",
-      "reviewMatchesHint": "Check each dog matched correctly - pick a different one where it didn't.",
-      "notOneOfOurs": "— not one of ours —",
-      "unmatched": "Unmatched",
-      "confirmImport": "Confirm import",
       "confirmReplacesAllWarning": "This replaces ALL of this competition's existing data - upload every day's file together if you have more than one.",
+      "wizard": {
+        "title": "Import EJS data",
+        "stepEvent": "Event",
+        "pickCompetition": "Which competition should this EJS go into?",
+        "stepFiles": "Files & teams",
+        "stepImport": "Import",
+        "orCreate": "…or create a new competition:",
+        "newCompetition": "Create competition",
+        "analyzeFiles": "Analyze files",
+        "loadMatches": "Load matches",
+        "rowsFound": "Found {{count}} rows for your teams",
+        "heats": "{{count}} heats",
+        "reviewSummary": "About to import {{rows}} rows across {{teams}} of your teams.",
+        "back": "Back",
+        "next": "Next",
+        "startImport": "Start import"
+      },
       "importSuccess_one": "Imported {{count}} entry",
       "importSuccess_other": "Imported {{count}} entries",
       "importFailed": "Import failed",
       "parseFailed": "Couldn't read that file",
-      "statsTitleClub": "Club stats",
+      "statsTitleClub": "All-dog stats",
       "statsTitleTeam": "Team stats",
       "statsTitleDog": "Dog stats",
       "lineup": "Lineup",
@@ -314,11 +333,29 @@
         "effectiveness": "Effectiveness %",
         "avgRunTime": "Average time",
         "avgLightsTime": "Average time on lights"
-      }
+      },
+      "statsTitleClubs": "Whole-club stats",
+      "wholeClubs": "Whole clubs",
+      "allDogs": "All dogs",
+      "allClubs": "All clubs",
+      "statsTitleOurClub": "Club stats",
+      "clubsChartTitle": "Club comparison",
+      "clubsChartPercentTitle": "Club comparison (%)",
+      "byFileChartTitle": "By competition file",
+      "byFileChartPercentTitle": "By competition file (%)"
     },
     "clubSwitch": {
       "title": "Club switch",
       "currentlyActingAs": "Currently acting as"
+    },
+    "appErrors": {
+      "title": "App errors",
+      "empty": "No errors logged.",
+      "clearAll": "Clear all",
+      "club": "Club",
+      "userId": "User ID",
+      "context": "Context",
+      "stack": "Stack trace"
     },
     "superAdmin": {
       "allClubs": "All clubs",
@@ -361,8 +398,6 @@
     "meeting": "Meeting"
   },
   "legends": {
-    "regularTask": "Regular task",
-    "lineupTask": "Lineup task",
     "legend": "Legend",
     "presentPlanned": "Present & planned",
     "presentNotPlanned": "Present, not planned yet",

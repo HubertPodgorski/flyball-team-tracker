@@ -1,22 +1,17 @@
 import { test, expect } from "../helpers/fixtures";
 import { uniqueEmail } from "../helpers/testData";
-import { promoteToTrainer, seedCompetitionWithLineups } from "../helpers/db";
-import { signupAndLoginAsTrainer, login, logout } from "../helpers/auth";
+import { seedCompetitionWithLineups } from "../helpers/db";
+import { signupAndLoginAsTrainer } from "../helpers/auth";
 
 // Regression: the chart used to get stuck at its 600px fallback width (squished left) if it first mounted empty.
 test("the lineup-comparison chart fills the card's real width, not the 600px fallback", async ({ page }) => {
-  const email = uniqueEmail("trainer");
+  const email = uniqueEmail("user");
 
-  await signupAndLoginAsTrainer(page, { email, name: "E2E Trainer", clubCode: "TEST" });
-  await promoteToTrainer(email);
-
-  // Re-login so the returned user object (and its roles) reflects the promotion - the trainer-panel route guard checks it.
-  await logout(page);
-  await login(page, email);
+  await signupAndLoginAsTrainer(page, { email, name: "E2E User", clubCode: "TEST" });
 
   const { teamName } = await seedCompetitionWithLineups("TEST_TEAM", `E2E Lineup Chart Comp ${Date.now()}`);
 
-  await page.goto("/trainer-panel/ejs-stats");
+  await page.goto("/user-panel/ejs-stats");
   await page.getByRole("combobox", { name: "Competition" }).click();
   await page.getByRole("option", { name: new RegExp(`E2E Lineup Chart Comp`) }).click();
 
@@ -45,21 +40,21 @@ test("the lineup-comparison chart fills the card's real width, not the 600px fal
 test("club stats reflect the seeded competition data - pass counts, fault rate, and outcome breakdown", async ({
   page,
 }) => {
-  const email = uniqueEmail("trainer");
+  const email = uniqueEmail("user");
 
-  await signupAndLoginAsTrainer(page, { email, name: "E2E Stats Trainer", clubCode: "TEST" });
-  await promoteToTrainer(email);
-  await logout(page);
-  await login(page, email);
+  await signupAndLoginAsTrainer(page, { email, name: "E2E Stats User", clubCode: "TEST" });
 
   const { dogAName, dogBName } = await seedCompetitionWithLineups(
     "TEST_TEAM",
     `E2E Stats Values Comp ${Date.now()}`
   );
 
-  await page.goto("/trainer-panel/ejs-stats");
+  await page.goto("/user-panel/ejs-stats");
   await page.getByRole("combobox", { name: "Competition" }).click();
   await page.getByRole("option", { name: new RegExp("E2E Stats Values Comp") }).click();
+
+  // Per-dog leaderboard lives on the "All dogs" tab; the default "Club" tab is a single whole-club summary.
+  await page.getByRole("button", { name: "All dogs", exact: true }).click();
 
   // Anchor on the dog-name text and read its own row (parent) - ".MuiStack-root" matches every nesting level.
   const passesCard = page.locator(".MuiCard-root.MuiPaper-outlined", { hasText: "Number of runs" });

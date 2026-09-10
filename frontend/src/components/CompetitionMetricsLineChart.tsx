@@ -1,17 +1,25 @@
 import React, { useEffect, useState } from "react";
-import { Box, Card, Stack, Typography, useTheme } from "@mui/material";
+import { Box, Card, Checkbox, FormControlLabel, Stack, Typography, useTheme } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { CompetitionDogStats } from "../helpers/types";
 
 const DEFAULT_WIDTH = 600;
-const MIN_POINT_SPACING = 36;
-const LEFT_MARGIN = 40;
+// Wide enough that the rotated x-axis labels below never collide - past this many points the chart scrolls instead.
+const MIN_POINT_SPACING = 52;
+// Extra left room so the leftmost rotated label doesn't run off the SVG.
+const LEFT_MARGIN = 80;
 const RIGHT_MARGIN = 20;
 const TOP_MARGIN = 20;
-const BOTTOM_MARGIN = 64;
+// Deep enough for the -35deg labels (name + optional club sub-label).
+const BOTTOM_MARGIN = 104;
+const LABEL_ANGLE = -35;
 const PLOT_HEIGHT = 220;
 const TICK_COUNT = 5;
 const POINT_RADIUS = 4;
+// Rotated x-axis labels are truncated to this many chars (full text stays in an SVG <title>).
+const LABEL_MAX_CHARS = 12;
+const truncate = (text: string, max: number) => (text.length > max ? `${text.slice(0, max - 1)}…` : text);
+const CHAR_WIDTH = 6.2;
 
 export interface MetricSeriesDef {
   key: string;
@@ -69,9 +77,22 @@ const CompetitionMetricsLineChart = ({ dogs, title, noDataLabel, series, fixedMa
 
   const namedDogs = [...dogs.filter((dog) => dog.name)].sort((a, b) => (a.name as string).localeCompare(b.name as string));
   const [hovered, setHovered] = useState<{ seriesKey: string; dogIndex: number } | null>(null);
+  // Legend entries toggle their own series off - the axis then rescales to whatever is left on.
+  const [hiddenKeys, setHiddenKeys] = useState<Set<string>>(new Set());
+  const toggleSeries = (key: string) =>
+    setHiddenKeys((current) => {
+      const next = new Set(current);
 
-  const rawMax = Math.max(1, ...series.flatMap((entry) => namedDogs.map((dog) => entry.getValue(dog)).filter((value): value is number => value !== null)));
-  const niceMax = fixedMax ?? computeNiceMax(rawMax);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+
+      return next;
+    });
+  const visibleSeries = series.filter((entry) => !hiddenKeys.has(entry.key));
+
+  const rawMax = Math.max(1, ...visibleSeries.flatMap((entry) => namedDogs.map((dog) => entry.getValue(dog)).filter((value): value is number => value !== null)));
+  // fixedMax is a ceiling, not a fixed height - the axis still shrinks to fit when the visible data sits well below it.
+  const niceMax = Math.min(fixedMax ?? Infinity, computeNiceMax(rawMax));
   const height = TOP_MARGIN + PLOT_HEIGHT + BOTTOM_MARGIN;
   // Below this many dogs it fills the full measured width; past it, points keep their minimum spacing and the chart scrolls instead of cramming.
   const neededWidth = LEFT_MARGIN + RIGHT_MARGIN + Math.max(namedDogs.length - 1, 0) * MIN_POINT_SPACING;
@@ -143,12 +164,29 @@ const CompetitionMetricsLineChart = ({ dogs, title, noDataLabel, series, fixedMa
     return path.trim();
   };
 
-  const orderedForAreas = [...series].sort((a, b) => areaRankOf(a.key) - areaRankOf(b.key));
-  const lowerBoundGetValueFor = (key: string) => series.find((entry) => entry.key === AREA_LOWER_BOUND_KEY[key])?.getValue;
+  const orderedForAreas = [...visibleSeries].sort((a, b) => areaRankOf(a.key) - areaRankOf(b.key));
+  const lowerBoundGetValueFor = (key: string) => visibleSeries.find((entry) => entry.key === AREA_LOWER_BOUND_KEY[key])?.getValue;
 
-  const hoveredDog = hovered ? namedDogs[hovered.dogIndex] : null;
+  const hoveredDog = hovered && !hiddenKeys.has(hovered.seriesKey) ? namedDogs[hovered.dogIndex] : null;
   const hoveredSeries = hovered ? series.find((entry) => entry.key === hovered.seriesKey) : undefined;
   const hoveredValue = hoveredDog && hoveredSeries ? hoveredSeries.getValue(hoveredDog) : null;
+
+  // The tooltip is drawn inside the SVG and clamped to the plot box, so the scroll container can never clip it.
+  const tooltip = (() => {
+    if (!hovered || !hoveredDog || !hoveredSeries || hoveredValue === null) return null;
+
+    const line1 = `${hoveredDog.name} · ${hoveredSeries.label}`;
+    const line2 = String(Math.round(hoveredValue));
+    const width = Math.min(Math.max(line1.length, line2.length) * CHAR_WIDTH + 16, PLOT_HEIGHT + 120);
+    const height = 34;
+    const anchorX = xFor(hovered.dogIndex);
+    const anchorY = yFor(hoveredValue);
+    const below = anchorY - height - 10 < TOP_MARGIN;
+    const x = Math.min(Math.max(anchorX - width / 2, LEFT_MARGIN), chartWidth - RIGHT_MARGIN - width);
+    const y = below ? anchorY + 10 : anchorY - height - 10;
+
+    return { x, y, width, height, line1, line2 };
+  })();
 
   return (
     <Card variant="outlined" sx={{ padding: 2, display: "flex", flexDirection: "column", gap: 1 }}>
@@ -157,7 +195,7 @@ const CompetitionMetricsLineChart = ({ dogs, title, noDataLabel, series, fixedMa
       {namedDogs.length > 0 ? (
         <>
           {/* Bleeds slightly into the card's own padding for a bit more real width to spread points over - the measured width picks this up automatically. */}
-          <Box ref={setContainerEl} sx={{ position: "relative", mx: "-12px", overflowX: "auto" }}>
+          <Box ref={setContainerEl} sx={{ position: "relative", mx: "-12px", overflowX: "auto", pb: isScrollable ? "10px" : 0 }}>
             <svg width={chartWidth} height={height} viewBox={`0 0 ${chartWidth} ${height}`}>
               {Array.from({ length: TICK_COUNT + 1 }, (_, tick) => {
                 const value = (niceMax / TICK_COUNT) * tick;
@@ -184,26 +222,40 @@ const CompetitionMetricsLineChart = ({ dogs, title, noDataLabel, series, fixedMa
                 />
               ))}
 
-              {namedDogs.map((dog, dogIndex) => (
-                <text key={dog.dogId} x={xFor(dogIndex)} textAnchor="middle" fill={theme.palette.text.primary}>
-                  <tspan x={xFor(dogIndex)} y={TOP_MARGIN + PLOT_HEIGHT + 20} fontSize={11}>
-                    {dog.name}
-                  </tspan>
+              {namedDogs.map((dog, dogIndex) => {
+                const labelX = xFor(dogIndex);
+                const labelY = TOP_MARGIN + PLOT_HEIGHT + 14;
 
-                  {/* Lineup rows only - the lineup's own dog order, a size step down from its name. */}
-                  {dog.nameSubLabel && (
-                    <tspan x={xFor(dogIndex)} y={TOP_MARGIN + PLOT_HEIGHT + 32} fontSize={9} fill={theme.palette.text.secondary}>
-                      {dog.nameSubLabel}
+                return (
+                  <text
+                    key={dog.dogId}
+                    x={labelX}
+                    y={labelY}
+                    textAnchor="end"
+                    fill={theme.palette.text.primary}
+                    transform={`rotate(${LABEL_ANGLE} ${labelX} ${labelY})`}
+                  >
+                    <title>{dog.nameSubLabel ? `${dog.name} - ${dog.nameSubLabel}` : dog.name}</title>
+
+                    <tspan x={labelX} fontSize={11}>
+                      {truncate(dog.name ?? "", LABEL_MAX_CHARS)}
                     </tspan>
-                  )}
-                </text>
-              ))}
 
-              {series.map((entry) => (
+                    {/* Club (opponent rows) or running order (lineup rows) - a size step down from the name. */}
+                    {dog.nameSubLabel && (
+                      <tspan x={labelX} dy={12} fontSize={9} fill={theme.palette.text.secondary}>
+                        {truncate(dog.nameSubLabel, LABEL_MAX_CHARS)}
+                      </tspan>
+                    )}
+                  </text>
+                );
+              })}
+
+              {visibleSeries.map((entry) => (
                 <path key={entry.key} d={pathFor(entry.getValue)} fill="none" stroke={entry.color} strokeWidth={2} />
               ))}
 
-              {series.map((entry) =>
+              {visibleSeries.map((entry) =>
                 namedDogs.map((dog, dogIndex) => {
                   const value = entry.getValue(dog);
 
@@ -227,33 +279,27 @@ const CompetitionMetricsLineChart = ({ dogs, title, noDataLabel, series, fixedMa
                   );
                 })
               )}
-            </svg>
 
-            {hovered && hoveredDog && hoveredSeries && hoveredValue !== null && (
-              <Box
-                sx={{
-                  position: "absolute",
-                  left: xFor(hovered.dogIndex),
-                  top: yFor(hoveredValue) - 12,
-                  transform: "translate(-50%, -100%)",
-                  backgroundColor: "background.paper",
-                  border: 1,
-                  borderColor: "divider",
-                  borderRadius: 1,
-                  boxShadow: 3,
-                  padding: "4px 8px",
-                  pointerEvents: "none",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                <Typography variant="caption" sx={{ fontWeight: "bold" }}>
-                  {hoveredDog.name} - {hoveredSeries.label}
-                </Typography>
-                <Typography variant="caption" sx={{ display: "block" }} color="text.secondary">
-                  {Math.round(hoveredValue)}
-                </Typography>
-              </Box>
-            )}
+              {tooltip && (
+                <g pointerEvents="none">
+                  <rect
+                    x={tooltip.x}
+                    y={tooltip.y}
+                    width={tooltip.width}
+                    height={tooltip.height}
+                    rx={4}
+                    fill={theme.palette.background.paper}
+                    stroke={theme.palette.divider}
+                  />
+                  <text x={tooltip.x + 8} y={tooltip.y + 14} fontSize={10} fontWeight="bold" fill={theme.palette.text.primary}>
+                    {tooltip.line1}
+                  </text>
+                  <text x={tooltip.x + 8} y={tooltip.y + 27} fontSize={10} fill={theme.palette.text.secondary}>
+                    {tooltip.line2}
+                  </text>
+                </g>
+              )}
+            </svg>
           </Box>
 
           {isScrollable && (
@@ -262,12 +308,21 @@ const CompetitionMetricsLineChart = ({ dogs, title, noDataLabel, series, fixedMa
             </Typography>
           )}
 
-          <Stack direction="row" sx={{ gap: 2, flexWrap: "wrap" }}>
+          <Stack direction="row" sx={{ gap: 1, flexWrap: "wrap" }}>
             {series.map((entry) => (
-              <Stack key={entry.key} direction="row" sx={{ gap: 1, alignItems: "center" }}>
-                <Box sx={{ width: 10, height: 10, borderRadius: "50%", backgroundColor: entry.color, flexShrink: 0 }} />
-                <Typography variant="body2">{entry.label}</Typography>
-              </Stack>
+              <FormControlLabel
+                key={entry.key}
+                sx={{ mr: 1 }}
+                control={
+                  <Checkbox
+                    size="small"
+                    checked={!hiddenKeys.has(entry.key)}
+                    onChange={() => toggleSeries(entry.key)}
+                    sx={{ paddingY: 0, color: entry.color, "&.Mui-checked": { color: entry.color } }}
+                  />
+                }
+                label={<Typography variant="body2">{entry.label}</Typography>}
+              />
             ))}
           </Stack>
         </>

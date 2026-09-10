@@ -5,8 +5,8 @@ import { EventType } from "../components/inputs/consts";
 import theme from "./theme";
 import { formatDate } from "./dateHelpers";
 
-// MUI's own red[400] - theme.error.main is a deliberately muted shade that reads as pink instead.
-export const ATTENDANCE_ABSENT_RED = red[400];
+// MUI's own red[700] - a deep, unambiguous red; theme.error.main and the lighter red shades read as pink.
+export const ATTENDANCE_ABSENT_RED = red[700];
 
 export const sortByNewest = (eventA, eventB) => {
   return new Date(eventB.date) - new Date(eventA.date);

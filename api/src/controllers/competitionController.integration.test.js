@@ -8,11 +8,11 @@ import crypto from "crypto";
 import competitionControllerModule from "./competitionController.js";
 import testHelpersModule from "../testHelpers.js";
 
-const { previewEjsImport, confirmEjsImport, getCompetitionStats } = competitionControllerModule;
+const { previewEjsImport, confirmEjsImport, getCompetitionStats, getAllCompetitionStats, getImportedCompetitionIds } =
+  competitionControllerModule;
 const { mockRes } = testHelpersModule;
 const EventModel = mongoose.model("Event");
 const DogModel = mongoose.model("Dog");
-const TeamModel = mongoose.model("Team");
 const CompetitionEntryModel = mongoose.model("CompetitionEntry");
 
 const CLUB = "TEST_TEAM";
@@ -46,12 +46,7 @@ describe("previewEjsImport", () => {
     expect(res.body.entries).toBeUndefined();
   });
 
-  it("with ourTeamNames, previews only that team's rows, auto-matched against the club's own dogs", async () => {
-    await makeDog("Rex");
-    await makeDog("Fido");
-    await makeDog("Buddy");
-    await makeDog("Max");
-
+  it("with ourTeamNames, previews only that team's rows, with dogs left as their raw EJS names", async () => {
     const res = mockRes();
 
     await previewEjsImport(
@@ -71,34 +66,9 @@ describe("previewEjsImport", () => {
     expect(entry.teamName).toBe("Fixture Team A");
     expect(entry.ourTeam).toBe(true);
     expect(entry.dogs.map((dog) => dog.name)).toEqual(["Rex", "Fido", "Buddy", "Max"]);
-    expect(entry.dogs.every((dog) => dog.matchedDogId)).toBe(true);
+    // Dogs are never matched to the club roster - the name from the sheet is all we keep.
+    expect(entry.dogs.every((dog) => dog.matchedDogId === null)).toBe(true);
     expect(entry.dogs[0].runningOnLights).toBe(true);
-    expect(entry.dogs[0].runningOnDogId).toBeNull();
-    // each dog 2-4 crossed on the previous dog's own matched club-dog id, not just its raw EJS name.
-    expect(entry.dogs[1].runningOnDogId).toBe(entry.dogs[0].matchedDogId);
-    expect(entry.dogs[2].runningOnDogId).toBe(entry.dogs[1].matchedDogId);
-    expect(entry.dogs[3].runningOnDogId).toBe(entry.dogs[2].matchedDogId);
-  });
-
-  it("leaves a dog with no close club match unmatched, with suggestions for manual review", async () => {
-    await makeDog("Completely Different Dog");
-
-    const res = mockRes();
-
-    await previewEjsImport(
-      {
-        club: CLUB,
-        params: { eventId: event._id.toString() },
-        files: await uploadFixture(),
-        body: { ourTeamNames: JSON.stringify(["Fixture Team A"]) },
-      },
-      res
-    );
-
-    const rex = res.body.entries[0].dogs.find((dog) => dog.name === "Rex");
-
-    expect(rex.matchedDogId).toBeNull();
-    expect(rex.suggestions.length).toBeGreaterThan(0);
   });
 
   it("404s for an eventId that doesn't belong to the caller's own club", async () => {
@@ -141,12 +111,7 @@ describe("confirmEjsImport", () => {
     event = await EventModel.create({ name: "Test Comp", date: "2026-01-01", type: "COMPETITION", team: CLUB });
   });
 
-  it("persists one entry per row, matching dogs only on the confirmed 'our team' row", async () => {
-    await makeDog("Rex");
-    await makeDog("Fido");
-    await makeDog("Buddy");
-    await makeDog("Max");
-
+  it("persists one entry per row, flagged by whether its team is one of ours, dogs never matched", async () => {
     const res = mockRes();
 
     await confirmEjsImport(
@@ -167,10 +132,9 @@ describe("confirmEjsImport", () => {
     expect(stored).toHaveLength(2);
     expect(stored[0].teamName).toBe("Fixture Team A");
     expect(stored[0].ourTeam).toBe(true);
-    expect(stored[0].dogs.every((dog) => dog.matchedDogId)).toBe(true);
     expect(stored[1].teamName).toBe("Fixture Team B");
     expect(stored[1].ourTeam).toBe(false);
-    expect(stored[1].dogs.every((dog) => !dog.matchedDogId)).toBe(true);
+    expect(stored.every((entry) => entry.dogs.every((dog) => dog.matchedDogId === null))).toBe(true);
     expect(stored.every((entry) => entry.sourceFile === "ejs-sample.xls")).toBe(true);
   });
 
@@ -198,20 +162,11 @@ describe("confirmEjsImport", () => {
     vi.restoreAllMocks();
   });
 
-  it("sets matchedLineupId when the 4 matched dogs run in the exact order of a registered lineup", async () => {
-    const rex = await makeDog("Rex");
-    const fido = await makeDog("Fido");
-    const buddy = await makeDog("Buddy");
-    const max = await makeDog("Max");
-
-    await TeamModel.create({
-      name: "A Team",
-      team: CLUB,
-      dogs: [rex, fido, buddy, max],
-      matchups: [{ name: "Lineup 1", dogs: [rex, fido, buddy, max] }],
-    });
-
-    const res = mockRes();
+  it("sets lineupKey from the row's own dog-name running order for our team, null for opponents", async () => {
+    await makeDog("Rex");
+    await makeDog("Fido");
+    await makeDog("Buddy");
+    await makeDog("Max");
 
     await confirmEjsImport(
       {
@@ -220,37 +175,14 @@ describe("confirmEjsImport", () => {
         files: await uploadFixture(),
         body: { ourTeamNames: JSON.stringify(["Fixture Team A"]) },
       },
-      res
+      mockRes()
     );
 
-    const stored = await CompetitionEntryModel.findOne({ eventId: event._id, teamName: "Fixture Team A" });
-    const [team] = await TeamModel.find({ team: CLUB });
+    const ours = await CompetitionEntryModel.findOne({ eventId: event._id, teamName: "Fixture Team A" });
+    const theirs = await CompetitionEntryModel.findOne({ eventId: event._id, teamName: "Fixture Team B" });
 
-    expect(stored.matchedLineupId.toString()).toBe(team.matchups[0]._id.toString());
-  });
-
-  it("applies a manual dogNameOverrides correction over the automatic match", async () => {
-    const correctDog = await makeDog("Rex The Second");
-
-    const res = mockRes();
-
-    await confirmEjsImport(
-      {
-        club: CLUB,
-        params: { eventId: event._id.toString() },
-        files: await uploadFixture(),
-        body: {
-          ourTeamNames: JSON.stringify(["Fixture Team A"]),
-          dogNameOverrides: JSON.stringify({ Rex: correctDog._id.toString() }),
-        },
-      },
-      res
-    );
-
-    const stored = await CompetitionEntryModel.findOne({ eventId: event._id, teamName: "Fixture Team A" });
-    const rex = stored.dogs.find((dog) => dog.name === "Rex");
-
-    expect(rex.matchedDogId.toString()).toBe(correctDog._id.toString());
+    expect(ours.lineupKey).toBe(ours.dogs.map((dog) => dog.name).join("|"));
+    expect(theirs.lineupKey).toBeNull();
   });
 
   it("re-importing the same file overwrites its own entries instead of duplicating them", async () => {
@@ -332,6 +264,32 @@ describe("getCompetitionStats", () => {
     expect(res.body.dogs.every((dog) => dog.totalPasses === 1)).toBe(true);
   });
 
+  it("derives lineups from the imported rows' own running orders, and can filter dogs to one", async () => {
+    await importDay("day1.xls");
+
+    const res = mockRes();
+    await getCompetitionStats({ club: CLUB, params: { eventId: event._id.toString() }, query: {} }, res);
+
+    expect(res.body.lineups).toHaveLength(1);
+    const [lineup] = res.body.lineups;
+    expect(lineup.order.split(" → ")).toHaveLength(4);
+    expect(lineup.heatCount).toBe(1);
+
+    const filtered = mockRes();
+    await getCompetitionStats(
+      { club: CLUB, params: { eventId: event._id.toString() }, query: { lineupKey: lineup.key } },
+      filtered
+    );
+    expect(filtered.body.dogs.map((dog) => dog.name).sort()).toEqual(["Buddy", "Fido", "Max", "Rex"]);
+
+    const noMatch = mockRes();
+    await getCompetitionStats(
+      { club: CLUB, params: { eventId: event._id.toString() }, query: { lineupKey: "Nobody|Ran|This|Order" } },
+      noMatch
+    );
+    expect(noMatch.body.dogs).toEqual([]);
+  });
+
   it("lists every distinct sourceFile, and narrows dogs to one when filtered by it", async () => {
     // A confirm replaces the whole event, so both days have to be uploaded together in one confirm to coexist.
     await confirmEjsImport(
@@ -358,11 +316,79 @@ describe("getCompetitionStats", () => {
     expect(dayRes.body.dogs.every((dog) => dog.totalPasses === 1)).toBe(true);
   });
 
+  it("scope=all returns every club's rows, ours included, keyed by name and grouped by team", async () => {
+    await importDay("day1.xls");
+
+    const res = mockRes();
+
+    await getCompetitionStats(
+      { club: CLUB, params: { eventId: event._id.toString() }, query: { scope: "all" } },
+      res
+    );
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.teamNames).toEqual(["Fixture Team A", "Fixture Team B"]);
+    expect(res.body.dogs.length).toBeGreaterThan(0);
+    // Our own dogs are now included, tagged with our team's name.
+    expect(res.body.dogs.find((dog) => dog.name === "Rex").teamName).toBe("Fixture Team A");
+    // Opponent dogs are there too.
+    expect(res.body.dogs.some((dog) => dog.teamName === "Fixture Team B")).toBe(true);
+  });
+
   it("404s for an eventId that doesn't belong to the caller's own club", async () => {
     const res = mockRes();
 
     await getCompetitionStats({ club: "OTHER_CLUB", params: { eventId: event._id.toString() }, query: {} }, res);
 
     expect(res.statusCode).toBe(404);
+  });
+
+  it("getAllCompetitionStats aggregates a dog's passes across every competition of the club", async () => {
+    const second = await EventModel.create({ name: "Comp 2", date: "2026-02-01", type: "COMPETITION", team: CLUB });
+    await importDay("day1.xls");
+    await confirmEjsImport(
+      { club: CLUB, params: { eventId: second._id.toString() }, files: await uploadFixture(), body: { ourTeamNames: JSON.stringify(["Fixture Team A"]) } },
+      mockRes()
+    );
+
+    const perEvent = mockRes();
+    await getCompetitionStats({ club: CLUB, params: { eventId: event._id.toString() }, query: {} }, perEvent);
+    expect(perEvent.body.dogs.every((dog) => dog.totalPasses === 1)).toBe(true);
+
+    const all = mockRes();
+    await getAllCompetitionStats({ club: CLUB, query: {} }, all);
+    expect(all.statusCode).toBe(200);
+    // Same 4 dogs, but now one pass from each of the two competitions.
+    expect(all.body.dogs.map((dog) => dog.name).sort()).toEqual(["Buddy", "Fido", "Max", "Rex"]);
+    expect(all.body.dogs.every((dog) => dog.totalPasses === 2)).toBe(true);
+  });
+});
+
+describe("getImportedCompetitionIds", () => {
+  it("returns only the eventIds that have parsed rows for the caller's club", async () => {
+    const withData = await EventModel.create({ name: "Imported", date: "2026-01-01", type: "COMPETITION", team: CLUB });
+    await EventModel.create({ name: "Empty", date: "2026-01-02", type: "COMPETITION", team: CLUB });
+    await makeDog("Rex");
+    await makeDog("Fido");
+    await makeDog("Buddy");
+    await makeDog("Max");
+
+    await confirmEjsImport(
+      { club: CLUB, params: { eventId: withData._id.toString() }, files: await uploadFixture(), body: { ourTeamNames: JSON.stringify(["Fixture Team A"]) } },
+      mockRes()
+    );
+
+    const res = mockRes();
+    await getImportedCompetitionIds({ club: CLUB }, res);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.eventIds).toEqual([withData._id.toString()]);
+  });
+
+  it("is scoped to the caller's own club", async () => {
+    const res = mockRes();
+    await getImportedCompetitionIds({ club: "OTHER_CLUB" }, res);
+
+    expect(res.body.eventIds).toEqual([]);
   });
 });

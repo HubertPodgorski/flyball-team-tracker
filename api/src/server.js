@@ -1,7 +1,18 @@
 require("dotenv").config();
 
+const { logAppError } = require("./helpers/logAppError");
+
 // node-xlrd (EJS .xls parsing) can throw synchronously inside an fs completion callback on a malformed file - that escapes any try/catch and would otherwise kill the whole process for every user over one bad upload.
-process.on("uncaughtException", (error) => console.error("Uncaught exception (process kept alive):", error));
+process.on("uncaughtException", (error) => {
+  console.error("Uncaught exception (process kept alive):", error);
+  logAppError({ error, context: { kind: "uncaughtException" } });
+});
+
+// No request context here - still worth capturing so a swallowed async failure isn't invisible.
+process.on("unhandledRejection", (reason) => {
+  console.error("Unhandled rejection:", reason);
+  logAppError({ error: reason instanceof Error ? reason : new Error(String(reason)), context: { kind: "unhandledRejection" } });
+});
 
 const usersRoutes = require("./routes/users");
 const superAdminRoutes = require("./routes/superAdmin");
@@ -53,6 +64,16 @@ app.use("/club-settings", clubSettingsRoutes);
 app.use("/resources", resourcesRoutes);
 app.use("/push-subscriptions", pushSubscriptionsRoutes);
 app.use("/competitions", competitionsRoutes);
+
+// Express 5 forwards a rejected async handler here automatically - one place to persist every uncaught request failure with its full context.
+app.use((error, req, res, next) => {
+  console.error(error);
+  logAppError({ error, req, statusCode: 500 });
+
+  if (res.headersSent) return next(error);
+
+  res.status(500).json({ error: "INTERNAL_ERROR" });
+});
 
 mongoose
   .connect(process.env.MONGO_URL)

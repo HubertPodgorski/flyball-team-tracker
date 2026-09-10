@@ -12,7 +12,7 @@ interface Props {
 
 // Dots, not squares - a bordered square reads as an (unrelated) checkbox, not a color key.
 const Legend = ({ items }: Props) => (
-  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
+  <Box data-testid="legend" sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
     {items.map(({ label, color }) => (
       <Box key={label} sx={{ display: "flex", alignItems: "center", gap: 1 }}>
         <Box

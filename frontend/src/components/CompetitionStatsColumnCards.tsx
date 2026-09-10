@@ -34,6 +34,9 @@ export const STAT_COLUMNS: StatColumnDef[] = [
   { titleKey: "pages.ejsStats.columns.avgLightsTime", value: (row) => row.avgLightsTime, format: seconds, sort: "asc" },
 ];
 
+// Aggregated club/lineup rows have no per-pass timings, so their average-time cards would only ever read "–".
+export const NON_TIME_STAT_COLUMNS = STAT_COLUMNS.filter((column) => column.format !== seconds);
+
 interface StatColumnCardProps {
   column: StatColumnDef;
   rows: CompetitionDogStats[];
@@ -63,11 +66,28 @@ const StatColumnCard = ({ column, rows, noDataLabel, t }: StatColumnCardProps) =
       </Typography>
 
       {sorted.length > 0 ? (
-        <Stack sx={{ gap: 0.75, overflowY: expanded ? "auto" : "visible", maxHeight: expanded ? EXPANDED_MAX_HEIGHT : "none" }}>
+        <Stack
+          sx={{
+            gap: 0.75,
+            overflowY: expanded ? "auto" : "visible",
+            maxHeight: expanded ? EXPANDED_MAX_HEIGHT : "none",
+            // Room for the scrollbar so it doesn't sit on top of the right-aligned values.
+            pr: expanded ? 1 : 0,
+          }}
+        >
           {visible.map((row) => (
             // Keyed by name, not dogId - in dog mode every row is the same dog on a different day, so dogId repeats.
-            <Stack key={row.name} direction="row" sx={{ justifyContent: "space-between", gap: 2 }}>
-              <Typography variant="body2">{row.name}</Typography>
+            <Stack key={row.name} direction="row" sx={{ justifyContent: "space-between", gap: 2, alignItems: "baseline" }}>
+              {row.nameSubLabel ? (
+                <Box>
+                  <Typography variant="body2">{row.name}</Typography>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+                    {row.nameSubLabel}
+                  </Typography>
+                </Box>
+              ) : (
+                <Typography variant="body2">{row.name}</Typography>
+              )}
               <Typography variant="body2" {...valueColorProps}>
                 {column.format(column.value(row))}
               </Typography>
@@ -92,15 +112,17 @@ const StatColumnCard = ({ column, rows, noDataLabel, t }: StatColumnCardProps) =
 interface CompetitionStatsColumnCardsProps {
   rows: CompetitionDogStats[];
   noDataLabel: string;
+  hideAverageTimes?: boolean;
 }
 
 // Replaces the old table: one scrollable, expandable card per column, stacked on mobile and 3-wide on desktop.
-const CompetitionStatsColumnCards = ({ rows, noDataLabel }: CompetitionStatsColumnCardsProps) => {
+const CompetitionStatsColumnCards = ({ rows, noDataLabel, hideAverageTimes }: CompetitionStatsColumnCardsProps) => {
   const { t } = useTranslation();
+  const columns = hideAverageTimes ? NON_TIME_STAT_COLUMNS : STAT_COLUMNS;
 
   return (
     <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(3, 1fr)" }, gap: 2 }}>
-      {STAT_COLUMNS.map((column) => (
+      {columns.map((column) => (
         <StatColumnCard key={column.titleKey} column={column} rows={rows} noDataLabel={noDataLabel} t={t} />
       ))}
     </Box>

@@ -5,15 +5,12 @@ import TasksRow from "../../components/tasksGrid/TasksRow";
 import TasksColumn from "../../components/tasksGrid/TasksColumn";
 import { useGetMappedTasks } from "../../hooks/useGetMappedTasks";
 import DogsTaskCell from "../../components/DogsTaskCell";
-import LineupTaskLegend from "../../components/LineupTaskLegend";
 
 const Tasks = () => {
   const { mappedTasks } = useGetMappedTasks();
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-      <LineupTaskLegend />
-
       <TasksMainGrid>
         {Object.entries(mappedTasks).map(([rowIndex, columns]) => (
           <TasksRow key={rowIndex} userPanel>

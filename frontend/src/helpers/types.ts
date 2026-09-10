@@ -177,7 +177,6 @@ export interface EjsEntry {
   result: string | null;
   jumpHeight: number;
   ourTeam: boolean;
-  matchedLineupId: string | null;
   dogs: EjsDog[];
   extraPasses: EjsExtraPass[];
 }
@@ -192,6 +191,8 @@ export interface CompetitionDogStats {
   name: string | null;
   // Lineup-comparison rows only - the lineup's own dog order, shown under its name in a smaller font.
   nameSubLabel?: string | null;
+  // Opponent (scope=others) rows only - the opponent team this dog ran for.
+  teamName?: string | null;
   totalPasses: number;
   faultCount: number;
   faultRate: number | null;
@@ -206,7 +207,18 @@ export interface CompetitionDogStats {
   avgRunTime: number | null;
 }
 
+// A lineup for these stats - a distinct 4-dog running order found in the imported rows, not a registered Team.matchups lineup.
+export interface CompetitionLineup {
+  key: string;
+  order: string;
+  heatCount: number;
+}
+
 export interface CompetitionStatsResult {
   sourceFiles: string[];
   dogs: CompetitionDogStats[];
+  // Opponent (scope=others) responses only - the distinct opponent team names, for the team filter.
+  teamNames: string[];
+  // "ours" responses only - the running orders in this competition's own rows.
+  lineups: CompetitionLineup[];
 }

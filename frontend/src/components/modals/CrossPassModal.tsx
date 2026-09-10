@@ -186,7 +186,7 @@ const CrossPassModal = ({
 
         <DialogActions sx={{ padding: 0 }}>
           {isEdit && (
-            <Button size="medium" color="error" disabled={deleteCrossPassMutation.isPending} onClick={onDelete} sx={{ marginRight: "auto" }}>
+            <Button size="medium" color="error" loading={deleteCrossPassMutation.isPending} onClick={onDelete} sx={{ marginRight: "auto" }}>
               {t("common.delete")}
             </Button>
           )}
@@ -198,7 +198,7 @@ const CrossPassModal = ({
           <Button
             size="medium"
             variant="contained"
-            disabled={createCrossPassMutation.isPending || updateCrossPassMutation.isPending}
+            loading={createCrossPassMutation.isPending || updateCrossPassMutation.isPending}
             onClick={() => submitGuard(() => form.handleSubmit())}
           >
             {t("common.save")}

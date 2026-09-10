@@ -3,13 +3,13 @@ const isOk = (value) => typeof value === "string" && value.trim().toLowerCase() 
 
 const average = (numbers) => (numbers.length ? numbers.reduce((sum, value) => sum + value, 0) / numbers.length : null);
 
-// One dog's passes across every given entry - filter entries first (by sourceFile/day, date range, matchedLineupId, etc.) to scope the stats to whatever cut is wanted.
-const collectDogPasses = (entries, dogId) => {
+// Every dog slot across the given entries matching `pick` - filter entries first (by sourceFile/day, lineup, etc.) to scope the stats.
+const collectPassesBy = (entries, pick) => {
   const passes = [];
 
   for (const entry of entries) {
     entry.dogs.forEach((dog, index) => {
-      if (String(dog.matchedDogId) !== String(dogId)) return;
+      if (!pick(dog)) return;
 
       passes.push({
         role: index === 0 ? "lights" : "cross",
@@ -22,6 +22,8 @@ const collectDogPasses = (entries, dogId) => {
 
   return passes;
 };
+
+const collectDogPasses = (entries, dogId) => collectPassesBy(entries, (dog) => String(dog.matchedDogId) === String(dogId));
 
 // Count of each exact "ok" text as it appears in the sheet ("ok"/"Ok"/"OK") - all count as the same clean pass, but the pie chart breaks them out.
 const countByText = (passes) => {
@@ -37,8 +39,7 @@ const countByText = (passes) => {
 };
 
 // "ok" passes are clean but have no number to average - tracked as their own count/rate, kept out of avgCrossTime/avgLightsTime.
-const computeDogStats = (entries, dogId) => {
-  const passes = collectDogPasses(entries, dogId);
+const statsFromPasses = (passes) => {
   const faulted = passes.filter((pass) => pass.faulted);
   const clean = passes.filter((pass) => !pass.faulted);
   const cleanNumeric = clean.filter((pass) => isNumeric(pass.timingValue));
@@ -59,6 +60,8 @@ const computeDogStats = (entries, dogId) => {
   };
 };
 
+const computeDogStats = (entries, dogId) => statsFromPasses(collectDogPasses(entries, dogId));
+
 // Every distinct matched dog - stringified first, since matchedDogId is a Mongoose ObjectId and a Set can't dedupe two instances of the same value.
 const computeStatsForAllDogs = (entries) => {
   const dogIds = new Set(entries.flatMap((entry) => entry.dogs.map((dog) => dog.matchedDogId).filter(Boolean).map(String)));
@@ -66,4 +69,15 @@ const computeStatsForAllDogs = (entries) => {
   return [...dogIds].map((dogId) => ({ dogId, ...computeDogStats(entries, dogId) }));
 };
 
-module.exports = { computeDogStats, computeStatsForAllDogs };
+// Opponent rows never get a matchedDogId - stats are keyed on the raw parsed name instead, and each dog carries its own (opponent) team name for filtering.
+const computeStatsForAllOpponentDogs = (entries) => {
+  const names = [...new Set(entries.flatMap((entry) => entry.dogs.map((dog) => dog.name).filter(Boolean)))];
+
+  return names.map((name) => {
+    const teamName = entries.find((entry) => entry.dogs.some((dog) => dog.name === name))?.teamName ?? null;
+
+    return { dogId: name, name, teamName, ...statsFromPasses(collectPassesBy(entries, (dog) => dog.name === name)) };
+  });
+};
+
+module.exports = { computeDogStats, computeStatsForAllDogs, computeStatsForAllOpponentDogs };

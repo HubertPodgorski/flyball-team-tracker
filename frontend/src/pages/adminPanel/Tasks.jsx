@@ -9,7 +9,6 @@ import { useGetMaxRowIndex } from "../../hooks/useGetMaxRowIndex";
 import { useFormHelpers } from "../../hooks/useFormHelpers";
 import TasksDragNDrop from "../../components/admin/TasksDragNDrop";
 import CurrentEventSelectWithDogs from "../../components/admin/CurrentEventSelectWithDogs";
-import LineupTaskLegend from "../../components/LineupTaskLegend";
 import TasksPrintView from "../../components/tasksGrid/TasksPrintView";
 import { TaskPlanningProvider } from "../../contexts/TaskPlanningContext";
 import { useClubFeatures } from "../../hooks/useClubFeatures";
@@ -68,8 +67,6 @@ const Tasks = () => {
               {t("tasksGrid.downloadPdf")}
             </Button>
           </Stack>
-
-          <LineupTaskLegend />
 
           <TasksDragNDrop
             onTaskEditClick={onTaskEditClick}
