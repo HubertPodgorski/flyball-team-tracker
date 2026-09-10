@@ -85,15 +85,20 @@ test("user can add a note and a cross-pass to their own dog from My Dogs", async
   await expect(runnerCard.getByText("Trails closely")).not.toBeVisible();
 
   // A second cross-pass, this time "running on lights" (no predecessor dog)
-  // with a starting position picked from the meters select.
+  // with a starting position of "16m - 1ft" - metre anchor, then the sign
+  // toggle, then an offset. Regression: the "-" sign used to be dropped
+  // whenever it was picked before an offset existed.
   await runnerCard.getByRole("button", { name: "Add cross pass" }).click();
   await page.getByRole("switch", { name: "Running on lights" }).click();
   await page.getByRole("combobox", { name: "Starting position", exact: true }).click();
   await page.getByRole("option", { name: "16m", exact: true }).click();
+  await page.getByRole("button", { name: "−", exact: true }).click();
+  await page.getByRole("combobox", { name: "Offset", exact: true }).click();
+  await page.getByRole("option", { name: "1ft", exact: true }).click();
   await page.getByRole("combobox", { name: "Note", exact: true }).fill("Off the box");
   await page.getByRole("button", { name: "Save" }).click();
   await expect(runnerCard.getByText("Lights")).toBeVisible();
-  await expect(runnerCard.getByText("16m")).toBeVisible();
+  await expect(runnerCard.getByText("16m - 1ft")).toBeVisible();
   await expect(runnerCard.getByText("Off the box")).toBeVisible();
 
   // Edit that same cross-pass by tapping its row.
@@ -116,6 +121,9 @@ test("user can add a note and a cross-pass to their own dog from My Dogs", async
   await expect(
     page.getByRole("combobox", { name: "Starting position", exact: true })
   ).toHaveText("16m");
+  // The sign and offset survived the round trip too.
+  await expect(page.getByRole("button", { name: "−", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("combobox", { name: "Offset", exact: true })).toHaveText("1ft");
   await expect(page.getByRole("combobox", { name: "Note", exact: true })).toHaveValue(
     "Off the box"
   );

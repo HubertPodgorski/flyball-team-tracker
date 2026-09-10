@@ -2,7 +2,6 @@ import React, { useRef, useState } from "react";
 import {
   Box,
   Button,
-  Chip,
   DialogActions,
   FormControl,
   InputLabel,
@@ -21,7 +20,7 @@ import { useTranslation } from "react-i18next";
 import Modal from "./modals/Modal";
 import { EventType } from "./inputs/consts";
 import EventForm from "../pages/forms/EventForm";
-import { EjsEntry, Event } from "../helpers/types";
+import { EjsPreviewResult, Event } from "../helpers/types";
 import { competitionOptionLabel } from "../helpers/competitionOptionLabel";
 import { useEventsQuery } from "../queries/events";
 import { getCurrentClub } from "../helpers/authToken";
@@ -48,9 +47,7 @@ const EjsImportWizard = ({ open, onClose, onImported }: Props) => {
   const [eventFormOpen, setEventFormOpen] = useState(false);
   const knownCompetitionIds = useRef<Set<string>>(new Set());
   const [files, setFiles] = useState<File[]>([]);
-  const [teamNames, setTeamNames] = useState<string[] | null>(null);
-  const [ourTeamNames, setOurTeamNames] = useState<string[]>([]);
-  const [entries, setEntries] = useState<EjsEntry[] | null>(null);
+  const [preview, setPreview] = useState<EjsPreviewResult | null>(null);
 
   const competitionEvents = events.filter((event) => event.type === EventType.COMPETITION);
 
@@ -58,9 +55,7 @@ const EjsImportWizard = ({ open, onClose, onImported }: Props) => {
     setActiveStep(0);
     setEventId("");
     setFiles([]);
-    setTeamNames(null);
-    setOurTeamNames([]);
-    setEntries(null);
+    setPreview(null);
   };
 
   const close = () => {
@@ -90,26 +85,7 @@ const EjsImportWizard = ({ open, onClose, onImported }: Props) => {
     previewMutation.mutate(
       { eventId, files },
       {
-        onSuccess: (result) => {
-          setTeamNames(result.teamNames);
-          setOurTeamNames([]);
-          setEntries(null);
-        },
-        onError: () => enqueueSnackbar(t("pages.ejsStats.parseFailed"), { variant: "error" }),
-      }
-    );
-  };
-
-  const toggleOurTeam = (teamName: string) =>
-    setOurTeamNames((current) =>
-      current.includes(teamName) ? current.filter((name) => name !== teamName) : [...current, teamName]
-    );
-
-  const onLoadRows = () => {
-    previewMutation.mutate(
-      { eventId, files, ourTeamNames },
-      {
-        onSuccess: (result) => setEntries(result.entries ?? []),
+        onSuccess: setPreview,
         onError: () => enqueueSnackbar(t("pages.ejsStats.parseFailed"), { variant: "error" }),
       }
     );
@@ -117,12 +93,13 @@ const EjsImportWizard = ({ open, onClose, onImported }: Props) => {
 
   const onStartImport = () => {
     confirmMutation.mutate(
-      { eventId, files, ourTeamNames },
+      { eventId, files },
       {
         onSuccess: ({ count }) => {
           enqueueSnackbar(t("pages.ejsStats.importSuccess", { count }), { variant: "success" });
+          queryClient.invalidateQueries({ queryKey: ["ejsCompetitions"] });
           queryClient.invalidateQueries({ queryKey: ["competitionStats", eventId] });
-          queryClient.invalidateQueries({ queryKey: ["importedCompetitionIds"] });
+          queryClient.invalidateQueries({ queryKey: ["competitionTeamMapping", eventId] });
           onImported?.(eventId);
           close();
         },
@@ -137,8 +114,7 @@ const EjsImportWizard = ({ open, onClose, onImported }: Props) => {
     t("pages.ejsStats.wizard.stepImport"),
   ];
 
-  const canContinue = (activeStep === 0 && !!eventId) || (activeStep === 1 && !!entries);
-
+  const canContinue = (activeStep === 0 && !!eventId) || (activeStep === 1 && !!preview);
   const isLastStep = activeStep === steps.length - 1;
 
   return (
@@ -191,8 +167,7 @@ const EjsImportWizard = ({ open, onClose, onImported }: Props) => {
                 accept=".xls,.xlsx"
                 onChange={(event) => {
                   setFiles(event.target.files ? Array.from(event.target.files) : []);
-                  setTeamNames(null);
-                  setEntries(null);
+                  setPreview(null);
                 }}
               />
             </Button>
@@ -201,47 +176,20 @@ const EjsImportWizard = ({ open, onClose, onImported }: Props) => {
               variant="contained"
               sx={{ alignSelf: "flex-start" }}
               disabled={files.length === 0}
-              loading={previewMutation.isPending && !teamNames}
+              loading={previewMutation.isPending}
               onClick={onAnalyzeFiles}
             >
               {t("pages.ejsStats.wizard.analyzeFiles")}
             </Button>
 
-            {teamNames && (
-              <Stack sx={{ gap: 1 }}>
-                <Typography variant="body2" color="text.secondary">
-                  {t("pages.ejsStats.pickOurTeams")}
+            {preview && (
+              <Stack sx={{ gap: 0.5 }}>
+                <Typography variant="body2" color="success.main">
+                  {t("pages.ejsStats.wizard.rowsFound", { count: preview.rowCount })}
                 </Typography>
-                <Stack direction="row" sx={{ gap: 1, flexWrap: "wrap" }}>
-                  {teamNames.map((teamName) => {
-                    const selected = ourTeamNames.includes(teamName);
-                    return (
-                      <Chip
-                        key={teamName}
-                        label={teamName}
-                        color={selected ? "primary" : "default"}
-                        variant={selected ? "filled" : "outlined"}
-                        onClick={() => toggleOurTeam(teamName)}
-                      />
-                    );
-                  })}
-                </Stack>
-
-                <Button
-                  variant="contained"
-                  sx={{ alignSelf: "flex-start" }}
-                  disabled={ourTeamNames.length === 0}
-                  loading={previewMutation.isPending && !!teamNames}
-                  onClick={onLoadRows}
-                >
-                  {t("pages.ejsStats.wizard.loadMatches")}
-                </Button>
-
-                {entries && (
-                  <Typography variant="caption" color="success.main">
-                    {t("pages.ejsStats.wizard.rowsFound", { count: entries.length })}
-                  </Typography>
-                )}
+                <Typography variant="body2" color="text.secondary">
+                  {t("pages.ejsStats.wizard.teamsFound", { teams: preview.teamNames.join(", ") })}
+                </Typography>
               </Stack>
             )}
           </Stack>
@@ -251,8 +199,8 @@ const EjsImportWizard = ({ open, onClose, onImported }: Props) => {
           <Stack sx={{ gap: 1 }}>
             <Typography variant="body2">
               {t("pages.ejsStats.wizard.reviewSummary", {
-                rows: entries?.length ?? 0,
-                teams: ourTeamNames.length,
+                rows: preview?.rowCount ?? 0,
+                teams: preview?.teamNames.length ?? 0,
               })}
             </Typography>
             <Typography variant="caption" color="warning.main">

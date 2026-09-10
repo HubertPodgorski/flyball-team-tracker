@@ -4,14 +4,14 @@ import { useTranslation } from "react-i18next";
 import { CompetitionDogStats } from "../helpers/types";
 
 const DEFAULT_WIDTH = 600;
-// Wide enough that the rotated x-axis labels below never collide - past this many points the chart scrolls instead.
-const MIN_POINT_SPACING = 52;
+// Wide enough that the x-axis labels below never collide (rotated names, or a stacked lineup order) - past this many points the chart scrolls.
+const MIN_POINT_SPACING = 72;
 // Extra left room so the leftmost rotated label doesn't run off the SVG.
 const LEFT_MARGIN = 80;
 const RIGHT_MARGIN = 20;
 const TOP_MARGIN = 20;
-// Deep enough for the -35deg labels (name + optional club sub-label).
-const BOTTOM_MARGIN = 104;
+// Deep enough for the -35deg labels (name + optional club sub-label), or a stacked 4-line lineup running order.
+const BOTTOM_MARGIN = 120;
 const LABEL_ANGLE = -35;
 const PLOT_HEIGHT = 220;
 const TICK_COUNT = 5;
@@ -225,6 +225,22 @@ const CompetitionMetricsLineChart = ({ dogs, title, noDataLabel, series, fixedMa
               {namedDogs.map((dog, dogIndex) => {
                 const labelX = xFor(dogIndex);
                 const labelY = TOP_MARGIN + PLOT_HEIGHT + 14;
+                // A lineup row's name is its 4-dog running order - stack one dog per line, upright, so all four read instead of one truncated blur.
+                const orderParts = (dog.name ?? "").split(/\s*→\s*/);
+
+                if (orderParts.length > 1) {
+                  return (
+                    <text key={dog.dogId} x={labelX} y={labelY} textAnchor="middle" fill={theme.palette.text.primary} fontSize={10}>
+                      <title>{dog.name}</title>
+
+                      {orderParts.map((part, partIndex) => (
+                        <tspan key={partIndex} x={labelX} dy={partIndex === 0 ? 0 : 11}>
+                          {truncate(part, LABEL_MAX_CHARS)}
+                        </tspan>
+                      ))}
+                    </text>
+                  );
+                }
 
                 return (
                   <text

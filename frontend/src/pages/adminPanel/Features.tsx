@@ -8,16 +8,7 @@ import { useTeamsQuery } from "../../queries/teams";
 import { findLinkedLineup } from "../../helpers/lineupLink";
 import { useConfirmModalSoft } from "../../hooks/useConfirmModal";
 import { ClubFeatures } from "../../helpers/types";
-
-const FEATURE_KEYS: (keyof ClubFeatures)[] = [
-  "teamsAndLineups",
-  "crossPasses",
-  "netTime",
-  "eventsCalendar",
-  "ejsStats",
-  "dogTasksCatalog",
-  "usefulResources",
-];
+import { FEATURE_KEYS } from "../../helpers/clubFeatures";
 
 // key -> the feature it requires to be on.
 const DEPENDS_ON: Partial<Record<keyof ClubFeatures, keyof ClubFeatures>> = {

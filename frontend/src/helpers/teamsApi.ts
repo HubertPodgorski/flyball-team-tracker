@@ -1,11 +1,7 @@
 import axios from "axios";
 import { apiSuffix } from "./apiCall";
-import { getAuthToken } from "./authToken";
+import { authHeaders } from "./authToken";
 import { Team } from "./types";
-
-const authHeaders = () => ({
-  headers: { Authorization: `Bearer ${getAuthToken()}` },
-});
 
 export const fetchTeams = async (): Promise<Team[]> => {
   const { data } = await axios.get(`${apiSuffix}/teams`, authHeaders());

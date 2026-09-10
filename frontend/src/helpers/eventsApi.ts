@@ -1,12 +1,8 @@
 import axios from "axios";
 import { apiSuffix } from "./apiCall";
-import { getAuthToken } from "./authToken";
+import { authHeaders } from "./authToken";
 import { Event } from "./types";
 import { CreateRecurringEventsRequestType } from "../pages/forms/types";
-
-const authHeaders = () => ({
-  headers: { Authorization: `Bearer ${getAuthToken()}` },
-});
 
 export const fetchEvents = async (): Promise<Event[]> => {
   const { data } = await axios.get(`${apiSuffix}/events`, authHeaders());

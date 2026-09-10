@@ -1,6 +1,18 @@
 const isNumeric = (value) => typeof value === "number";
 const isOk = (value) => typeof value === "string" && value.trim().toLowerCase() === "ok";
 
+// The judge's "ok" changeover codes as seconds - lowercase "ok" is the loosest still-clean pass, "OK" bang on the line.
+const OK_CROSS_SECONDS = { ok: 0.1, Ok: 0.05, OK: 0 };
+// A changeover value as a number: the raw number, or the seconds an "ok" code stands for, else null.
+const crossSeconds = (value) => {
+  if (isNumeric(value)) return value;
+  if (typeof value === "string" && Object.prototype.hasOwnProperty.call(OK_CROSS_SECONDS, value.trim())) {
+    return OK_CROSS_SECONDS[value.trim()];
+  }
+
+  return null;
+};
+
 const average = (numbers) => (numbers.length ? numbers.reduce((sum, value) => sum + value, 0) / numbers.length : null);
 
 // Every dog slot across the given entries matching `pick` - filter entries first (by sourceFile/day, lineup, etc.) to scope the stats.
@@ -38,12 +50,16 @@ const countByText = (passes) => {
   return counts;
 };
 
-// "ok" passes are clean but have no number to average - tracked as their own count/rate, kept out of avgCrossTime/avgLightsTime.
+// An "ok" changeover counts toward avgCrossTime at the seconds its code stands for; run-time and lights averages stay numeric-only.
 const statsFromPasses = (passes) => {
   const faulted = passes.filter((pass) => pass.faulted);
   const clean = passes.filter((pass) => !pass.faulted);
   const cleanNumeric = clean.filter((pass) => isNumeric(pass.timingValue));
   const cleanOk = clean.filter((pass) => isOk(pass.timingValue));
+  const crossSecondsList = clean
+    .filter((pass) => pass.role === "cross")
+    .map((pass) => crossSeconds(pass.timingValue))
+    .filter((value) => value !== null);
 
   return {
     totalPasses: passes.length,
@@ -54,7 +70,7 @@ const statsFromPasses = (passes) => {
     okByText: countByText(cleanOk),
     okPercentOfAllPasses: passes.length ? cleanOk.length / passes.length : null,
     okPercentOfCleanPasses: clean.length ? cleanOk.length / clean.length : null,
-    avgCrossTime: average(cleanNumeric.filter((pass) => pass.role === "cross").map((pass) => pass.timingValue)),
+    avgCrossTime: average(crossSecondsList),
     avgLightsTime: average(cleanNumeric.filter((pass) => pass.role === "lights").map((pass) => pass.timingValue)),
     avgRunTime: average(clean.map((pass) => pass.time).filter(isNumeric)),
   };
@@ -80,4 +96,4 @@ const computeStatsForAllOpponentDogs = (entries) => {
   });
 };
 
-module.exports = { computeDogStats, computeStatsForAllDogs, computeStatsForAllOpponentDogs };
+module.exports = { computeDogStats, computeStatsForAllDogs, computeStatsForAllOpponentDogs, crossSeconds };

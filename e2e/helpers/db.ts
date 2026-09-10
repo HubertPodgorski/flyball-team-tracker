@@ -186,21 +186,24 @@ export const seedCompetitionWithLineups = async (
 
     await db.collection("squads").insertOne({ _id: teamId, name: teamName, team: club, dogs: [dogA, dogB], matchups: [] });
 
+    // EJS data is one global pool now - a super-admin owns the event, the club claims its team name via an EjsTeamMapping.
     await db.collection("events").insertOne({
       _id: eventId,
       name: eventName,
       date: new Date().toISOString().slice(0, 10),
       type: "COMPETITION",
-      team: club,
+      team: "SUPER_ADMIN_CLUB",
     });
+
+    await db.collection("ejsteammappings").insertOne({ ejsTeamName: teamName, club });
 
     await db.collection("competitionentries").insertMany([
       {
         eventId,
         lineupKey: key([dogA, dogB]),
         teamName,
-        team: club,
-        ourTeam: true,
+        team: "__EJS__",
+        ourTeam: false,
         dogs: [
           { name: dogA.name, matchedDogId: dogA._id, lightsTime: 4.1, faulted: false },
           { name: dogB.name, matchedDogId: dogB._id, crossTime: 4.3, faulted: false },
@@ -211,8 +214,8 @@ export const seedCompetitionWithLineups = async (
         eventId,
         lineupKey: key([dogB, dogA]),
         teamName,
-        team: club,
-        ourTeam: true,
+        team: "__EJS__",
+        ourTeam: false,
         dogs: [
           { name: dogB.name, matchedDogId: dogB._id, lightsTime: 4.5, faulted: true },
           { name: dogA.name, matchedDogId: dogA._id, crossTime: "ok", faulted: false },

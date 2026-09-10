@@ -150,6 +150,15 @@ export interface ClubSettings {
   features: ClubFeatures;
 }
 
+// A club row from the super-admin clubs panel (api/src/models/clubModel.js).
+export interface Club {
+  _id: string;
+  code: string;
+  team: string;
+  name: string;
+  suspended: boolean;
+}
+
 export interface EjsDog {
   name: string | null;
   matchedDogId: string | null;
@@ -186,7 +195,24 @@ export interface EjsEntry {
 
 export interface EjsPreviewResult {
   teamNames: string[];
-  entries?: EjsEntry[];
+  rowCount: number;
+}
+
+// A competition (any club's event) that has imported EJS data - the shared list every user picks from.
+export interface EjsCompetition {
+  _id: string;
+  name: string;
+  date: string;
+  endDate?: string;
+}
+
+export interface CompetitionTeamMapping {
+  // Every EJS team name in this competition.
+  teamNames: string[];
+  // ejsTeamName -> owning club, for the names that are claimed.
+  mappings: Record<string, string>;
+  // The subset of teamNames the current club owns.
+  myTeamNames: string[];
 }
 
 export interface CompetitionDogStats {
@@ -215,13 +241,57 @@ export interface CompetitionLineup {
   key: string;
   order: string;
   heatCount: number;
+  // The mapped team this running order ran for - lets the Team tab show only the picked team's lineups.
+  teamName?: string | null;
+}
+
+// One dog's changeover quality behind a specific predecessor dog.
+export interface PredecessorStat {
+  dog: string;
+  predecessor: string;
+  heats: number;
+  avgCrossTime: number | null;
+  avgRunTime: number | null;
+  faultCount: number;
+  faultRate: number | null;
+  okCount: number;
+}
+
+export interface CompetitionRecord {
+  value: number;
+  eventId: string;
+  eventName: string | null;
+}
+
+export interface CompetitionRecords {
+  // Fastest clean team net time per team of the club, with that heat's own 4-dog running order.
+  teamBests: (CompetitionRecord & { teamName: string; division: number | null; dogs: string[] })[];
+  dogBests: (CompetitionRecord & { dog: string })[];
+}
+
+export interface NetVsGrossStats {
+  teamName: string;
+  heats: number;
+  avgGross: number | null;
+  avgNet: number | null;
+  avgStartOverhead: number | null;
+  avgOverlap: number | null;
 }
 
 export interface CompetitionStatsResult {
   sourceFiles: string[];
   dogs: CompetitionDogStats[];
-  // Opponent (scope=others) responses only - the distinct opponent team names, for the team filter.
+  // Changeover-by-predecessor, records and net-vs-gross - all over the caller's club's (or picked team's) own rows.
+  pairings: PredecessorStat[];
+  records: CompetitionRecords;
+  // One entry per team of the club (or just the picked team).
+  netVsGross: NetVsGrossStats[];
+  // Every team name in the competition pool - the team filter's options in "all clubs" scope.
   teamNames: string[];
-  // "ours" responses only - the running orders in this competition's own rows.
+  // The caller's club's own mapped team names - the team filter's options in "my club" scope.
+  myTeamNames: string[];
+  // ejsTeamName -> owning club's display name, for the "whole clubs" view (a club = all its team names summed).
+  clubByTeamName: Record<string, string>;
+  // The running orders in the caller's club's own rows.
   lineups: CompetitionLineup[];
 }

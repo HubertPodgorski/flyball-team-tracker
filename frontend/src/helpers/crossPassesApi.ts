@@ -1,11 +1,7 @@
 import axios from "axios";
 import { apiSuffix } from "./apiCall";
-import { getAuthToken } from "./authToken";
+import { authHeaders } from "./authToken";
 import { CrossPass } from "./types";
-
-const authHeaders = () => ({
-  headers: { Authorization: `Bearer ${getAuthToken()}` },
-});
 
 export const fetchCrossPasses = async (): Promise<CrossPass[]> => {
   const { data } = await axios.get(`${apiSuffix}/cross-passes`, authHeaders());

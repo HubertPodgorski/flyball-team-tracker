@@ -1,6 +1,6 @@
 import axios from "axios";
 import { apiSuffix } from "./apiCall";
-import { getAuthToken } from "./authToken";
+import { authHeaders } from "./authToken";
 
 export interface AppError {
   _id: string;
@@ -14,8 +14,6 @@ export interface AppError {
   context?: unknown;
   createdAt: string;
 }
-
-const authHeaders = () => ({ headers: { Authorization: `Bearer ${getAuthToken()}` } });
 
 export const fetchAppErrors = async (): Promise<AppError[]> => {
   const { data } = await axios.get(`${apiSuffix}/super-admin/errors`, authHeaders());

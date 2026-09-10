@@ -1,58 +1,80 @@
-import { useMutation, useQueries, useQuery } from "@tanstack/react-query";
+import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  previewEjsImport,
   confirmEjsImport,
   fetchCompetitionStats,
-  fetchImportedCompetitionIds,
+  fetchCompetitionTeamMapping,
+  fetchEjsCompetitions,
+  previewEjsImport,
+  setCompetitionTeamMapping,
 } from "../helpers/competitionsApi";
 
-export const useImportedCompetitionIdsQuery = () =>
-  useQuery({ queryKey: ["importedCompetitionIds"], queryFn: fetchImportedCompetitionIds });
+// Every competition with imported EJS data - the same list for every user.
+export const useEjsCompetitionsQuery = () =>
+  useQuery({ queryKey: ["ejsCompetitions"], queryFn: fetchEjsCompetitions });
 
 export const usePreviewEjsImportMutation = () =>
   useMutation({
-    mutationFn: ({ eventId, files, ourTeamNames }: { eventId: string; files: File[]; ourTeamNames?: string[] }) =>
-      previewEjsImport(eventId, files, ourTeamNames),
+    mutationFn: ({ eventId, files }: { eventId: string; files: File[] }) => previewEjsImport(eventId, files),
   });
 
 export const useConfirmEjsImportMutation = () =>
   useMutation({
-    mutationFn: ({ eventId, files, ourTeamNames }: { eventId: string; files: File[]; ourTeamNames: string[] }) =>
-      confirmEjsImport(eventId, files, ourTeamNames),
+    mutationFn: ({ eventId, files }: { eventId: string; files: File[] }) => confirmEjsImport(eventId, files),
   });
+
+export const useCompetitionTeamMappingQuery = (eventId: string | undefined) =>
+  useQuery({
+    queryKey: ["competitionTeamMapping", eventId],
+    queryFn: () => fetchCompetitionTeamMapping(eventId as string),
+    enabled: !!eventId,
+  });
+
+export const useSetCompetitionTeamMappingMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: setCompetitionTeamMapping,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["competitionTeamMapping"] });
+      queryClient.invalidateQueries({ queryKey: ["competitionStats"] });
+    },
+  });
+};
 
 export const useCompetitionStatsQuery = (
   eventId: string | undefined,
   sourceFile?: string,
   lineupKey?: string,
-  scope: "ours" | "all" = "ours"
+  scope: "ours" | "all" = "ours",
+  teamName?: string
 ) =>
   useQuery({
-    queryKey: ["competitionStats", eventId, sourceFile, lineupKey, scope],
-    queryFn: () => fetchCompetitionStats(eventId as string, sourceFile, lineupKey, scope),
+    queryKey: ["competitionStats", eventId, sourceFile, lineupKey, scope, teamName],
+    queryFn: () => fetchCompetitionStats(eventId as string, sourceFile, lineupKey, scope, teamName),
     enabled: !!eventId,
   });
 
-// One stats fetch per lineup (a running order) - shares its cache key shape with useCompetitionStatsQuery, so it reuses whatever's already loaded.
-export const useCompetitionStatsByLineupQueries = (eventId: string | undefined, lineupKeys: string[]) =>
+// One stats fetch per lineup (a running order, pinned to its own team) - shares its cache key shape with useCompetitionStatsQuery.
+export const useCompetitionStatsByLineupQueries = (
+  eventId: string | undefined,
+  lineups: { key: string; teamName?: string | null }[]
+) =>
   useQueries({
-    queries: lineupKeys.map((lineupKey) => ({
-      queryKey: ["competitionStats", eventId, undefined, lineupKey, "ours"],
-      queryFn: () => fetchCompetitionStats(eventId as string, undefined, lineupKey, "ours"),
+    queries: lineups.map((lineup) => ({
+      queryKey: ["competitionStats", eventId, undefined, lineup.key, "ours", lineup.teamName ?? undefined],
+      queryFn: () => fetchCompetitionStats(eventId as string, undefined, lineup.key, "ours", lineup.teamName ?? undefined),
       enabled: !!eventId,
     })),
   });
 
-// One stats fetch per uploaded EJS file - for the "across all competitions, file by file" comparison chart.
-export const useCompetitionStatsBySourceFileQueries = (
-  eventId: string | undefined,
-  sourceFiles: string[],
-  scope: "ours" | "all" = "ours"
+// One stats fetch per competition - for the "across all competitions" trend chart. Same cache-key shape, so single-competition views stay warm.
+export const useCompetitionStatsByEventQueries = (
+  eventIds: string[],
+  { scope = "ours", teamName, lineupKey }: { scope?: "ours" | "all"; teamName?: string; lineupKey?: string } = {}
 ) =>
   useQueries({
-    queries: sourceFiles.map((sourceFile) => ({
-      queryKey: ["competitionStats", eventId, sourceFile, undefined, scope],
-      queryFn: () => fetchCompetitionStats(eventId as string, sourceFile, undefined, scope),
-      enabled: !!eventId,
+    queries: eventIds.map((eventId) => ({
+      queryKey: ["competitionStats", eventId, undefined, lineupKey, scope, teamName],
+      queryFn: () => fetchCompetitionStats(eventId, undefined, lineupKey, scope, teamName),
     })),
   });

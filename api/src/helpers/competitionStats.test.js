@@ -28,14 +28,14 @@ describe("computeDogStats", () => {
     expect(stats.avgRunTime).toBeCloseTo(4.2);
   });
 
-  it("keeps 'ok' passes clean but out of the cross-time average, tracked as their own count", () => {
+  it("folds 'ok' changeover codes into the cross-time average at the seconds they stand for", () => {
     const entries = [entryFor(2, { timingValue: 0.1, time: 4.0 }), entryFor(2, { timingValue: "ok", time: 4.1 }), entryFor(2, { timingValue: "OK", time: 4.2 })];
     const stats = computeDogStats(entries, DOG);
 
     expect(stats.faultCount).toBe(0);
     expect(stats.cleanCount).toBe(3);
     expect(stats.okCount).toBe(2);
-    expect(stats.avgCrossTime).toBeCloseTo(0.1); // only the one numeric pass
+    expect(stats.avgCrossTime).toBeCloseTo((0.1 + 0.1 + 0) / 3); // 0.1 numeric, "ok" -> 0.10, "OK" -> 0
     expect(stats.avgRunTime).toBeCloseTo((4.0 + 4.1 + 4.2) / 3); // "ok" passes still count toward run-time average
   });
 

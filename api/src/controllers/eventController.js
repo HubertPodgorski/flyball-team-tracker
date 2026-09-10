@@ -91,8 +91,8 @@ const deleteEvent = async (req, res) => {
   const { id } = req.params;
 
   await EventModel.findOneAndDelete({ _id: id, team: req.club });
-  // Cascade: a competition's parsed EJS rows have no meaning without it (a no-op for other event types).
-  await CompetitionEntryModel.deleteMany({ eventId: id, team: req.club });
+  // Cascade: a competition's parsed EJS rows (global pool, not team-scoped) have no meaning without it - a no-op for other event types.
+  await CompetitionEntryModel.deleteMany({ eventId: id });
 
   res.status(200).json({ ok: true });
   broadcast(req.club, "events_updated", await findClubEvents(req.club));

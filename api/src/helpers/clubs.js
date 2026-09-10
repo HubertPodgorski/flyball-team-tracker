@@ -39,6 +39,8 @@ const getClubCodes = () => getCache().codes;
 const teamForClubCode = (code) => getCache().teamByCode[code];
 const isValidClub = (team) => getCache().teams.includes(team);
 const isClubSuspended = (team) => getCache().suspendedTeams.has(team);
+// Display name for a club's `team` string - falls back to the string itself if it's not a known club.
+const clubNameForTeam = (team) => (getCache().list.find((club) => club.team === team) || {}).name || team;
 
 module.exports = {
   DEFAULT_CLUBS,
@@ -49,4 +51,5 @@ module.exports = {
   teamForClubCode,
   isValidClub,
   isClubSuspended,
+  clubNameForTeam,
 };

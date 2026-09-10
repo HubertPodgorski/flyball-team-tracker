@@ -13,74 +13,7 @@ import type { AnyFieldApi } from "@tanstack/react-form";
 import { useTranslation } from "react-i18next";
 import { FormFieldProps } from "./utils";
 import ClearableTextField from "./ClearableTextField";
-
-const CM_PER_FOOT = 30.48;
-
-interface OffsetOption {
-  cm: number;
-  label: string;
-}
-
-// Quarter-meter steps plus feet marks - two groups, not interleaved.
-const CM_OFFSETS: OffsetOption[] = [25, 50, 75].map((cm) => ({
-  cm,
-  label: `${cm}cm`,
-}));
-
-const FOOT_OFFSETS: OffsetOption[] = [0.5, 1, 1.5, 2, 2.5, 3].map((feet) => ({
-  cm: feet * CM_PER_FOOT,
-  label: `${feet}ft`,
-}));
-
-const OFFSETS: OffsetOption[] = [...CM_OFFSETS, ...FOOT_OFFSETS];
-
-type Sign = "+" | "-";
-
-// Literal, not computed - "16m - 25cm" stays that, never becomes "15.75m".
-const formatValue = (meters: number, sign: Sign, offsetCm: number): string => {
-  if (offsetCm === 0) return `${meters}m`;
-
-  const offset = OFFSETS.find(({ cm }) => cm === offsetCm);
-
-  return `${meters}m ${sign} ${offset?.label ?? `${offsetCm}cm`}`;
-};
-
-// Loose match: lowercased, spaces stripped, "f" accepted as shorthand for "ft".
-const normalizeOffsetText = (text: string): string => {
-  const normalized = text.trim().toLowerCase().replace(/\s+/g, "");
-
-  return /^\d+(\.\d+)?f$/.test(normalized) ? `${normalized}t` : normalized;
-};
-
-const parseValue = (
-  value: string
-): { meters: number; sign: Sign; offsetCm: number } | null => {
-  // Tolerate comma decimals and extra whitespace, not just what the picker itself produces.
-  const trimmed = value.trim().replace(/,/g, ".").replace(/\s+/g, "");
-
-  const bareMatch = /^(\d+)m$/.exec(trimmed);
-
-  if (bareMatch) {
-    return { meters: Number(bareMatch[1]), sign: "+", offsetCm: 0 };
-  }
-
-  const offsetMatch = /^(\d+)m\s*([+-])\s*(.+)$/.exec(trimmed);
-
-  if (!offsetMatch) return null;
-
-  const normalizedOffsetText = normalizeOffsetText(offsetMatch[3]);
-  const matchedOffset = OFFSETS.find(
-    ({ label }) => normalizeOffsetText(label) === normalizedOffsetText
-  );
-
-  if (!matchedOffset) return null;
-
-  return {
-    meters: Number(offsetMatch[1]),
-    sign: offsetMatch[2] as Sign,
-    offsetCm: matchedOffset.cm,
-  };
-};
+import { CM_OFFSETS, FOOT_OFFSETS, formatValue, parseValue, type Sign } from "../../helpers/startingPosition";
 
 interface InnerProps {
   field: AnyFieldApi;
