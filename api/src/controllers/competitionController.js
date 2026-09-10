@@ -1,10 +1,15 @@
 const fs = require("fs/promises");
 const EventModel = require("../models/eventModel");
 const CompetitionEntryModel = require("../models/competitionEntryModel");
+const EjsTeamMappingModel = require("../models/ejsTeamMappingModel");
 const { readEjsFile } = require("../helpers/readEjsFile");
 const { parseEjsRows } = require("../helpers/ejsParser");
 const { computeStatsForAllOpponentDogs } = require("../helpers/competitionStats");
 const { logAppError } = require("../helpers/logAppError");
+
+// EJS data is one global pool - a super-admin imports it, every club reads it. The `team` field on these rows
+// is this sentinel, not a real club; a club "owns" a row when its teamName is in EjsTeamMapping.
+const EJS_TEAM = "__EJS__";
 
 // Parses and deletes each file's temp copy regardless of success; sourceFile is the only thing distinguishing rows across a multi-file import.
 const parseUploadedFiles = async (files) => {
@@ -34,29 +39,20 @@ const parseUploadedFilesOrRespond = async (files, req, res) => {
   }
 };
 
-// Only a COMPETITION event in the caller's own club is a valid import target.
-const findCompetitionEvent = (eventId, club) => EventModel.findOne({ _id: eventId, team: club });
-
-const parseOurTeamNames = (raw) => new Set(JSON.parse(raw || "[]"));
-
 // A row's own 4-dog running order by name - this is what a "lineup" means for these stats.
 const lineupKeyFor = (entry) => entry.dogs.map((dog) => dog.name || "").join("|");
 
-// We only map teams, not dogs - every dog stays as its raw EJS name so nothing is dropped for want of a club-roster match.
-const applyTeamFlagToEntry = (entry, ourTeamNames) => {
-  const ourTeam = ourTeamNames.has(entry.teamName);
+// Dogs stay as their raw EJS names; ownership is resolved per club at read time, so every row gets a lineupKey.
+const toStoredEntry = (entry) => ({
+  ...entry,
+  ourTeam: false,
+  lineupKey: lineupKeyFor(entry),
+  dogs: entry.dogs.map((dog) => ({ ...dog, matchedDogId: null, runningOnDogId: null, suggestions: [] })),
+});
 
-  return {
-    ...entry,
-    ourTeam,
-    lineupKey: ourTeam ? lineupKeyFor(entry) : null,
-    dogs: entry.dogs.map((dog) => ({ ...dog, matchedDogId: null, runningOnDogId: null, suggestions: [] })),
-  };
-};
-
-// Preview only - nothing persisted. Without ourTeamNames, just lists every team name found so the trainer can pick which are theirs.
+// Preview only - nothing persisted. Lists every team name found and the parsed row count.
 const previewEjsImport = async (req, res) => {
-  const event = await findCompetitionEvent(req.params.eventId, req.club);
+  const event = await EventModel.findById(req.params.eventId);
 
   if (!event) return res.status(404).json({ error: "COMPETITION_EVENT_NOT_FOUND" });
 
@@ -68,19 +64,12 @@ const previewEjsImport = async (req, res) => {
 
   const teamNames = [...new Set(entries.map((entry) => entry.teamName))].sort();
 
-  if (!req.body.ourTeamNames) return res.status(200).json({ teamNames });
-
-  const ourTeamNames = parseOurTeamNames(req.body.ourTeamNames);
-  const previewEntries = entries
-    .filter((entry) => ourTeamNames.has(entry.teamName))
-    .map((entry) => applyTeamFlagToEntry(entry, ourTeamNames));
-
-  res.status(200).json({ teamNames, entries: previewEntries });
+  res.status(200).json({ teamNames, rowCount: entries.length });
 };
 
-// Persists every parsed row, flagged by whether its team is one of ours; dogs are never matched to the club roster.
+// Persists every parsed row into the global EJS pool (super-admin only). A confirm replaces the whole event's rows.
 const confirmEjsImport = async (req, res) => {
-  const event = await findCompetitionEvent(req.params.eventId, req.club);
+  const event = await EventModel.findById(req.params.eventId);
 
   if (!event) return res.status(404).json({ error: "COMPETITION_EVENT_NOT_FOUND" });
 
@@ -90,55 +79,62 @@ const confirmEjsImport = async (req, res) => {
 
   if (!entries) return;
 
-  const ourTeamNames = parseOurTeamNames(req.body.ourTeamNames);
-  const documents = entries.map((entry) => ({
-    ...applyTeamFlagToEntry(entry, ourTeamNames),
-    eventId: event._id,
-    team: req.club,
-  }));
+  const documents = entries.map((entry) => ({ ...toStoredEntry(entry), eventId: event._id, team: EJS_TEAM }));
 
   try {
-    // A confirm always replaces the whole event's data, not just the uploaded file(s)' own rows - a mistaken earlier day's import can't linger once you re-confirm.
     await CompetitionEntryModel.deleteMany({ eventId: event._id });
 
     const created = await CompetitionEntryModel.insertMany(documents);
 
     res.status(200).json({ count: created.length });
   } catch (error) {
-    // An unexpected cell shape our schema doesn't yet cover - a 500, not a process crash from an unhandled rejection.
     console.error("EJS import failed to persist:", error);
     logAppError({ error, req, statusCode: 500, context: { stage: "persist", entryCount: documents.length, files: req.files.map((file) => file.originalname) } });
     res.status(500).json({ error: "IMPORT_FAILED" });
   }
 };
 
-// Just the eventIds that already have parsed rows - the stats view only offers competitions you can actually look at.
-const getImportedCompetitionIds = async (req, res) => {
-  const eventIds = await CompetitionEntryModel.find({ team: req.club }).distinct("eventId");
+// Every competition (any club's event) that has imported EJS rows - the shared list every user picks from.
+const getEjsCompetitions = async (_req, res) => {
+  const eventIds = await CompetitionEntryModel.find({ team: EJS_TEAM }).distinct("eventId");
+  const events = await EventModel.find({ _id: { $in: eventIds } })
+    .select("_id name date endDate")
+    .sort({ date: -1 });
+
+  res.status(200).json(events);
+};
+
+// Kept for the frontend's existing "which events have data" check.
+const getImportedCompetitionIds = async (_req, res) => {
+  const eventIds = await CompetitionEntryModel.find({ team: EJS_TEAM }).distinct("eventId");
 
   res.status(200).json({ eventIds: eventIds.map((id) => id.toString()) });
 };
 
-// Shared by the per-event and the all-competitions views - `scopeFilter` is either { eventId } or { team } (every one of the club's).
-const respondWithStats = async (scopeFilter, req, res) => {
-  // scope=all: every club's rows. Default: only our own team's rows, plus the lineups derived from them.
-  const all = req.query.scope === "all";
-  const filter = { ...scopeFilter };
+const myTeamNamesFor = (club) => EjsTeamMappingModel.find({ club }).distinct("ejsTeamName");
 
-  if (!all) filter.ourTeam = true;
+// scopeFilter is { eventId } for one competition, or {} for every imported competition.
+const respondWithStats = async (scopeFilter, req, res) => {
+  const all = req.query.scope === "all";
+  const poolFilter = { ...scopeFilter, team: EJS_TEAM };
+  const myTeamNames = await myTeamNamesFor(req.club);
+
+  const filter = { ...poolFilter };
+
+  if (!all) filter.teamName = { $in: myTeamNames };
   if (req.query.sourceFile) filter.sourceFile = req.query.sourceFile;
-  if (!all && req.query.lineupKey) filter.lineupKey = req.query.lineupKey;
+  if (req.query.lineupKey) filter.lineupKey = req.query.lineupKey;
 
   const entries = await CompetitionEntryModel.find(filter);
-  const sourceFiles = (await CompetitionEntryModel.find(scopeFilter).distinct("sourceFile")).sort();
-  // Every dog is keyed on its raw EJS name and carries its own team name - no matching against the club roster, so nothing is dropped.
+  const sourceFiles = (await CompetitionEntryModel.find(poolFilter).distinct("sourceFile")).sort();
   const dogs = computeStatsForAllOpponentDogs(entries);
-  const teamNames = [...new Set(dogs.map((dog) => dog.teamName).filter(Boolean))].sort();
+  // Every team name in the competition pool, for the team picker - not just the ones with dogs in the current filter.
+  const teamNames = (await CompetitionEntryModel.find(poolFilter).distinct("teamName")).sort();
 
-  if (all) return res.status(200).json({ sourceFiles, dogs, teamNames, lineups: [] });
-
-  // Every distinct running order in our own scoped rows - a "lineup" derived purely from the imported data.
-  const ourEntries = await CompetitionEntryModel.find({ ...scopeFilter, ourTeam: true });
+  // Our own running orders - always from our mapped team's rows, whatever the scope.
+  const ourEntries = myTeamNames.length
+    ? await CompetitionEntryModel.find({ ...poolFilter, teamName: { $in: myTeamNames } })
+    : [];
   const lineupsByKey = new Map();
 
   for (const entry of ourEntries) {
@@ -153,16 +149,58 @@ const respondWithStats = async (scopeFilter, req, res) => {
   res.status(200).json({ sourceFiles, dogs, teamNames, lineups: [...lineupsByKey.values()] });
 };
 
-// Per-dog effectiveness for one competition event. scope=all switches to every club's rows; otherwise just our own team's, plus lineups.
 const getCompetitionStats = async (req, res) => {
-  const event = await findCompetitionEvent(req.params.eventId, req.club);
+  const event = await EventModel.findById(req.params.eventId);
 
   if (!event) return res.status(404).json({ error: "COMPETITION_EVENT_NOT_FOUND" });
 
   return respondWithStats({ eventId: event._id }, req, res);
 };
 
-// The same stats aggregated across every competition the club has imported.
-const getAllCompetitionStats = (req, res) => respondWithStats({ team: req.club }, req, res);
+const getAllCompetitionStats = (req, res) => respondWithStats({}, req, res);
 
-module.exports = { previewEjsImport, confirmEjsImport, getCompetitionStats, getAllCompetitionStats, getImportedCompetitionIds };
+// For the passive mapping prompt: the team names in one competition, plus which (if any) already belong to the caller's club.
+const getCompetitionTeamMapping = async (req, res) => {
+  const teamNames = (await CompetitionEntryModel.find({ eventId: req.params.eventId, team: EJS_TEAM }).distinct("teamName")).sort();
+  const mappings = await EjsTeamMappingModel.find({ ejsTeamName: { $in: teamNames } });
+  const byName = Object.fromEntries(mappings.map((row) => [row.ejsTeamName, row.club]));
+
+  res.status(200).json({
+    teamNames,
+    mappings: byName,
+    myTeamNames: teamNames.filter((name) => byName[name] === req.club),
+  });
+};
+
+// A club claims an EJS team name as its own. Can't take a name another club already owns.
+const setCompetitionTeamMapping = async (req, res) => {
+  const { ejsTeamName } = req.body;
+
+  if (!ejsTeamName) return res.status(400).json({ error: "MISSING_TEAM_NAME" });
+
+  const existing = await EjsTeamMappingModel.findOne({ ejsTeamName });
+
+  if (existing && existing.club !== req.club) {
+    return res.status(409).json({ error: "TEAM_NAME_TAKEN" });
+  }
+
+  const mapping = await EjsTeamMappingModel.findOneAndUpdate(
+    { ejsTeamName },
+    { ejsTeamName, club: req.club },
+    { upsert: true, returnDocument: "after" }
+  );
+
+  res.status(200).json(mapping);
+};
+
+module.exports = {
+  previewEjsImport,
+  confirmEjsImport,
+  getEjsCompetitions,
+  getImportedCompetitionIds,
+  getCompetitionStats,
+  getAllCompetitionStats,
+  getCompetitionTeamMapping,
+  setCompetitionTeamMapping,
+  EJS_TEAM,
+};

@@ -10,6 +10,7 @@ const ClubModel = require("../models/clubModel");
 const ClubSettingsModel = require("../models/clubSettingsModel");
 const CrossPassModel = require("../models/crossPassModel");
 const CompetitionEntryModel = require("../models/competitionEntryModel");
+const EjsTeamMappingModel = require("../models/ejsTeamMappingModel");
 const AppErrorModel = require("../models/appErrorModel");
 const { isValidClub, refreshClubsCache } = require("../helpers/clubs");
 const { broadcast } = require("../sse");
@@ -321,6 +322,7 @@ const deleteClub = async (req, res) => {
   }
 
   await AppErrorModel.deleteMany({ club: club.team });
+  await EjsTeamMappingModel.deleteMany({ club: club.team });
   await ClubModel.findByIdAndDelete(_id);
 
   await refreshClubsCache();

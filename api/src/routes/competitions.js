@@ -3,7 +3,17 @@ const multer = require("multer");
 const os = require("os");
 const crypto = require("crypto");
 const decodeToken = require("../middleware/decodeToken");
-const { previewEjsImport, confirmEjsImport, getCompetitionStats, getAllCompetitionStats, getImportedCompetitionIds } = require("../controllers/competitionController");
+const requireSuperAdmin = require("../middleware/requireSuperAdmin");
+const {
+  previewEjsImport,
+  confirmEjsImport,
+  getEjsCompetitions,
+  getImportedCompetitionIds,
+  getCompetitionStats,
+  getAllCompetitionStats,
+  getCompetitionTeamMapping,
+  setCompetitionTeamMapping,
+} = require("../controllers/competitionController");
 
 const router = express.Router();
 
@@ -30,10 +40,16 @@ const acceptFiles = (req, res, next) =>
 
 router.use(decodeToken);
 
+// Reads - every authenticated user.
 router.get("/imported", getImportedCompetitionIds);
+router.get("/ejs-competitions", getEjsCompetitions);
 router.get("/all-stats", getAllCompetitionStats);
-router.post("/:eventId/ejs-preview", acceptFiles, previewEjsImport);
-router.post("/:eventId/ejs-confirm", acceptFiles, confirmEjsImport);
+router.get("/:eventId/team-mapping", getCompetitionTeamMapping);
+router.post("/team-mapping", setCompetitionTeamMapping);
 router.get("/:eventId/stats", getCompetitionStats);
+
+// Imports - super-admin only.
+router.post("/:eventId/ejs-preview", requireSuperAdmin, acceptFiles, previewEjsImport);
+router.post("/:eventId/ejs-confirm", requireSuperAdmin, acceptFiles, confirmEjsImport);
 
 module.exports = router;
