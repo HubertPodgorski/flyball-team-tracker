@@ -7,6 +7,10 @@ const {
   updateItem,
   deleteItem,
   resetUserPassword,
+  getClubs,
+  createClub,
+  updateClub,
+  deleteClub,
 } = require("../controllers/superAdminController");
 const { getAppErrors, clearAppErrors } = require("../controllers/appErrorController");
 
@@ -15,9 +19,14 @@ const superAdminRoutes = () => {
 
   router.use(requireSuperAdmin);
 
-  // Before the generic entity routes - "errors" is read-only and has its own shape.
+  // Before the generic entity routes - "errors" and "clubs" are not team-scoped and have their own shapes.
   router.get("/errors", getAppErrors);
   router.delete("/errors", clearAppErrors);
+
+  router.get("/clubs", getClubs);
+  router.post("/clubs", createClub);
+  router.patch("/clubs", updateClub);
+  router.delete("/clubs/:_id", deleteClub);
 
   Object.keys(entityConfig).forEach((entity) => {
     router.get(`/${entity}`, getList(entity));

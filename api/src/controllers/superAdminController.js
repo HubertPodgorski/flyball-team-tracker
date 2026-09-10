@@ -6,7 +6,12 @@ const TeamModel = require("../models/teamModel");
 const TaskModel = require("../models/taskModel");
 const ResourceModel = require("../models/resourceModel");
 const PushSubscriptionModel = require("../models/pushSubscriptionModel");
-const { CLUBS } = require("../helpers/teams");
+const ClubModel = require("../models/clubModel");
+const ClubSettingsModel = require("../models/clubSettingsModel");
+const CrossPassModel = require("../models/crossPassModel");
+const CompetitionEntryModel = require("../models/competitionEntryModel");
+const AppErrorModel = require("../models/appErrorModel");
+const { getClubTeams, refreshClubsCache } = require("../helpers/clubs");
 const { broadcast } = require("../sse");
 const { detachTasksFromMatchup, keepOnlyPoolDogsInMatchups } = require("../helpers/lineupCascade");
 const { replaceDogEverywhere, broadcastDogCascade } = require("../helpers/dogCascade");
@@ -43,7 +48,7 @@ const getList = (entity) => async (req, res) => {
   const { Model } = entityConfig[entity];
   const { team: club } = req.query;
 
-  if (club && !CLUBS.includes(club)) {
+  if (club && !getClubTeams().includes(club)) {
     return res.status(400).json({ error: "INVALID_TEAM" });
   }
 
@@ -58,7 +63,7 @@ const createItem = (entity) => async (req, res) => {
   const { Model } = entityConfig[entity];
   const { team: club, ...data } = req.body;
 
-  if (!club || !CLUBS.includes(club)) {
+  if (!club || !getClubTeams().includes(club)) {
     return res.status(400).json({ error: "INVALID_TEAM" });
   }
 
@@ -103,7 +108,7 @@ const updateItem = (entity) => async (req, res) => {
   const { Model } = entityConfig[entity];
   const { _id, team: club, ...data } = req.body;
 
-  if (!club || !CLUBS.includes(club)) {
+  if (!club || !getClubTeams().includes(club)) {
     return res.status(400).json({ error: "INVALID_TEAM" });
   }
 
@@ -182,7 +187,7 @@ const deleteItem = (entity) => async (req, res) => {
   const { _id } = req.params;
   const { team: club } = req.query;
 
-  if (!club || !CLUBS.includes(club)) {
+  if (!club || !getClubTeams().includes(club)) {
     return res.status(400).json({ error: "INVALID_TEAM" });
   }
 
@@ -237,6 +242,92 @@ const resetUserPassword = async (req, res) => {
   }
 };
 
+// Every collection scoped by the `team` string - a club delete has to sweep all of them or it leaves orphans.
+const CLUB_SCOPED_MODELS = [
+  UserModel,
+  DogModel,
+  DogTaskModel,
+  EventModel,
+  TeamModel,
+  TaskModel,
+  ResourceModel,
+  CrossPassModel,
+  CompetitionEntryModel,
+  ClubSettingsModel,
+];
+
+const getClubs = async (_req, res) => {
+  const clubs = await ClubModel.find().sort({ name: 1 });
+
+  res.status(200).json(clubs);
+};
+
+const createClub = async (req, res) => {
+  const { code, name } = req.body;
+  // New clubs have no reason for the code and the stored `team` id to differ - default one to the other.
+  const team = (req.body.team || code || "").trim();
+
+  if (!code || !team || !name) {
+    return res.status(400).json({ error: "MISSING_FIELDS" });
+  }
+
+  const clash = await ClubModel.findOne({ $or: [{ code }, { team }] });
+
+  if (clash) {
+    return res.status(409).json({ error: "CLUB_CODE_OR_TEAM_TAKEN" });
+  }
+
+  const club = await ClubModel.create({ code, team, name });
+
+  await refreshClubsCache();
+
+  res.status(200).json(club);
+};
+
+// Only `name` and `suspended` are editable - changing `code`/`team` after users exist would strand their data.
+const updateClub = async (req, res) => {
+  const { _id, name, suspended } = req.body;
+  const update = {};
+
+  if (name !== undefined) update.name = name;
+  if (suspended !== undefined) update.suspended = suspended;
+
+  const club = await ClubModel.findByIdAndUpdate(_id, update, { returnDocument: "after" });
+
+  if (!club) return res.status(404).json({ error: "NOT_FOUND" });
+
+  await refreshClubsCache();
+
+  res.status(200).json(club);
+};
+
+// Deletes the club row AND every document in that club - irreversible, hence the client's double confirm.
+const deleteClub = async (req, res) => {
+  const { _id } = req.params;
+  const club = await ClubModel.findById(_id);
+
+  if (!club) return res.status(404).json({ error: "NOT_FOUND" });
+
+  // Push subscriptions are keyed by userId, not team - clear them before the users they point at are gone.
+  const userIds = await UserModel.find({ team: club.team }).distinct("_id");
+  await PushSubscriptionModel.deleteMany({ userId: { $in: userIds } });
+
+  const deleted = {};
+
+  for (const Model of CLUB_SCOPED_MODELS) {
+    const { deletedCount } = await Model.deleteMany({ team: club.team });
+
+    deleted[Model.modelName] = deletedCount;
+  }
+
+  await AppErrorModel.deleteMany({ club: club.team });
+  await ClubModel.findByIdAndDelete(_id);
+
+  await refreshClubsCache();
+
+  res.status(200).json({ ok: true, team: club.team, deleted });
+};
+
 module.exports = {
   entityConfig,
   getList,
@@ -244,4 +335,8 @@ module.exports = {
   updateItem,
   deleteItem,
   resetUserPassword,
+  getClubs,
+  createClub,
+  updateClub,
+  deleteClub,
 };

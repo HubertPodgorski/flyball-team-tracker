@@ -1,6 +1,7 @@
 import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
-import { afterAll, afterEach, beforeAll } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach } from "vitest";
+import { ensureClubsSeeded, refreshClubsCache } from "./src/helpers/clubs.js";
 
 // Nothing loads .env for this process (controllers are imported directly,
 // never through server.js) - any test exercising JWT signing needs this set
@@ -21,6 +22,12 @@ afterEach(async () => {
   for (const collection of Object.values(collections)) {
     await collection.deleteMany({});
   }
+});
+
+// The club list is DB-backed now - reseed it after each wipe so "TEST_TEAM" etc. stay valid clubs.
+beforeEach(async () => {
+  await ensureClubsSeeded();
+  await refreshClubsCache();
 });
 
 afterAll(async () => {

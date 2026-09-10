@@ -6,6 +6,7 @@ const {
   updateTask,
   deleteTask,
   reorderTasks,
+  copyTasksFromPreviousSession,
 } = require("../controllers/taskController");
 
 const router = express.Router();
@@ -14,6 +15,7 @@ router.use(decodeToken);
 
 router.get("/", getTasks);
 router.post("/", createTask);
+router.post("/copy-from-previous", copyTasksFromPreviousSession);
 router.patch("/", updateTask);
 router.delete("/:id", deleteTask);
 router.patch("/reorder", reorderTasks);

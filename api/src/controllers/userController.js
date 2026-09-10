@@ -1,7 +1,7 @@
 const UserModel = require("../models/userModel");
 const PushSubscriptionModel = require("../models/pushSubscriptionModel");
 const jwt = require("jsonwebtoken");
-const { CLUBS } = require("../helpers/teams");
+const { getClubTeams } = require("../helpers/clubs");
 const { findClubUsers } = require("../helpers/clubUsers");
 const { broadcast } = require("../sse");
 
@@ -107,7 +107,7 @@ const switchClub = async (req, res) => {
     return res.status(401).json({ error: "INVALID_TOKEN" });
   }
 
-  if (!CLUBS.includes(club)) {
+  if (!getClubTeams().includes(club)) {
     return res.status(400).json({ error: "INVALID_TEAM" });
   }
 
@@ -145,9 +145,9 @@ const getClubCodes = async (req, res) => {
 };
 
 // Every actual club, as opposed to getClubCodes' signup codes - a code and
-// the club it resolves to can differ (see userModel.js's clubCodeMap).
+// the club it resolves to can differ (see helpers/clubs.js).
 const getClubs = async (req, res) => {
-  res.status(200).json(CLUBS);
+  res.status(200).json(getClubTeams());
 };
 
 module.exports = {

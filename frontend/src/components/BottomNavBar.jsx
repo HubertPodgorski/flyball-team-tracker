@@ -22,6 +22,7 @@ import TextSnippetIcon from "@mui/icons-material/TextSnippet";
 import GroupsIcon from "@mui/icons-material/Groups";
 import QueryStatsIcon from "@mui/icons-material/QueryStats";
 import BugReportIcon from "@mui/icons-material/BugReport";
+import ApartmentIcon from "@mui/icons-material/Apartment";
 
 import { Link, useLocation } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
@@ -226,12 +227,17 @@ const BottomNavBar = () => {
               icon={<BugReportIcon />}
               label={t("nav.appErrors")}
             />
+            <NavListItem
+              to="/super-admin/clubs"
+              icon={<ApartmentIcon />}
+              label={t("nav.clubs")}
+            />
           </>
         )}
 
         <Divider />
 
-        {features.eventsCalendar && (
+        {features.ejsStats && (
           <NavListItem
             to={userRoutes.ejsStats}
             icon={<QueryStatsIcon />}

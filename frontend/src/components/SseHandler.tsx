@@ -1,5 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useSnackbar } from "notistack";
+import { useTranslation } from "react-i18next";
 import { useAuthContext } from "../hooks/useAuthContext";
 import { useCurrentClub } from "../hooks/useCurrentClub";
 import { apiSuffix } from "../helpers/apiCall";
@@ -9,17 +11,27 @@ import { crossPassesQueryOptions } from "../queries/crossPasses";
 import { dogTasksQueryOptions } from "../queries/dogTasks";
 import { usersQueryOptions } from "../queries/users";
 import { eventsQueryOptions } from "../queries/events";
-import { tasksQueryOptions } from "../queries/tasks";
 import { dogsQueryOptions } from "../queries/dogs";
 import { clubSettingsQueryOptions } from "../queries/clubSettings";
 import { resourcesQueryOptions } from "../queries/resources";
-import { ClubSettings, CrossPass, Dog, DogTask, Event, Resource, Task, Team, User } from "../helpers/types";
+import { ClubSettings, CrossPass, Dog, DogTask, Event, Resource, Team, User } from "../helpers/types";
 
 // Live updates for entities migrated off socket.io.
 const SseHandler = () => {
   const { user, setUserDogs } = useAuthContext();
   const queryClient = useQueryClient();
   const club = useCurrentClub();
+  const { enqueueSnackbar } = useSnackbar();
+  const { t } = useTranslation();
+
+  // The axios interceptor fires this when a write bounces off a suspended (read-only) club.
+  useEffect(() => {
+    const onSuspended = () => enqueueSnackbar(t("pages.superAdminClubs.clubSuspendedNotice"), { variant: "warning" });
+
+    window.addEventListener("club-suspended", onSuspended);
+
+    return () => window.removeEventListener("club-suspended", onSuspended);
+  }, [enqueueSnackbar, t]);
 
   // Read fresh inside event listeners without making the connection effect
   // below depend on the whole `user` object - see the comment on that
@@ -90,10 +102,9 @@ const SseHandler = () => {
       queryClient.setQueryData(eventsQueryOptions().queryKey, events);
     });
 
-    source.addEventListener("tasks_updated", (event: MessageEvent) => {
-      const tasks: Task[] = JSON.parse(event.data);
-
-      queryClient.setQueryData(tasksQueryOptions().queryKey, tasks);
+    source.addEventListener("tasks_updated", () => {
+      // Tasks are cached per session board (["tasks", club, eventId]) plus a bare "all tasks" key - let each re-fetch its own slice.
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
     });
 
     source.addEventListener("dogs_updated", (event: MessageEvent) => {

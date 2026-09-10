@@ -13,6 +13,8 @@ export interface CreateEditTaskRequestType {
   dogs: Dog[];
   position: Position;
   matchupRef?: LineupRef;
+  // The session board this task belongs to - set on create only, null for the default board.
+  eventId?: string | null;
 }
 
 // What EventForm's callers pass in - not the full Event (no _id/dogs/users on a fresh Add).

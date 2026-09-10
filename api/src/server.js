@@ -1,6 +1,8 @@
 require("dotenv").config();
 
 const { logAppError } = require("./helpers/logAppError");
+const { ensureClubsSeeded, refreshClubsCache } = require("./helpers/clubs");
+const { migrateOrphanTasksToNextEvent } = require("./helpers/taskMigration");
 
 // node-xlrd (EJS .xls parsing) can throw synchronously inside an fs completion callback on a malformed file - that escapes any try/catch and would otherwise kill the whole process for every user over one bad upload.
 process.on("uncaughtException", (error) => {
@@ -77,8 +79,15 @@ app.use((error, req, res, next) => {
 
 mongoose
   .connect(process.env.MONGO_URL)
-  .then(() => {
+  .then(async () => {
     console.log("Connected to DB");
+
+    // Additive one-time seed - fills the clubs collection from the old hardcoded lists the first time it's empty.
+    await ensureClubsSeeded();
+    await refreshClubsCache();
+
+    // One-time: re-home pre-existing (global) task plans onto each club's next session board.
+    await migrateOrphanTasksToNextEvent().catch((error) => console.error("Task migration failed:", error));
 
     app.listen(process.env.PORT, () => {
       console.log(`Listening on port ${process.env.PORT}`);

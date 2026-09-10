@@ -14,6 +14,7 @@ const FEATURE_KEYS: (keyof ClubFeatures)[] = [
   "crossPasses",
   "netTime",
   "eventsCalendar",
+  "ejsStats",
   "dogTasksCatalog",
   "usefulResources",
 ];

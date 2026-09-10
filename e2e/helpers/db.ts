@@ -25,6 +25,30 @@ export const promoteToTrainer = async (email: string): Promise<void> => {
   }
 };
 
+// The task board is scoped to the nearest upcoming event; clear a shared club's events so a spec's board is deterministic (the default board).
+export const deleteAllEvents = async (club: string): Promise<void> => {
+  const client = new MongoClient(getMongoUrl());
+
+  try {
+    await client.connect();
+    await client.db().collection("events").deleteMany({ team: club });
+  } finally {
+    await client.close();
+  }
+};
+
+// For specs that assert on "copy from a previously planned session" - a clean slate so only this spec's plans exist.
+export const deleteAllTasks = async (club: string): Promise<void> => {
+  const client = new MongoClient(getMongoUrl());
+
+  try {
+    await client.connect();
+    await client.db().collection("tasks").deleteMany({ team: club });
+  } finally {
+    await client.close();
+  }
+};
+
 // Seeds a team with one lineup of two dogs, bypassing the drag-and-drop UI
 // entirely - direct insert into the "squads" collection (see teamModel.js).
 // Names carry a unique suffix (tests often share one club) so a locator for

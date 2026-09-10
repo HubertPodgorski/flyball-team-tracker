@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const { isClubSuspended } = require("../helpers/clubs");
 
 // Real server-side check, same as requireSuperAdmin.js: verifies the
 // signature against SECRET, not just a decode. jwt.decode() alone parses
@@ -26,6 +27,11 @@ const decodeToken = (req, res, next) => {
   // Fallback: old tokens (pre team->club rename) carry `team`, not `club`.
   req.club = decoded.club ?? decoded.team;
   req.userId = decoded._id;
+
+  // A suspended club is read-only: sign in and browse, but every write is refused.
+  if (req.method !== "GET" && isClubSuspended(req.club)) {
+    return res.status(403).json({ error: "CLUB_SUSPENDED" });
+  }
 
   next();
 };
