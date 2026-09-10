@@ -457,7 +457,7 @@
         "title": "Tasks",
         "items": [
           "Tasks are laid out on a grid of rows and columns - drag a card to reorder it, or move it into a different cell.",
-          "Pick an event at the top to see which dogs are marked present, and to plan tasks against that event's attendance.",
+          "The board shows your club’s plan for its next training session. Pick an event at the top to see which of its dogs are marked present.",
           "A task can list dogs directly, or link to a team lineup instead - tap a linked task itself (not one of its dogs) to see and edit that lineup's cross-pass timing.",
           "Tap any dog on a task to see its notes and cross-passes, same as on My Dogs - edit them if it's your own dog or you're a trainer, otherwise just view."
         ]
@@ -510,12 +510,12 @@
       "title": "Trainer tools",
       "intro": "As a trainer, you also get a dedicated panel for managing your club's data:",
       "items": [
-        "Tasks - the same drag-and-drop board, plus the ability to create, edit, and delete tasks. Use \"Download PDF\" to open an A4-formatted, printable copy of the plain board members see (no drag handles or edit controls) - pick \"Save as PDF\" in the print dialog to download it, or print it directly.",
+        "Tasks - the same drag-and-drop board, plus create, edit and delete. The board is scoped to the session picked at the top, so you can plan future trainings ahead of time; the nearest upcoming one is selected by default. On an empty session board, \"Copy plan from previous session\" seeds it from your most recently planned session. Use \"Download PDF\" for an A4-formatted printable copy of the plain board members see - pick \"Save as PDF\" in the print dialog, or print it directly.",
         "Dogs, Dog tasks, Users - manage your club's dogs (including each dog's jump height), the task types they can be assigned, and your club's members. Open a member's card to reset their password if they're locked out - you'll get a one-time temporary password to pass along to them.",
         "Events - create trainings, competitions, seminars, and meetings for your club; the soonest upcoming one is pinned at the top here too. The bell icon on an event immediately sends an attendance-reminder push to anyone who hasn't marked yet, regardless of the usual ~24h timing. Toggle \"Repeats weekly\" to create a whole block of sessions at once - pick the weekdays and an end date (up to 3 months out) and each session is created as its own independent event, with its own attendance.",
         "Teams - build and edit teams and their lineups for your whole club, not just your own dogs.",
-        "EJS Stats - upload a competition's EJS export file(s) to see your club's stats by club, team, or dog: run counts, fault/ok rates, effectiveness, average times, comparison charts, and a pass-outcome breakdown. In Team mode, switch between comparing individual dogs or whole lineups. Confirming an import replaces ALL of that competition's existing data, so upload every day's file together if there's more than one.",
-        "Features - turn off the parts of the app your club doesn't use, like Teams & Lineups, Cross-passes, Events/Calendar, or the Dog Tasks catalog."
+        "EJS Stats - upload a competition’s EJS export file(s) (.xls or .xlsx) for run counts, fault/ok rates, effectiveness, average times, comparison charts and a pass-outcome breakdown. View it by whole club, by team, by lineup or by dog, and switch the scope between \"My club\" and \"All clubs\" to see opponents too. \"All competitions together\" aggregates every import, with a per-file breakdown on the dog and team tabs. Confirming an import replaces ALL of that competition’s existing data, so upload every day’s file together if there’s more than one.",
+        "Features - turn off the parts of the app your club doesn’t use, like Teams & Lineups, Cross-passes, Events/Calendar, EJS Stats, or the Dog Tasks catalog."
       ]
     },
     "trainerWorkflow": {
@@ -574,7 +574,7 @@
       "title": "Also included",
       "items": [
         "Click any dog on a task to see (and, if it's yours or you're a trainer, edit) its notes and cross-passes.",
-        "Trainers can import a competition's EJS export for club/team/dog stats, comparison charts, and a pass-outcome breakdown.",
+        "Trainers can import a competition’s EJS export (.xls/.xlsx) for club, team, lineup and dog stats - your own club or opponents’ - plus comparison charts and a pass-outcome breakdown.",
         "Trainers can download the task board as a printable A4 PDF."
       ]
     },

@@ -469,7 +469,7 @@
         "title": "Zadania",
         "items": [
           "Zadania są ułożone na siatce wierszy i kolumn - przeciągnij kartę, aby zmienić jej kolejność, albo przenieś ją do innej komórki.",
-          "Wybierz wydarzenie u góry, aby zobaczyć, które psy są zaznaczone jako obecne, i planować zadania na podstawie tej obecności.",
+          "Tablica pokazuje plan Twojego klubu na najbliższy trening. Wybierz wydarzenie u góry, aby zobaczyć, które z jego psów są zaznaczone jako obecne.",
           "Zadanie może zawierać psy bezpośrednio albo być powiązane ze składem drużyny - dotknij samego zadania (nie psa), aby zobaczyć i edytować czasy crossów tego składu.",
           "Dotknij dowolnego psa na zadaniu, aby zobaczyć jego notatki i crossy, tak jak w Moje psy - edytujesz je, jeśli to Twój pies albo jesteś trenerem, w innym wypadku tylko podgląd."
         ]
@@ -522,12 +522,12 @@
       "title": "Narzędzia trenera",
       "intro": "Jako trener masz dostęp do osobnego panelu do zarządzania danymi klubu:",
       "items": [
-        "Zadania - ta sama tablica z przeciąganiem, plus możliwość tworzenia, edycji i usuwania zadań. Przyciskiem \"Pobierz PDF\" otworzysz gotową do druku wersję A4 zwykłej tablicy, jaką widzą członkowie (bez uchwytów do przeciągania i edycji) - w oknie drukowania wybierz \"Zapisz jako PDF\", żeby ją pobrać, albo wydrukuj od razu.",
+        "Zadania - ta sama tablica z przeciąganiem, plus tworzenie, edycja i usuwanie. Tablica jest przypisana do sesji wybranej u góry, więc możesz planować przyszłe treningi z wyprzedzeniem; domyślnie zaznaczona jest najbliższa. Na pustej tablicy sesji przycisk \"Skopiuj plan z poprzedniej sesji\" wypełni ją z ostatnio zaplanowanej sesji. Przyciskiem \"Pobierz PDF\" otworzysz gotową do druku wersję A4 zwykłej tablicy, jaką widzą członkowie - w oknie drukowania wybierz \"Zapisz jako PDF\", albo wydrukuj od razu.",
         "Psy, Zadania psów, Użytkownicy - zarządzaj psami klubu (w tym wysokością hopek każdego psa), rodzajami zadań, które można im przypisać, oraz członkami klubu. Otwórz kartę członka, aby zresetować jego hasło, jeśli nie może się zalogować - otrzymasz jednorazowe tymczasowe hasło do przekazania mu.",
         "Wydarzenia - twórz treningi, zawody, seminaria i zebrania dla klubu; najbliższe nadchodzące jest przypięte na górze także tutaj. Ikona dzwonka przy wydarzeniu od razu wysyła przypomnienie o obecności każdemu, kto jeszcze się nie zaznaczył, niezależnie od zwykłego czasu ~24h. Włącz \"Powtarzaj co tydzień\", aby utworzyć od razu całą serię sesji - wybierz dni tygodnia i datę końcową (maksymalnie 3 miesiące naprzód), a każda sesja powstanie jako niezależne wydarzenie, z własną obecnością.",
         "Drużyny - buduj i edytuj drużyny oraz ich składy dla całego klubu, nie tylko dla własnych psów.",
-        "Statystyki EJS - wgraj plik(i) eksportu EJS z zawodów, aby zobaczyć statystyki klubu według klubu, drużyny albo psa: liczbę biegów, odsetek błędów/ok, skuteczność, średnie czasy, wykresy porównawcze i podział wyników przebiegów. W trybie Drużyna przełączysz się między porównaniem pojedynczych psów a całych składów. Zatwierdzenie importu zastępuje WSZYSTKIE dotychczasowe dane tych zawodów - jeśli masz więcej niż jeden dzień, wgraj wszystkie pliki naraz.",
-        "Funkcje - wyłącz części aplikacji, których Twój klub nie używa, np. Drużyny i składy, Crossy, Wydarzenia/Kalendarz czy katalog zadań dla psów."
+        "Statystyki EJS - wgraj plik(i) eksportu EJS z zawodów (.xls lub .xlsx): liczba biegów, odsetek błędów/ok, skuteczność, średnie czasy, wykresy porównawcze i podział wyników przebiegów. Oglądaj wg całego klubu, drużyny, składu albo psa, a przełącznikiem \"Mój klub\" / \"Wszystkie kluby\" zobaczysz też przeciwników. \"Wszystkie zawody razem\" agreguje wszystkie importy, z podziałem na pliki w zakładkach psa i drużyny. Zatwierdzenie importu zastępuje WSZYSTKIE dotychczasowe dane tych zawodów - jeśli masz więcej niż jeden dzień, wgraj wszystkie pliki naraz.",
+        "Funkcje - wyłącz części aplikacji, których Twój klub nie używa, np. Drużyny i składy, Crossy, Wydarzenia/Kalendarz, Statystyki EJS czy katalog zadań dla psów."
       ]
     },
     "trainerWorkflow": {
@@ -586,7 +586,7 @@
       "title": "Zawiera też",
       "items": [
         "Kliknij dowolnego psa na zadaniu, aby zobaczyć (a jeśli to Twój pies albo jesteś trenerem - edytować) jego notatki i crossy.",
-        "Trener może wgrać eksport EJS z zawodów, żeby zobaczyć statystyki klubu/drużyny/psa, wykresy porównawcze i podział wyników przebiegów.",
+        "Trener może wgrać eksport EJS z zawodów (.xls/.xlsx) - statystyki klubu, drużyny, składu i psa, własnego klubu lub przeciwników - plus wykresy porównawcze i podział wyników przebiegów.",
         "Trener może pobrać tablicę zadań jako gotowy do druku PDF w formacie A4."
       ]
     },
