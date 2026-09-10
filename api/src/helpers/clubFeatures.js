@@ -4,6 +4,7 @@ const DEFAULT_FEATURES = {
   teamsAndLineups: true,
   crossPasses: true,
   eventsCalendar: true,
+  ejsStats: true,
   dogTasksCatalog: true,
   usefulResources: true,
   netTime: true,

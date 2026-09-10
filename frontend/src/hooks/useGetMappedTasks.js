@@ -8,9 +8,9 @@ import {
 import { useAppContext } from "./useAppContext";
 import { useReorderTasksMutation, useTasksQuery } from "../queries/tasks";
 
-export const useGetMappedTasks = (adminPanel, isDragging = false) => {
+export const useGetMappedTasks = (adminPanel, isDragging = false, eventId) => {
   const { tasks, setTasks } = useAppContext();
-  const { data: queriedTasks } = useTasksQuery();
+  const { data: queriedTasks } = useTasksQuery(eventId);
   const reorderTasksMutation = useReorderTasksMutation();
 
   const [mappedTasks, setMappedTasks] = useState([]);

@@ -30,6 +30,8 @@ export interface Task {
   dogs: Dog[];
   description: string;
   position: Position;
+  // The session this task is planned for; null/absent = the club's default board.
+  eventId?: string | null;
   // Property key matches the backend's stored schema - renaming needs a data migration, not just a code change.
   matchupRef?: LineupRef;
 }
@@ -137,6 +139,7 @@ export interface ClubFeatures {
   teamsAndLineups: boolean;
   crossPasses: boolean;
   eventsCalendar: boolean;
+  ejsStats: boolean;
   dogTasksCatalog: boolean;
   usefulResources: boolean;
   netTime: boolean;

@@ -9,6 +9,8 @@ const taskSchema = new Schema(
     dogs: {
       type: [DogModel.schema],
     },
+    // Which training session this task is planned for. null = the club's default board (also every task from before this field existed).
+    eventId: { type: Schema.Types.ObjectId, default: null },
     // Kept even if dogs later drift from the matchup.
     matchupRef: {
       squadId: { type: Schema.Types.ObjectId },
@@ -29,5 +31,7 @@ const taskSchema = new Schema(
     timestamps: true,
   }
 );
+
+taskSchema.index({ team: 1, eventId: 1 });
 
 module.exports = mongoose.model("Task", taskSchema);

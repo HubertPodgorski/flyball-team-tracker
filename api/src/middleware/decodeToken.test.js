@@ -1,9 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 import decodeToken from "./decodeToken.js";
 import testHelpersModule from "../testHelpers.js";
+import { refreshClubsCache } from "../helpers/clubs.js";
 
 const { mockRes } = testHelpersModule;
+const ClubModel = mongoose.model("Club");
 
 // Regression coverage for a real vulnerability: this middleware used to call
 // jwt.decode() (parses the payload, checks nothing) instead of jwt.verify()
@@ -94,5 +97,26 @@ describe("decodeToken", () => {
     expect(next).not.toHaveBeenCalled();
     expect(res.statusCode).toBe(401);
     expect(res.body).toEqual({ error: "UNAUTHORIZED" });
+  });
+
+  it("blocks writes for a suspended club but still lets GETs through", async () => {
+    await ClubModel.updateOne({ team: "TEST_TEAM" }, { suspended: true });
+    await refreshClubsCache();
+
+    const token = jwt.sign({ _id: "u", club: "TEST_TEAM" }, process.env.SECRET);
+
+    const writeRes = mockRes();
+    const writeNext = vi.fn();
+    decodeToken({ method: "POST", headers: { authorization: `Bearer ${token}` } }, writeRes, writeNext);
+
+    expect(writeNext).not.toHaveBeenCalled();
+    expect(writeRes.statusCode).toBe(403);
+    expect(writeRes.body).toEqual({ error: "CLUB_SUSPENDED" });
+
+    const readRes = mockRes();
+    const readNext = vi.fn();
+    decodeToken({ method: "GET", headers: { authorization: `Bearer ${token}` } }, readRes, readNext);
+
+    expect(readNext).toHaveBeenCalledOnce();
   });
 });

@@ -1,6 +1,6 @@
 import { test, expect } from "../helpers/fixtures";
 import { uniqueEmail } from "../helpers/testData";
-import { promoteToTrainer, seedTeamWithLineup, seedLineupLinkedTask } from "../helpers/db";
+import { promoteToTrainer, seedTeamWithLineup, seedLineupLinkedTask, deleteAllEvents } from "../helpers/db";
 import { signupAndLoginAsTrainer, login, logout, addDog } from "../helpers/auth";
 
 // A dog chip opens dog details (and the note saved there persists) on this read-only board too, same as the trainer's.
@@ -9,6 +9,8 @@ test("user-panel tasks: tapping a dog opens its details, and a saved note persis
 
   await signupAndLoginAsTrainer(page, { email, name: "E2E Trainer", clubCode: "TEST" });
   await promoteToTrainer(email);
+  // No events -> both the trainer board and the user board resolve to the default (no-event) board, where the seeded task lives.
+  await deleteAllEvents("TEST_TEAM");
   await logout(page);
   await login(page, email);
 

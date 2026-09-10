@@ -64,7 +64,8 @@
     "allResources": "Wszystkie przydatne linki",
     "appErrors": "Błędy aplikacji",
     "openDrawer": "otwórz menu",
-    "features": "Funkcje"
+    "features": "Funkcje",
+    "clubs": "Kluby"
   },
   "features": {
     "intro": "Wyłącz to, czego Twój klub nie używa - trenerzy i członkowie przestaną to widzieć w całej aplikacji.",
@@ -99,6 +100,10 @@
     "usefulResources": {
       "title": "Przydatne linki",
       "body": "Lista linków klubu - strona na Facebooku, arkusze wydarzeń i tym podobne."
+    },
+    "ejsStats": {
+      "title": "Statystyki EJS",
+      "body": "Import i analiza wyników zawodów (EJS)."
     }
   },
   "settings": {
@@ -401,6 +406,25 @@
     "resources": {
       "intro": "Linki, których Twój klub naprawdę potrzebuje - strona na Facebooku, arkusze wydarzeń, cokolwiek innego warto mieć pod ręką.",
       "noneYet": "Brak linków"
+    },
+    "superAdminClubs": {
+      "title": "Kluby",
+      "addClub": "Dodaj klub",
+      "codeLabel": "Kod rejestracji",
+      "teamLabel": "Id klubu (team)",
+      "nameLabel": "Nazwa wyświetlana",
+      "add": "Dodaj klub",
+      "suspended": "Zawieszony (tylko odczyt)",
+      "delete": "Usuń klub",
+      "deleteTitle": "Usunąć ten klub?",
+      "deleteWarning": "To trwale usuwa {{name}} oraz wszystkich użytkowników, psy, wydarzenia, drużyny, zadania i wyniki w tym klubie. Tego nie da się cofnąć.",
+      "understandCheckbox": "Rozumiem, że to usuwa wszystkie dane klubu",
+      "typeCodeToConfirm": "Wpisz {{code}}, aby potwierdzić",
+      "confirmDelete": "Usuń wszystko",
+      "deleted": "Usunięto {{name}} i wszystkie jego dane",
+      "createFailed": "Coś poszło nie tak",
+      "codeTaken": "Ten kod lub id klubu jest już zajęty",
+      "clubSuspendedNotice": "Twój klub jest zawieszony - tylko podgląd, zmiany są wyłączone."
     }
   },
   "eventTypes": {
@@ -424,7 +448,10 @@
     "noDogsSelected": "Nie wybrano psów",
     "eventLabel": "Wydarzenie",
     "noneOption": "Brak",
-    "downloadPdf": "Pobierz PDF"
+    "downloadPdf": "Pobierz PDF",
+    "copyFromPrevious": "Skopiuj plan z poprzedniej sesji",
+    "noPreviousPlan": "Brak wcześniej zaplanowanej sesji do skopiowania",
+    "copyFailed": "Nie udało się skopiować poprzedniego planu"
   },
   "confirm": {
     "title": "Czy na pewno?",

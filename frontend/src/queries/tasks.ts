@@ -1,6 +1,7 @@
 import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
 import { getCurrentClub } from "../helpers/authToken";
 import {
+  copyTasksFromPreviousSession,
   createTask,
   deleteTask,
   fetchTasks,
@@ -8,14 +9,15 @@ import {
   updateTask,
 } from "../helpers/tasksApi";
 
-export const tasksQueryOptions = (club = getCurrentClub()) =>
+// eventId scopes the board to one session; "none" is the default board; omitted means every task in the club (the feature-gate check in Features.tsx).
+export const tasksQueryOptions = (eventId?: string, club = getCurrentClub()) =>
   queryOptions({
-    queryKey: ["tasks", club],
-    queryFn: fetchTasks,
+    queryKey: eventId ? ["tasks", club, eventId] : ["tasks", club],
+    queryFn: () => fetchTasks(eventId),
     enabled: !!club,
   });
 
-export const useTasksQuery = () => useQuery(tasksQueryOptions());
+export const useTasksQuery = (eventId?: string) => useQuery(tasksQueryOptions(eventId));
 
 // No cache update on success - tasks_updated (SSE) is the source of truth.
 // The task grid's own optimistic updates live in AppContext, not here - see
@@ -31,3 +33,6 @@ export const useDeleteTaskMutation = () =>
 
 export const useReorderTasksMutation = () =>
   useMutation({ mutationFn: reorderTasks });
+
+export const useCopyTasksFromPreviousMutation = () =>
+  useMutation({ mutationFn: copyTasksFromPreviousSession });

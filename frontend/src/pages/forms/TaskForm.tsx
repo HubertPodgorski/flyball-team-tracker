@@ -294,7 +294,13 @@ const TaskForm = ({
           { onSuccess: handleClose }
         );
       } else {
-        createTaskMutation.mutate(data, { onSuccess: handleClose });
+        // A new task belongs to whichever session board is open; no/blank selection means the default board.
+        const scopeEventId = typeof selectedEventId === "string" && selectedEventId ? selectedEventId : null;
+
+        createTaskMutation.mutate(
+          { ...data, eventId: scopeEventId },
+          { onSuccess: handleClose }
+        );
       }
     },
   });

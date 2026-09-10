@@ -12,25 +12,26 @@ import DogPlanningLegend from "../DogPlanningLegend";
 
 const CurrentEventSelectWithDogs = () => {
   const { t } = useTranslation();
-  const { data: events = [] } = useEventsQuery();
+  const { data: events = [], isSuccess: eventsLoaded } = useEventsQuery();
   const { setSelectedEventId } = useTaskPlanningContext();
 
   const form = useForm({
-    defaultValues: { event: [] },
+    defaultValues: { event: "" },
   });
 
   const selectedEvent = useStore(form.store, (state) => state.values.event);
   const nextEvent = useMemo(() => getNextEvent(events), [events]);
 
-  // Preselect the nearest upcoming event once, the same way the calendar highlights it - the user can still switch to "none".
+  // Preselect the nearest upcoming event once the events list has settled, the same way the calendar highlights it.
+  // Fires exactly once per mount so a later live update to the events list never yanks the board to a different session.
   const didPreselect = useRef(false);
   useEffect(() => {
-    if (didPreselect.current || events.length === 0) return;
+    if (didPreselect.current || !eventsLoaded) return;
 
     didPreselect.current = true;
 
     if (nextEvent) form.setFieldValue("event", nextEvent._id);
-  }, [events, nextEvent, form]);
+  }, [eventsLoaded, nextEvent, form]);
 
   // Shared with TaskForm's dog select - see TaskPlanningContext.
   useEffect(() => {

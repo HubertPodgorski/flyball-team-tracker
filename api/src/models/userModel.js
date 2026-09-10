@@ -2,22 +2,9 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const DogModel = require("./dogModel");
+const { teamForClubCode, getClubCodes } = require("../helpers/clubs");
 
 const Schema = mongoose.Schema;
-
-// signup code -> club. Not 1:1 with CLUBS in helpers/teams.js since a code
-// can read differently than the club value it maps to (e.g. "DZIKIEGZIKI" -> "DZIKIE_GZIKI").
-const clubCodeMap = {
-  DZIKIEGZIKI: "DZIKIE_GZIKI",
-  FLYVENGERS: "FLYVENGERS",
-  DZIKIE_GZIKI_NABOR: "DZIKIE_GZIKI_NABOR",
-  WEST_SIDE_DOGZ: "WEST_SIDE_DOGZ",
-  TEST: "TEST_TEAM",
-  ULTRA_FLYBALL_TEAM: "ULTRA_FLYBALL_TEAM",
-  SANDBOX: "SANDBOX",
-};
-
-const getClubFromClubCode = (clubCode) => clubCodeMap[clubCode];
 
 // Email lookups are case-insensitive ("user@x.com" and "User@X.com" are the same account) - stored casing is untouched.
 const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -64,7 +51,7 @@ userSchema.statics.signup = async function (email, password, name, clubCode) {
     throw Error("EMAIL_ALREADY_IN_USE");
   }
 
-  const club = getClubFromClubCode(clubCode ?? "");
+  const club = teamForClubCode(clubCode ?? "");
 
   // An unrecognized code used to fall through silently, creating a user
   // with no club at all - a real account nothing ever surfaced as broken
@@ -166,9 +153,6 @@ userSchema.statics.resetPasswordForUser = async function (userId) {
 
 module.exports = mongoose.model("User", userSchema);
 
-// The single source of truth for which club codes are valid at signup - the
-// frontend used to keep its own separate hardcoded copy of this list for
-// client-side validation, which could silently drift from this one (add a
-// club here and forget there, or vice versa). Exposed read-only via
-// GET /users/club-codes instead.
-module.exports.getValidClubCodes = () => Object.keys(clubCodeMap);
+// The valid signup codes, DB-backed via helpers/clubs.js. Exposed read-only over GET /users/club-codes so the
+// frontend never keeps its own drifting copy.
+module.exports.getValidClubCodes = () => getClubCodes();

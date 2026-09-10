@@ -64,7 +64,8 @@
     "allResources": "All resources",
     "appErrors": "App errors",
     "openDrawer": "open drawer",
-    "features": "Features"
+    "features": "Features",
+    "clubs": "Clubs"
   },
   "features": {
     "intro": "Turn off anything your club doesn't use - trainers and members stop seeing it everywhere in the app.",
@@ -97,6 +98,10 @@
     "usefulResources": {
       "title": "Useful Resources",
       "body": "The club's list of external links - Facebook page, event spreadsheets, and the like."
+    },
+    "ejsStats": {
+      "title": "EJS Stats",
+      "body": "Import and analyse competition (EJS) results."
     }
   },
   "settings": {
@@ -389,6 +394,25 @@
     "resources": {
       "intro": "Links your club actually needs - Facebook page, event spreadsheets, anything else worth keeping handy.",
       "noneYet": "No resources yet"
+    },
+    "superAdminClubs": {
+      "title": "Clubs",
+      "addClub": "Add a club",
+      "codeLabel": "Signup code",
+      "teamLabel": "Club id (team)",
+      "nameLabel": "Display name",
+      "add": "Add club",
+      "suspended": "Suspended (read-only)",
+      "delete": "Delete club",
+      "deleteTitle": "Delete this club?",
+      "deleteWarning": "This permanently deletes {{name}} and every user, dog, event, team, task and result in it. This cannot be undone.",
+      "understandCheckbox": "I understand this deletes all of the club’s data",
+      "typeCodeToConfirm": "Type {{code}} to confirm",
+      "confirmDelete": "Delete everything",
+      "deleted": "{{name}} and all its data were deleted",
+      "createFailed": "Something went wrong",
+      "codeTaken": "That code or club id is already taken",
+      "clubSuspendedNotice": "Your club is suspended - viewing only, changes are disabled."
     }
   },
   "eventTypes": {
@@ -412,7 +436,10 @@
     "noDogsSelected": "No dogs selected",
     "eventLabel": "Event",
     "noneOption": "None",
-    "downloadPdf": "Download PDF"
+    "downloadPdf": "Download PDF",
+    "copyFromPrevious": "Copy plan from previous session",
+    "noPreviousPlan": "No earlier planned session to copy from",
+    "copyFailed": "Couldn't copy the previous plan"
   },
   "confirm": {
     "title": "Are you sure?",

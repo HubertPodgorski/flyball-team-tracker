@@ -5,6 +5,7 @@ const ALL_ON: ClubFeatures = {
   teamsAndLineups: true,
   crossPasses: true,
   eventsCalendar: true,
+  ejsStats: true,
   dogTasksCatalog: true,
   usefulResources: true,
   netTime: true,
