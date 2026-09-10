@@ -126,7 +126,7 @@ export const seedLineupLinkedTask = async (
   }
 };
 
-// A team with two lineups plus one CompetitionEntry per lineup - enough real data for the lineup chart's two points.
+// A team plus two CompetitionEntry rows whose running orders differ - two data-derived lineups for the lineup chart.
 export const seedCompetitionWithLineups = async (
   club: string,
   eventName: string
@@ -135,12 +135,11 @@ export const seedCompetitionWithLineups = async (
 
   const suffix = Date.now();
   const teamId = new ObjectId();
-  const lineupAId = new ObjectId();
-  const lineupBId = new ObjectId();
   const teamName = `Seeded Comp Team ${suffix}`;
   const dogA = { _id: new ObjectId(), name: `Seeded Comp Dog A ${suffix}` };
   const dogB = { _id: new ObjectId(), name: `Seeded Comp Dog B ${suffix}` };
   const eventId = new ObjectId();
+  const key = (dogs: { name: string }[]) => dogs.map((dog) => dog.name).join("|");
 
   try {
     await client.connect();
@@ -153,16 +152,7 @@ export const seedCompetitionWithLineups = async (
       { _id: dogB._id, name: dogB.name, team: club },
     ]);
 
-    await db.collection("squads").insertOne({
-      _id: teamId,
-      name: teamName,
-      team: club,
-      dogs: [dogA, dogB],
-      matchups: [
-        { _id: lineupAId, name: `Seeded Lineup A ${suffix}`, dogs: [dogA, dogB], crossPasses: [] },
-        { _id: lineupBId, name: `Seeded Lineup B ${suffix}`, dogs: [dogA, dogB], crossPasses: [] },
-      ],
-    });
+    await db.collection("squads").insertOne({ _id: teamId, name: teamName, team: club, dogs: [dogA, dogB], matchups: [] });
 
     await db.collection("events").insertOne({
       _id: eventId,
@@ -175,8 +165,8 @@ export const seedCompetitionWithLineups = async (
     await db.collection("competitionentries").insertMany([
       {
         eventId,
-        matchedLineupId: lineupAId,
-        teamName: "Our Team",
+        lineupKey: key([dogA, dogB]),
+        teamName,
         team: club,
         ourTeam: true,
         dogs: [
@@ -187,13 +177,13 @@ export const seedCompetitionWithLineups = async (
       },
       {
         eventId,
-        matchedLineupId: lineupBId,
-        teamName: "Our Team",
+        lineupKey: key([dogB, dogA]),
+        teamName,
         team: club,
         ourTeam: true,
         dogs: [
-          { name: dogA.name, matchedDogId: dogA._id, lightsTime: "ok", faulted: false },
-          { name: dogB.name, matchedDogId: dogB._id, crossTime: 4.5, faulted: true },
+          { name: dogB.name, matchedDogId: dogB._id, lightsTime: 4.5, faulted: true },
+          { name: dogA.name, matchedDogId: dogA._id, crossTime: "ok", faulted: false },
         ],
         extraPasses: [],
       },
@@ -215,6 +205,30 @@ export const promoteToSuperAdmin = async (email: string): Promise<void> => {
       .db()
       .collection("users")
       .updateOne({ email }, { $set: { roles: ["SUPER_ADMIN"] } });
+  } finally {
+    await client.close();
+  }
+};
+
+export const seedAppError = async (
+  overrides: Record<string, unknown> = {}
+): Promise<void> => {
+  const client = new MongoClient(getMongoUrl());
+
+  try {
+    await client.connect();
+
+    await client.db().collection("apperrors").insertOne({
+      message: "Seeded failure",
+      stack: "Error: Seeded failure\n    at somewhere (file.js:1:1)",
+      method: "POST",
+      route: "/competitions/x/ejs-confirm",
+      statusCode: 500,
+      context: { stage: "persist" },
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      ...overrides,
+    });
   } finally {
     await client.close();
   }

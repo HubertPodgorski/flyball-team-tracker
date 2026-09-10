@@ -1,4 +1,5 @@
 const EventModel = require("../models/eventModel");
+const CompetitionEntryModel = require("../models/competitionEntryModel");
 const { broadcast } = require("../sse");
 const { findClubUsers } = require("../helpers/clubUsers");
 const { sendPushToMembers } = require("../helpers/push");
@@ -90,6 +91,8 @@ const deleteEvent = async (req, res) => {
   const { id } = req.params;
 
   await EventModel.findOneAndDelete({ _id: id, team: req.club });
+  // Cascade: a competition's parsed EJS rows have no meaning without it (a no-op for other event types).
+  await CompetitionEntryModel.deleteMany({ eventId: id, team: req.club });
 
   res.status(200).json({ ok: true });
   broadcast(req.club, "events_updated", await findClubEvents(req.club));

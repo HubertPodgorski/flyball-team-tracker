@@ -1,9 +1,9 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import { useForm, useStore } from "@tanstack/react-form";
 import { Box, Typography } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import FormSelect from "../inputs/FormSelect";
-import { getFormattedDate } from "../../helpers/calendar";
+import { getFormattedDate, getNextEvent } from "../../helpers/calendar";
 import { useEventsQuery } from "../../queries/events";
 import { useDogsWithAttendance } from "../../hooks/useDogsWithAttendance";
 import { useTaskPlanningContext } from "../../hooks/useTaskPlanningContext";
@@ -20,6 +20,17 @@ const CurrentEventSelectWithDogs = () => {
   });
 
   const selectedEvent = useStore(form.store, (state) => state.values.event);
+  const nextEvent = useMemo(() => getNextEvent(events), [events]);
+
+  // Preselect the nearest upcoming event once, the same way the calendar highlights it - the user can still switch to "none".
+  const didPreselect = useRef(false);
+  useEffect(() => {
+    if (didPreselect.current || events.length === 0) return;
+
+    didPreselect.current = true;
+
+    if (nextEvent) form.setFieldValue("event", nextEvent._id);
+  }, [events, nextEvent, form]);
 
   // Shared with TaskForm's dog select - see TaskPlanningContext.
   useEffect(() => {
@@ -39,7 +50,10 @@ const CurrentEventSelectWithDogs = () => {
           { value: "", label: t("tasksGrid.noneOption") },
           ...events.map(({ name, _id: value, date }) => ({
             value,
-            label: `${name} ${getFormattedDate(date)}`,
+            label:
+              value === nextEvent?._id
+                ? `${name} ${getFormattedDate(date)} · ${t("pages.calendar.nextEvent")}`
+                : `${name} ${getFormattedDate(date)}`,
           })),
         ]}
       />

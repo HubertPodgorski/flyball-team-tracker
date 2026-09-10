@@ -1,13 +1,10 @@
 const fs = require("fs/promises");
 const EventModel = require("../models/eventModel");
-const DogModel = require("../models/dogModel");
-const TeamModel = require("../models/teamModel");
 const CompetitionEntryModel = require("../models/competitionEntryModel");
-const { readEjsSheet } = require("../helpers/xlsColors");
+const { readEjsFile } = require("../helpers/readEjsFile");
 const { parseEjsRows } = require("../helpers/ejsParser");
-const { matchDogNames } = require("../helpers/dogNameMatcher");
-const { buildLineupIndex, matchLineup } = require("../helpers/lineupMatcher");
-const { computeStatsForAllDogs } = require("../helpers/competitionStats");
+const { computeStatsForAllOpponentDogs } = require("../helpers/competitionStats");
+const { logAppError } = require("../helpers/logAppError");
 
 // Parses and deletes each file's temp copy regardless of success; sourceFile is the only thing distinguishing rows across a multi-file import.
 const parseUploadedFiles = async (files) => {
@@ -15,7 +12,7 @@ const parseUploadedFiles = async (files) => {
 
   for (const file of files) {
     try {
-      const rows = await readEjsSheet(file.path);
+      const rows = await readEjsFile(file.path);
 
       entries.push(...parseEjsRows(rows).map((entry) => ({ ...entry, sourceFile: file.originalname })));
     } finally {
@@ -27,10 +24,11 @@ const parseUploadedFiles = async (files) => {
 };
 
 // A malformed .xls (readEjsSheet rejects rather than risk crashing the process on it) is a 400, not a 500 - same shape as every other validation error here.
-const parseUploadedFilesOrRespond = async (files, res) => {
+const parseUploadedFilesOrRespond = async (files, req, res) => {
   try {
     return await parseUploadedFiles(files);
   } catch (error) {
+    logAppError({ error, req, statusCode: 400, context: { stage: "readEjsSheet", files: files.map((file) => file.originalname) } });
     res.status(400).json({ error: "COULD_NOT_READ_FILE" });
     return null;
   }
@@ -41,40 +39,18 @@ const findCompetitionEvent = (eventId, club) => EventModel.findOne({ _id: eventI
 
 const parseOurTeamNames = (raw) => new Set(JSON.parse(raw || "[]"));
 
-// One name -> matchedDogId map, built once per unique dog name among "our team" rows, so every occurrence of that name resolves the same way.
-const buildMatchMap = async (entries, ourTeamNames, club) => {
-  const ourNames = [
-    ...new Set(entries.filter((entry) => ourTeamNames.has(entry.teamName)).flatMap((entry) => entry.dogs.map((dog) => dog.name).filter(Boolean))),
-  ];
-  const clubDogs = await DogModel.find({ team: club });
-  const matches = matchDogNames(ourNames, clubDogs);
+// A row's own 4-dog running order by name - this is what a "lineup" means for these stats.
+const lineupKeyFor = (entry) => entry.dogs.map((dog) => dog.name || "").join("|");
 
-  return new Map(matches.map((match) => [match.name, match]));
-};
-
-const resolveMatchedDogId = (dog, ourTeam, matchMap, overrides) => {
-  if (!ourTeam || !dog.name) return null;
-
-  const match = matchMap.get(dog.name);
-
-  return overrides[dog.name] ?? (match ? match.matchedDogId : null);
-};
-
-// suggestions is preview-only data; runningOnDogId is separate from the real CrossPass collection - just this row's own running order.
-const applyMatchesToEntry = (entry, ourTeamNames, matchMap, overrides, lineupIndex) => {
+// We only map teams, not dogs - every dog stays as its raw EJS name so nothing is dropped for want of a club-roster match.
+const applyTeamFlagToEntry = (entry, ourTeamNames) => {
   const ourTeam = ourTeamNames.has(entry.teamName);
-  const matchedDogIds = entry.dogs.map((dog) => resolveMatchedDogId(dog, ourTeam, matchMap, overrides));
 
   return {
     ...entry,
     ourTeam,
-    matchedLineupId: ourTeam ? matchLineup(matchedDogIds, lineupIndex) : null,
-    dogs: entry.dogs.map((dog, index) => ({
-      ...dog,
-      matchedDogId: matchedDogIds[index],
-      runningOnDogId: index === 0 ? null : matchedDogIds[index - 1],
-      suggestions: ourTeam && dog.name ? (matchMap.get(dog.name) || {}).suggestions || [] : [],
-    })),
+    lineupKey: ourTeam ? lineupKeyFor(entry) : null,
+    dogs: entry.dogs.map((dog) => ({ ...dog, matchedDogId: null, runningOnDogId: null, suggestions: [] })),
   };
 };
 
@@ -86,7 +62,7 @@ const previewEjsImport = async (req, res) => {
 
   if (!req.files || req.files.length === 0) return res.status(400).json({ error: "NO_FILES_UPLOADED" });
 
-  const entries = await parseUploadedFilesOrRespond(req.files, res);
+  const entries = await parseUploadedFilesOrRespond(req.files, req, res);
 
   if (!entries) return;
 
@@ -95,16 +71,14 @@ const previewEjsImport = async (req, res) => {
   if (!req.body.ourTeamNames) return res.status(200).json({ teamNames });
 
   const ourTeamNames = parseOurTeamNames(req.body.ourTeamNames);
-  const matchMap = await buildMatchMap(entries, ourTeamNames, req.club);
-  const lineupIndex = buildLineupIndex(await TeamModel.find({ team: req.club }));
   const previewEntries = entries
     .filter((entry) => ourTeamNames.has(entry.teamName))
-    .map((entry) => applyMatchesToEntry(entry, ourTeamNames, matchMap, {}, lineupIndex));
+    .map((entry) => applyTeamFlagToEntry(entry, ourTeamNames));
 
   res.status(200).json({ teamNames, entries: previewEntries });
 };
 
-// Persists every parsed row - both "our" (dog-matched) and opponent rows (kept for heat context, matchedDogId always null).
+// Persists every parsed row, flagged by whether its team is one of ours; dogs are never matched to the club roster.
 const confirmEjsImport = async (req, res) => {
   const event = await findCompetitionEvent(req.params.eventId, req.club);
 
@@ -112,16 +86,13 @@ const confirmEjsImport = async (req, res) => {
 
   if (!req.files || req.files.length === 0) return res.status(400).json({ error: "NO_FILES_UPLOADED" });
 
-  const entries = await parseUploadedFilesOrRespond(req.files, res);
+  const entries = await parseUploadedFilesOrRespond(req.files, req, res);
 
   if (!entries) return;
 
   const ourTeamNames = parseOurTeamNames(req.body.ourTeamNames);
-  const overrides = JSON.parse(req.body.dogNameOverrides || "{}");
-  const matchMap = await buildMatchMap(entries, ourTeamNames, req.club);
-  const lineupIndex = buildLineupIndex(await TeamModel.find({ team: req.club }));
   const documents = entries.map((entry) => ({
-    ...applyMatchesToEntry(entry, ourTeamNames, matchMap, overrides, lineupIndex),
+    ...applyTeamFlagToEntry(entry, ourTeamNames),
     eventId: event._id,
     team: req.club,
   }));
@@ -136,27 +107,62 @@ const confirmEjsImport = async (req, res) => {
   } catch (error) {
     // An unexpected cell shape our schema doesn't yet cover - a 500, not a process crash from an unhandled rejection.
     console.error("EJS import failed to persist:", error);
+    logAppError({ error, req, statusCode: 500, context: { stage: "persist", entryCount: documents.length, files: req.files.map((file) => file.originalname) } });
     res.status(500).json({ error: "IMPORT_FAILED" });
   }
 };
 
-// Per-dog effectiveness for one competition event, optionally narrowed to one uploaded file (day) and/or one lineup - never opponent rows.
+// Just the eventIds that already have parsed rows - the stats view only offers competitions you can actually look at.
+const getImportedCompetitionIds = async (req, res) => {
+  const eventIds = await CompetitionEntryModel.find({ team: req.club }).distinct("eventId");
+
+  res.status(200).json({ eventIds: eventIds.map((id) => id.toString()) });
+};
+
+// Shared by the per-event and the all-competitions views - `scopeFilter` is either { eventId } or { team } (every one of the club's).
+const respondWithStats = async (scopeFilter, req, res) => {
+  // scope=all: every club's rows. Default: only our own team's rows, plus the lineups derived from them.
+  const all = req.query.scope === "all";
+  const filter = { ...scopeFilter };
+
+  if (!all) filter.ourTeam = true;
+  if (req.query.sourceFile) filter.sourceFile = req.query.sourceFile;
+  if (!all && req.query.lineupKey) filter.lineupKey = req.query.lineupKey;
+
+  const entries = await CompetitionEntryModel.find(filter);
+  const sourceFiles = (await CompetitionEntryModel.find(scopeFilter).distinct("sourceFile")).sort();
+  // Every dog is keyed on its raw EJS name and carries its own team name - no matching against the club roster, so nothing is dropped.
+  const dogs = computeStatsForAllOpponentDogs(entries);
+  const teamNames = [...new Set(dogs.map((dog) => dog.teamName).filter(Boolean))].sort();
+
+  if (all) return res.status(200).json({ sourceFiles, dogs, teamNames, lineups: [] });
+
+  // Every distinct running order in our own scoped rows - a "lineup" derived purely from the imported data.
+  const ourEntries = await CompetitionEntryModel.find({ ...scopeFilter, ourTeam: true });
+  const lineupsByKey = new Map();
+
+  for (const entry of ourEntries) {
+    if (!entry.lineupKey) continue;
+
+    const existing = lineupsByKey.get(entry.lineupKey);
+
+    if (existing) existing.heatCount += 1;
+    else lineupsByKey.set(entry.lineupKey, { key: entry.lineupKey, order: entry.dogs.map((dog) => dog.name || "?").join(" → "), heatCount: 1 });
+  }
+
+  res.status(200).json({ sourceFiles, dogs, teamNames, lineups: [...lineupsByKey.values()] });
+};
+
+// Per-dog effectiveness for one competition event. scope=all switches to every club's rows; otherwise just our own team's, plus lineups.
 const getCompetitionStats = async (req, res) => {
   const event = await findCompetitionEvent(req.params.eventId, req.club);
 
   if (!event) return res.status(404).json({ error: "COMPETITION_EVENT_NOT_FOUND" });
 
-  const filter = { eventId: event._id, ourTeam: true };
-
-  if (req.query.sourceFile) filter.sourceFile = req.query.sourceFile;
-  if (req.query.lineupId) filter.matchedLineupId = req.query.lineupId;
-
-  const entries = await CompetitionEntryModel.find(filter);
-  const sourceFiles = (await CompetitionEntryModel.find({ eventId: event._id }).distinct("sourceFile")).sort();
-  const dogNamesById = new Map((await DogModel.find({ team: req.club })).map((dog) => [dog._id.toString(), dog.name]));
-  const dogs = computeStatsForAllDogs(entries).map((stats) => ({ ...stats, name: dogNamesById.get(stats.dogId.toString()) || null }));
-
-  res.status(200).json({ sourceFiles, dogs });
+  return respondWithStats({ eventId: event._id }, req, res);
 };
 
-module.exports = { previewEjsImport, confirmEjsImport, getCompetitionStats };
+// The same stats aggregated across every competition the club has imported.
+const getAllCompetitionStats = (req, res) => respondWithStats({ team: req.club }, req, res);
+
+module.exports = { previewEjsImport, confirmEjsImport, getCompetitionStats, getAllCompetitionStats, getImportedCompetitionIds };

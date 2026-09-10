@@ -20,7 +20,7 @@ test("tasks actually load after a pure SPA login, reached via nav link (no page 
   await login(page, email);
 
   await page.getByRole("button", { name: "open drawer" }).click();
-  await page.locator(".MuiDrawer-paper").getByRole("link", { name: "Tasks", exact: true }).click();
+  await page.locator(".MuiDrawer-paper").getByRole("link", { name: "Training planning", exact: true }).click();
   await expect(page).toHaveURL(/\/trainer-panel\/tasks$/);
 
   const addButtons = page.getByText("Add task here");

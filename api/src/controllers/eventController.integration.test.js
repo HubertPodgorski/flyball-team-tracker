@@ -5,10 +5,12 @@ import webpush from "web-push";
 import eventControllerModule from "./eventController.js";
 import testHelpersModule from "../testHelpers.js";
 
-const { createEvent, createRecurringEvents, sendEventReminder } = eventControllerModule;
+const { createEvent, createRecurringEvents, sendEventReminder, deleteEvent } =
+  eventControllerModule;
 const { mockRes } = testHelpersModule;
 const UserModel = mongoose.model("User");
 const EventModel = mongoose.model("Event");
+const CompetitionEntryModel = mongoose.model("CompetitionEntry");
 const PushSubscriptionModel = mongoose.model("PushSubscription");
 
 const CLUB = "TEST_TEAM";
@@ -237,5 +239,46 @@ describe("createRecurringEvents", () => {
     expect(res.statusCode).toBe(400);
     expect(await EventModel.countDocuments({ team: CLUB })).toBe(0);
     expect(webpush.sendNotification).not.toHaveBeenCalled();
+  });
+});
+
+describe("deleteEvent", () => {
+  const makeEntry = (eventId, overrides = {}) =>
+    CompetitionEntryModel.create({
+      eventId,
+      team: CLUB,
+      teamName: "Our Team",
+      ourTeam: true,
+      dogs: [],
+      extraPasses: [],
+      ...overrides,
+    });
+
+  it("cascades: deleting a competition also removes its parsed EJS entries", async () => {
+    const competition = await EventModel.create({
+      name: "Regionals",
+      date: "2026-05-01",
+      type: "COMPETITION",
+      team: CLUB,
+    });
+    const other = await EventModel.create({
+      name: "Nationals",
+      date: "2026-06-01",
+      type: "COMPETITION",
+      team: CLUB,
+    });
+
+    await makeEntry(competition._id);
+    await makeEntry(competition._id);
+    await makeEntry(other._id);
+
+    const res = mockRes();
+    await deleteEvent({ params: { id: competition._id.toString() }, club: CLUB }, res);
+
+    expect(res.statusCode).toBe(200);
+    expect(await EventModel.countDocuments({ _id: competition._id })).toBe(0);
+    expect(await CompetitionEntryModel.countDocuments({ eventId: competition._id })).toBe(0);
+    // A sibling competition's own entries are untouched.
+    expect(await CompetitionEntryModel.countDocuments({ eventId: other._id })).toBe(1);
   });
 });

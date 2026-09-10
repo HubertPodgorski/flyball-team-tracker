@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { aggregateLineupRow } from "./competitionLineupStats";
-import { CompetitionDogStats, Lineup } from "./types";
+import { aggregateLineupRow, aggregateClubRow } from "./competitionLineupStats";
+import { CompetitionDogStats, CompetitionLineup } from "./types";
 
 // Only the fields aggregateLineupRow reads actually matter for these tests.
 const dogStats = (overrides: Partial<CompetitionDogStats>): CompetitionDogStats => ({
@@ -20,30 +20,19 @@ const dogStats = (overrides: Partial<CompetitionDogStats>): CompetitionDogStats 
   ...overrides,
 });
 
-const lineup = (overrides: Partial<Lineup>): Lineup => ({
-  _id: "lineup-1",
-  dogs: [{ _id: "a", name: "Rex" }, { _id: "b", name: "Milo" }],
-  crossPasses: [],
-  ...overrides,
-});
+const lineup: CompetitionLineup = { key: "Rex|Milo", order: "Rex → Milo", heatCount: 4 };
 
 describe("aggregateLineupRow", () => {
-  it("shows the dog order as a separate sub-label when the lineup has its own name", () => {
-    const row = aggregateLineupRow(lineup({ name: "Alpha Squad" }), []);
+  it("labels the row by the running order, keyed on the lineup key", () => {
+    const row = aggregateLineupRow(lineup, []);
 
-    expect(row.name).toBe("Alpha Squad");
-    expect(row.nameSubLabel).toBe("Rex → Milo");
-  });
-
-  it("falls back to the dog order as the name itself, with no redundant sub-label, when unnamed", () => {
-    const row = aggregateLineupRow(lineup({ name: undefined }), []);
-
+    expect(row.dogId).toBe("Rex|Milo");
     expect(row.name).toBe("Rex → Milo");
     expect(row.nameSubLabel).toBeNull();
   });
 
   it("sums raw counts across the lineup's dogs, then rebuilds rates from those sums", () => {
-    const row = aggregateLineupRow(lineup({ name: "Alpha Squad" }), [
+    const row = aggregateLineupRow(lineup, [
       dogStats({ totalPasses: 10, faultCount: 2, okCount: 3 }),
       dogStats({ totalPasses: 6, faultCount: 0, okCount: 6 }),
     ]);
@@ -58,11 +47,38 @@ describe("aggregateLineupRow", () => {
   });
 
   it("returns nulls rather than dividing by zero when the lineup has no passes yet", () => {
-    const row = aggregateLineupRow(lineup({ name: "Alpha Squad" }), []);
+    const row = aggregateLineupRow(lineup, []);
 
     expect(row.totalPasses).toBe(0);
     expect(row.faultRate).toBeNull();
     expect(row.okPercentOfAllPasses).toBeNull();
     expect(row.okPercentOfCleanPasses).toBeNull();
+  });
+});
+
+describe("aggregateClubRow", () => {
+  const dogs = [
+    dogStats({ dogId: "Rex", name: "Rex", teamName: "Club B", totalPasses: 10, faultCount: 2, okCount: 3, okByText: { ok: 3 } }),
+    dogStats({ dogId: "Milo", name: "Milo", teamName: "Club B", totalPasses: 6, faultCount: 0, okCount: 6, okByText: { OK: 6 } }),
+    dogStats({ dogId: "Spot", name: "Spot", teamName: "Club C", totalPasses: 4, faultCount: 4, okCount: 0 }),
+  ];
+
+  it("keeps only the given club's dogs and labels the row by the club name", () => {
+    const row = aggregateClubRow("Club B", dogs);
+
+    expect(row.dogId).toBe("Club B");
+    expect(row.name).toBe("Club B");
+    expect(row.totalPasses).toBe(16);
+    expect(row.faultCount).toBe(2);
+    expect(row.okCount).toBe(9);
+    expect(row.okByText).toEqual({ ok: 3, OK: 6 });
+    expect(row.faultRate).toBeCloseTo(2 / 16);
+  });
+
+  it("is empty when the club ran no dogs", () => {
+    const row = aggregateClubRow("Club Z", dogs);
+
+    expect(row.totalPasses).toBe(0);
+    expect(row.faultRate).toBeNull();
   });
 });

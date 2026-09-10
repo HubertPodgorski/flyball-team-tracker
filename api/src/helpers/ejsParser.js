@@ -16,6 +16,9 @@ const isFaultText = (value) => typeof value === "string" && FAULT_TEXT_CODES.has
 // "-" (no seed time yet), "NT", blank, etc. all show up in columns the export otherwise fills with real numbers - anything not already a number becomes null.
 const numericOrNull = (value) => (typeof value === "number" ? value : null);
 
+// The "Kiedy" column is normally an Excel time-of-day serialized as a Date; some real exports put a garbled string there instead.
+const dateOrNull = (value) => (value instanceof Date && !Number.isNaN(value.getTime()) ? value : null);
+
 // Extra pairs are (marker, time) starting at FIRST_EXTRA_COLUMN - an uncolored pair continues whichever dog was most recently colored.
 const parseExtraPasses = (row, slotColors) => {
   const extraPasses = [];
@@ -70,7 +73,7 @@ const parseRow = (row, slotColors) => {
     race: numericOrNull(cellValue(row, 0)),
     division: numericOrNull(cellValue(row, 1)),
     match: numericOrNull(cellValue(row, 2)),
-    time: cellValue(row, 3),
+    time: dateOrNull(cellValue(row, 3)),
     teamName: cellValue(row, 4),
     seedTime: numericOrNull(cellValue(row, 5)),
     seedNetTime: numericOrNull(cellValue(row, 6)),

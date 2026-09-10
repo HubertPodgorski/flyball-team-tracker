@@ -21,6 +21,7 @@ import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
 import TextSnippetIcon from "@mui/icons-material/TextSnippet";
 import GroupsIcon from "@mui/icons-material/Groups";
 import QueryStatsIcon from "@mui/icons-material/QueryStats";
+import BugReportIcon from "@mui/icons-material/BugReport";
 
 import { Link, useLocation } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
@@ -138,7 +139,7 @@ const BottomNavBar = () => {
             <NavListItem
               to={trainerRoutes.tasks}
               icon={<FormatListBulletedIcon />}
-              label={t("nav.tasks")}
+              label={t("nav.trainerTasks")}
             />
             <NavListItem
               to={trainerRoutes.dogs}
@@ -157,13 +158,6 @@ const BottomNavBar = () => {
                 to={trainerRoutes.events}
                 icon={<CalendarMonthIcon />}
                 label={t("nav.events")}
-              />
-            )}
-            {features.eventsCalendar && (
-              <NavListItem
-                to={trainerRoutes.ejsStats}
-                icon={<QueryStatsIcon />}
-                label={t("nav.ejsStats")}
               />
             )}
             <NavListItem
@@ -227,10 +221,23 @@ const BottomNavBar = () => {
               icon={<LinkIcon />}
               label={t("nav.allResources")}
             />
+            <NavListItem
+              to="/super-admin/errors"
+              icon={<BugReportIcon />}
+              label={t("nav.appErrors")}
+            />
           </>
         )}
 
         <Divider />
+
+        {features.eventsCalendar && (
+          <NavListItem
+            to={userRoutes.ejsStats}
+            icon={<QueryStatsIcon />}
+            label={t("nav.ejsStats")}
+          />
+        )}
 
         {features.usefulResources && (
           <NavListItem

@@ -10,6 +10,7 @@ export const userRoutes = {
   calendar: "/user-panel/calendar",
   myDogs: "/user-panel/my-dogs",
   teams: "/user-panel/teams",
+  ejsStats: "/user-panel/ejs-stats",
   resources: "/user-panel/resources",
   settings: "/user-panel/settings",
   about: "/user-panel/about",
@@ -21,6 +22,7 @@ export const userPaths = {
   calendar: "calendar",
   myDogs: "my-dogs",
   teams: "teams",
+  ejsStats: "ejs-stats",
   resources: "resources",
   settings: "settings",
   about: "about",
@@ -34,7 +36,6 @@ export const trainerRoutes = {
   dogTasks: "/trainer-panel/dog-tasks",
   teams: "/trainer-panel/teams",
   features: "/trainer-panel/features",
-  ejsStats: "/trainer-panel/ejs-stats",
 };
 
 export const trainerPaths = {
@@ -46,5 +47,4 @@ export const trainerPaths = {
   dogTasks: "dog-tasks",
   teams: "teams",
   features: "features",
-  ejsStats: "ejs-stats",
 };

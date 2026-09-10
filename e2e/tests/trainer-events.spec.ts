@@ -36,11 +36,13 @@ test("trainer can create an event, cycle attendance, and delete it", async ({ pa
 
   await page.goto("/trainer-panel/events");
 
-  // EventTypeLegend, always shown above the event list.
-  await expect(page.getByText("Training", { exact: true })).toBeVisible();
-  await expect(page.getByText("Competition", { exact: true })).toBeVisible();
-  await expect(page.getByText("Seminary", { exact: true })).toBeVisible();
-  await expect(page.getByText("Meeting", { exact: true })).toBeVisible();
+  // EventTypeLegend, always shown above the event list - scoped to the legend
+  // itself since "Training" now also labels the user's bottom-nav tab.
+  const legend = page.getByTestId("legend");
+  await expect(legend.getByText("Training", { exact: true })).toBeVisible();
+  await expect(legend.getByText("Competition", { exact: true })).toBeVisible();
+  await expect(legend.getByText("Seminary", { exact: true })).toBeVisible();
+  await expect(legend.getByText("Meeting", { exact: true })).toBeVisible();
 
   const eventName = `E2E Event ${Date.now()}`;
 
@@ -71,8 +73,8 @@ test("trainer can create an event, cycle attendance, and delete it", async ({ pa
   // Three-state cycle: default -> PRESENT -> ABSENT -> default.
   await dogButton.click();
   await dogButton.click();
-  // Regression: Absent must render ATTENDANCE_ABSENT_RED, not the theme's own muted/pink error.main.
-  await expect(dogButton).toHaveCSS("background-color", /239, 83, 80/);
+  // Regression: Absent must render ATTENDANCE_ABSENT_RED (a deep red), not the theme's own muted/pink error.main.
+  await expect(dogButton).toHaveCSS("background-color", /211, 47, 47/);
   await dogButton.click();
   await expect(dogButton).toBeVisible();
 

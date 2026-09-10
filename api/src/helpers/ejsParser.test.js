@@ -56,6 +56,18 @@ describe("parseEjsRows", () => {
     expect(entry.seedNetTime).toBeNull();
   });
 
+  // Regression: a real export (Tczew 2026) had a garbled string in every "Kiedy" cell, which crashed the import - Cast to Date failed.
+  it("keeps the entry time only when it is a real Date, nulling a garbled string", () => {
+    const withDate = cleanRow();
+    withDate[3] = cell(new Date("2026-06-13T09:00:00.000Z"));
+
+    const garbled = cleanRow();
+    garbled[3] = cell("3_:Tc:ze");
+
+    expect(parseEjsRows([[], HEADER_ROW, withDate])[0].time).toEqual(new Date("2026-06-13T09:00:00.000Z"));
+    expect(parseEjsRows([[], HEADER_ROW, garbled])[0].time).toBeNull();
+  });
+
   it("drops unplayed/bye rows (fewer than 8 columns) instead of returning a broken entry", () => {
     const byeRow = [cell(3), cell(5), cell(1), cell("08:36:43"), cell("Team A"), cell(17.5), cell(17.2)];
 
