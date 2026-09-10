@@ -1,10 +1,6 @@
 import axios from "axios";
 import { apiSuffix } from "./apiCall";
-import { getAuthToken } from "./authToken";
-
-const authHeaders = () => ({
-  headers: { Authorization: `Bearer ${getAuthToken()}` },
-});
+import { authHeaders } from "./authToken";
 
 export const fetchSuperAdminList = async (
   entity: string,

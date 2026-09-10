@@ -6,6 +6,9 @@ const EventModel = require("../models/eventModel");
 // Every pre-existing task has no eventId, so it only shows on the default board - move each club's tasks onto
 // its nearest upcoming event (where the trainer and members now look). Clubs with no upcoming event keep their
 // tasks on the default board, which is still shown to everyone.
+//
+// DISPOSABLE: once this has run in every deployed environment, delete this file, its call in server.js, and
+// taskMigration.integration.test.js - the migrations doc it writes stays and keeps it a no-op regardless.
 const MIGRATION_ID = "tasks-to-next-upcoming-event";
 
 const orphanFilter = { $or: [{ eventId: null }, { eventId: { $exists: false } }] };

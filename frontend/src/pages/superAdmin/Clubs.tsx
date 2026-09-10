@@ -27,7 +27,7 @@ import {
   useDeleteClubMutation,
   useUpdateClubMutation,
 } from "../../queries/clubs";
-import { Club } from "../../helpers/clubsApi";
+import { Club } from "../../helpers/types";
 
 const emptyForm = { code: "", name: "" };
 

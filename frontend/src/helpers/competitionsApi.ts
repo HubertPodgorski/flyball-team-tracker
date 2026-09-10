@@ -1,9 +1,7 @@
 import axios from "axios";
 import { apiSuffix } from "./apiCall";
-import { getAuthToken } from "./authToken";
+import { authHeaders } from "./authToken";
 import { EjsPreviewResult, CompetitionStatsResult } from "./types";
-
-const authHeaders = () => ({ headers: { Authorization: `Bearer ${getAuthToken()}` } });
 
 // A stand-in eventId meaning "every imported competition at once".
 export const ALL_COMPETITIONS = "__all__";

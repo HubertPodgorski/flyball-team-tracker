@@ -11,7 +11,7 @@ const ClubSettingsModel = require("../models/clubSettingsModel");
 const CrossPassModel = require("../models/crossPassModel");
 const CompetitionEntryModel = require("../models/competitionEntryModel");
 const AppErrorModel = require("../models/appErrorModel");
-const { getClubTeams, refreshClubsCache } = require("../helpers/clubs");
+const { isValidClub, refreshClubsCache } = require("../helpers/clubs");
 const { broadcast } = require("../sse");
 const { detachTasksFromMatchup, keepOnlyPoolDogsInMatchups } = require("../helpers/lineupCascade");
 const { replaceDogEverywhere, broadcastDogCascade } = require("../helpers/dogCascade");
@@ -48,7 +48,7 @@ const getList = (entity) => async (req, res) => {
   const { Model } = entityConfig[entity];
   const { team: club } = req.query;
 
-  if (club && !getClubTeams().includes(club)) {
+  if (club && !isValidClub(club)) {
     return res.status(400).json({ error: "INVALID_TEAM" });
   }
 
@@ -63,7 +63,7 @@ const createItem = (entity) => async (req, res) => {
   const { Model } = entityConfig[entity];
   const { team: club, ...data } = req.body;
 
-  if (!club || !getClubTeams().includes(club)) {
+  if (!isValidClub(club)) {
     return res.status(400).json({ error: "INVALID_TEAM" });
   }
 
@@ -108,7 +108,7 @@ const updateItem = (entity) => async (req, res) => {
   const { Model } = entityConfig[entity];
   const { _id, team: club, ...data } = req.body;
 
-  if (!club || !getClubTeams().includes(club)) {
+  if (!isValidClub(club)) {
     return res.status(400).json({ error: "INVALID_TEAM" });
   }
 
@@ -187,7 +187,7 @@ const deleteItem = (entity) => async (req, res) => {
   const { _id } = req.params;
   const { team: club } = req.query;
 
-  if (!club || !getClubTeams().includes(club)) {
+  if (!isValidClub(club)) {
     return res.status(400).json({ error: "INVALID_TEAM" });
   }
 

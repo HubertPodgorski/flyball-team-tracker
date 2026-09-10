@@ -1,8 +1,6 @@
-import React, { useEffect, useMemo, useRef } from "react";
-import { useForm, useStore } from "@tanstack/react-form";
-import { Box, Typography } from "@mui/material";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Box, FormControl, InputLabel, MenuItem, Select, Typography } from "@mui/material";
 import { useTranslation } from "react-i18next";
-import FormSelect from "../inputs/FormSelect";
 import { getFormattedDate, getNextEvent } from "../../helpers/calendar";
 import { useEventsQuery } from "../../queries/events";
 import { useDogsWithAttendance } from "../../hooks/useDogsWithAttendance";
@@ -15,11 +13,7 @@ const CurrentEventSelectWithDogs = () => {
   const { data: events = [], isSuccess: eventsLoaded } = useEventsQuery();
   const { setSelectedEventId } = useTaskPlanningContext();
 
-  const form = useForm({
-    defaultValues: { event: "" },
-  });
-
-  const selectedEvent = useStore(form.store, (state) => state.values.event);
+  const [selectedEvent, setSelectedEvent] = useState("");
   const nextEvent = useMemo(() => getNextEvent(events), [events]);
 
   // Preselect the nearest upcoming event once the events list has settled, the same way the calendar highlights it.
@@ -30,34 +24,40 @@ const CurrentEventSelectWithDogs = () => {
 
     didPreselect.current = true;
 
-    if (nextEvent) form.setFieldValue("event", nextEvent._id);
-  }, [eventsLoaded, nextEvent, form]);
+    if (nextEvent) setSelectedEvent(nextEvent._id);
+  }, [eventsLoaded, nextEvent]);
 
-  // Shared with TaskForm's dog select - see TaskPlanningContext.
+  // Bridge the pick into TaskPlanningContext - shared with TaskForm and the board.
   useEffect(() => {
     setSelectedEventId(selectedEvent);
   }, [selectedEvent, setSelectedEventId]);
 
   const dogsWithAttendance = useDogsWithAttendance(selectedEvent);
 
+  const labelFor = (event) => {
+    const base = `${event.name} ${getFormattedDate(event.date)}`;
+
+    return event._id === nextEvent?._id ? `${base} · ${t("pages.calendar.nextEvent")}` : base;
+  };
+
   return (
     <>
-      <FormSelect
-        form={form}
-        multi={false}
-        name="event"
-        label={t("tasksGrid.eventLabel")}
-        options={[
-          { value: "", label: t("tasksGrid.noneOption") },
-          ...events.map(({ name, _id: value, date }) => ({
-            value,
-            label:
-              value === nextEvent?._id
-                ? `${name} ${getFormattedDate(date)} · ${t("pages.calendar.nextEvent")}`
-                : `${name} ${getFormattedDate(date)}`,
-          })),
-        ]}
-      />
+      <FormControl fullWidth>
+        <InputLabel id="task-event-select-label">{t("tasksGrid.eventLabel")}</InputLabel>
+        <Select
+          labelId="task-event-select-label"
+          label={t("tasksGrid.eventLabel")}
+          value={selectedEvent}
+          onChange={(event) => setSelectedEvent(event.target.value)}
+        >
+          <MenuItem value="">{t("tasksGrid.noneOption")}</MenuItem>
+          {events.map((event) => (
+            <MenuItem key={event._id} value={event._id}>
+              {labelFor(event)}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
 
       {dogsWithAttendance.length > 0 && (
         <>
@@ -69,10 +69,7 @@ const CurrentEventSelectWithDogs = () => {
               {t("common.dogs")}
             </Typography>
 
-            <DogAttendanceChips
-              dogsWithAttendance={dogsWithAttendance}
-              showIfPlanned
-            />
+            <DogAttendanceChips dogsWithAttendance={dogsWithAttendance} showIfPlanned />
           </Box>
         </>
       )}

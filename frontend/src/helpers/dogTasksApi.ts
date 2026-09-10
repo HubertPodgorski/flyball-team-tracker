@@ -1,11 +1,7 @@
 import axios from "axios";
 import { apiSuffix } from "./apiCall";
-import { getAuthToken } from "./authToken";
+import { authHeaders } from "./authToken";
 import { DogTask } from "./types";
-
-const authHeaders = () => ({
-  headers: { Authorization: `Bearer ${getAuthToken()}` },
-});
 
 export const fetchDogTasks = async (): Promise<DogTask[]> => {
   const { data } = await axios.get(`${apiSuffix}/dog-tasks`, authHeaders());

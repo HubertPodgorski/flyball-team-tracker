@@ -1,11 +1,7 @@
 import axios from "axios";
 import { apiSuffix } from "./apiCall";
-import { getAuthToken } from "./authToken";
+import { authHeaders } from "./authToken";
 import { Task } from "./types";
-
-const authHeaders = () => ({
-  headers: { Authorization: `Bearer ${getAuthToken()}` },
-});
 
 // eventId: a real event id for one session's board, "none" for the default board, undefined for every task in the club.
 export const fetchTasks = async (eventId?: string): Promise<Task[]> => {

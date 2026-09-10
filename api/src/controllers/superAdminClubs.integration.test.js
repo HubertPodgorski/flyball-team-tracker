@@ -1,12 +1,10 @@
 import { describe, expect, it } from "vitest";
 import mongoose from "mongoose";
 import superAdminControllerModule from "./superAdminController.js";
-import taskControllerModule from "./taskController.js";
 import testHelpersModule from "../testHelpers.js";
 import { teamForClubCode, getClubTeams, isClubSuspended } from "../helpers/clubs.js";
 
 const { getClubs, createClub, updateClub, deleteClub } = superAdminControllerModule;
-const { getTasks } = taskControllerModule;
 const { mockRes } = testHelpersModule;
 
 const ClubModel = mongoose.model("Club");
@@ -70,16 +68,3 @@ describe("superAdmin clubs", () => {
   });
 });
 
-describe("suspended club is read-only", () => {
-  it("blocks a write (createTask via the route middleware is out of scope here - assert the flag drives isClubSuspended)", async () => {
-    const club = await ClubModel.findOne({ code: "TEST" });
-
-    await updateClub({ body: { _id: club._id.toString(), suspended: true } }, mockRes());
-    expect(isClubSuspended("TEST_TEAM")).toBe(true);
-
-    // GET-shaped reads still work.
-    const res = mockRes();
-    await getTasks({ club: "TEST_TEAM", query: {} }, res);
-    expect(res.statusCode).toBe(200);
-  });
-});

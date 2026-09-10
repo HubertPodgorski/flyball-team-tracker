@@ -150,6 +150,15 @@ export interface ClubSettings {
   features: ClubFeatures;
 }
 
+// A club row from the super-admin clubs panel (api/src/models/clubModel.js).
+export interface Club {
+  _id: string;
+  code: string;
+  team: string;
+  name: string;
+  suspended: boolean;
+}
+
 export interface EjsDog {
   name: string | null;
   matchedDogId: string | null;

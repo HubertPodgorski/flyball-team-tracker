@@ -1,8 +1,7 @@
 import axios from "axios";
 import { apiSuffix } from "./apiCall";
-import { getAuthToken } from "./authToken";
-
-const authHeaders = () => ({ headers: { Authorization: `Bearer ${getAuthToken()}` } });
+import { authHeaders } from "./authToken";
+import { Club } from "./types";
 
 // Every real club - only used by super-admin surfaces, which are always
 // already authenticated (unlike club-codes, needed before login exists).
@@ -11,14 +10,6 @@ export const fetchClubs = async (): Promise<string[]> => {
 
   return data;
 };
-
-export interface Club {
-  _id: string;
-  code: string;
-  team: string;
-  name: string;
-  suspended: boolean;
-}
 
 export const fetchAdminClubs = async (): Promise<Club[]> => {
   const { data } = await axios.get(`${apiSuffix}/super-admin/clubs`, authHeaders());

@@ -1,11 +1,7 @@
 import axios from "axios";
 import { apiSuffix } from "./apiCall";
-import { getAuthToken } from "./authToken";
+import { authHeaders } from "./authToken";
 import { ClubFeatures, ClubSettings } from "./types";
-
-const authHeaders = () => ({
-  headers: { Authorization: `Bearer ${getAuthToken()}` },
-});
 
 export const fetchClubSettings = async (): Promise<ClubSettings> => {
   const { data } = await axios.get(`${apiSuffix}/club-settings`, authHeaders());

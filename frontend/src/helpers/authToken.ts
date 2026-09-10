@@ -7,6 +7,9 @@ export const getAuthToken = (): string => {
   return token;
 };
 
+// The axios config every authenticated request passes as its last arg.
+export const authHeaders = () => ({ headers: { Authorization: `Bearer ${getAuthToken()}` } });
+
 // Falls back to `team` for pre-rename tokens.
 export const getCurrentClub = (): string | undefined => {
   const payload = decodeJwtPayload(getAuthToken());
