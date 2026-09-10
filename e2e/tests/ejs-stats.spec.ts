@@ -15,14 +15,14 @@ test("the lineup-comparison chart fills the card's real width, not the 600px fal
   await page.getByRole("combobox", { name: "Competition" }).click();
   await page.getByRole("option", { name: new RegExp(`E2E Lineup Chart Comp`) }).click();
 
-  await page.getByRole("button", { name: "Team", exact: true }).click();
+  await page.getByRole("button", { name: "Teams", exact: true }).click();
   await page.getByRole("combobox", { name: "Team", exact: true }).click();
   await page.getByRole("option", { name: teamName, exact: true }).click();
 
   await page.getByRole("button", { name: "Lineups", exact: true }).click();
 
   // The title's immediate parent is exactly its own Card - the outer page Card also contains this text, ambiguously.
-  const chartCard = page.getByRole("heading", { name: "Dog comparison", exact: true }).locator("..");
+  const chartCard = page.getByRole("heading", { name: "Lineup comparison", exact: true }).locator("..");
   const svg = chartCard.locator("svg").first();
 
   await expect(svg).toBeVisible();

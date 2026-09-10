@@ -5,6 +5,8 @@ const EjsTeamMappingModel = require("../models/ejsTeamMappingModel");
 const { readEjsFile } = require("../helpers/readEjsFile");
 const { parseEjsRows } = require("../helpers/ejsParser");
 const { computeStatsForAllOpponentDogs } = require("../helpers/competitionStats");
+const { computePredecessorStats, computeRecords, computeNetVsGross } = require("../helpers/competitionAdvancedStats");
+const { clubNameForTeam } = require("../helpers/clubs");
 const { logAppError } = require("../helpers/logAppError");
 
 // EJS data is one global pool - a super-admin imports it, every club reads it. The `team` field on these rows
@@ -39,8 +41,12 @@ const parseUploadedFilesOrRespond = async (files, req, res) => {
   }
 };
 
-// A row's own 4-dog running order by name - this is what a "lineup" means for these stats.
-const lineupKeyFor = (entry) => entry.dogs.map((dog) => dog.name || "").join("|");
+// A row's own 4-dog running order by name - this is what a "lineup" means for these stats. Blank for name-less bye rows.
+const lineupKeyFor = (entry) => {
+  const names = entry.dogs.map((dog) => dog.name || "");
+
+  return names.some(Boolean) ? names.join("|") : "";
+};
 
 // Dogs stay as their raw EJS names; ownership is resolved per club at read time, so every row gets a lineupKey.
 const toStoredEntry = (entry) => ({
@@ -118,10 +124,13 @@ const respondWithStats = async (scopeFilter, req, res) => {
   const all = req.query.scope === "all";
   const poolFilter = { ...scopeFilter, team: EJS_TEAM };
   const myTeamNames = await myTeamNamesFor(req.club);
+  // An explicit ?teamName= pins the stats (and lineups) to that one team, whatever the scope - the Team tab uses it.
+  const pickedTeam = req.query.teamName || null;
 
   const filter = { ...poolFilter };
 
-  if (!all) filter.teamName = { $in: myTeamNames };
+  if (pickedTeam) filter.teamName = pickedTeam;
+  else if (!all) filter.teamName = { $in: myTeamNames };
   if (req.query.sourceFile) filter.sourceFile = req.query.sourceFile;
   if (req.query.lineupKey) filter.lineupKey = req.query.lineupKey;
 
@@ -130,23 +139,48 @@ const respondWithStats = async (scopeFilter, req, res) => {
   const dogs = computeStatsForAllOpponentDogs(entries);
   // Every team name in the competition pool, for the team picker - not just the ones with dogs in the current filter.
   const teamNames = (await CompetitionEntryModel.find(poolFilter).distinct("teamName")).sort();
+  // ejsTeamName -> owning club's display name, for the "whole clubs" view that sums a club's teams into one row.
+  const teamMappings = await EjsTeamMappingModel.find({ ejsTeamName: { $in: teamNames } });
+  const clubByTeamName = Object.fromEntries(teamMappings.map((mapping) => [mapping.ejsTeamName, clubNameForTeam(mapping.club)]));
 
-  // Our own running orders - always from our mapped team's rows, whatever the scope.
-  const ourEntries = myTeamNames.length
-    ? await CompetitionEntryModel.find({ ...poolFilter, teamName: { $in: myTeamNames } })
+  // Running orders for the picked team if one was given, else for our own mapped teams.
+  const lineupTeamNames = pickedTeam ? [pickedTeam] : myTeamNames;
+  const lineupEntries = lineupTeamNames.length
+    ? await CompetitionEntryModel.find({ ...poolFilter, teamName: { $in: lineupTeamNames } })
     : [];
   const lineupsByKey = new Map();
 
-  for (const entry of ourEntries) {
+  for (const entry of lineupEntries) {
     if (!entry.lineupKey) continue;
 
     const existing = lineupsByKey.get(entry.lineupKey);
 
     if (existing) existing.heatCount += 1;
-    else lineupsByKey.set(entry.lineupKey, { key: entry.lineupKey, order: entry.dogs.map((dog) => dog.name || "?").join(" → "), heatCount: 1 });
+    else
+      lineupsByKey.set(entry.lineupKey, {
+        key: entry.lineupKey,
+        teamName: entry.teamName,
+        order: entry.dogs.map((dog) => dog.name || "?").join(" → "),
+        heatCount: 1,
+      });
   }
 
-  res.status(200).json({ sourceFiles, dogs, teamNames, lineups: [...lineupsByKey.values()] });
+  // Extra stats over our own / the picked team's rows: changeover-by-predecessor, records, net-vs-gross time.
+  const ownEventIds = [...new Set(lineupEntries.map((entry) => String(entry.eventId)))];
+  const ownEvents = ownEventIds.length ? await EventModel.find({ _id: { $in: ownEventIds } }).select("_id name") : [];
+  const eventNameById = Object.fromEntries(ownEvents.map((event) => [String(event._id), event.name]));
+
+  res.status(200).json({
+    sourceFiles,
+    dogs,
+    teamNames,
+    myTeamNames,
+    clubByTeamName,
+    lineups: [...lineupsByKey.values()],
+    pairings: computePredecessorStats(lineupEntries),
+    records: computeRecords(lineupEntries, eventNameById),
+    netVsGross: computeNetVsGross(lineupEntries),
+  });
 };
 
 const getCompetitionStats = async (req, res) => {

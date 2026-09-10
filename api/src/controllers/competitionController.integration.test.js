@@ -233,6 +233,7 @@ describe("getCompetitionStats", () => {
     expect(res.statusCode).toBe(200);
     expect(res.body.dogs).toEqual([]);
     expect(res.body.teamNames).toEqual(["Fixture Team A", "Fixture Team B"]);
+    expect(res.body.myTeamNames).toEqual([]);
   });
 
   it("default scope covers only the claimed team's dogs, and derives its lineups", async () => {
@@ -243,8 +244,16 @@ describe("getCompetitionStats", () => {
 
     expect(res.body.dogs.map((dog) => dog.name).sort()).toEqual(["Buddy", "Fido", "Max", "Rex"]);
     expect(res.body.dogs.every((dog) => dog.teamName === "Fixture Team A")).toBe(true);
+    expect(res.body.myTeamNames).toEqual(["Fixture Team A"]);
+    // A claimed team resolves to its owning club's display name, for the "whole clubs" summary rows.
+    expect(res.body.clubByTeamName["Fixture Team A"]).toBe("Test");
     expect(res.body.lineups).toHaveLength(1);
     expect(res.body.lineups[0].order.split(" → ")).toHaveLength(4);
+    expect(res.body.lineups[0].teamName).toBe("Fixture Team A");
+    // Extra stats are always present (possibly empty) for the claimed team's own rows.
+    expect(Array.isArray(res.body.pairings)).toBe(true);
+    expect(res.body.records).toHaveProperty("dogBests");
+    expect(res.body).toHaveProperty("netVsGross");
   });
 
   it("scope=all returns every team's dogs regardless of mapping", async () => {

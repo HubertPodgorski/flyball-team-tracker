@@ -17,27 +17,32 @@ import {
 import { useTheme } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
-import { useEventsQuery } from "../../queries/events";
 import {
   useCompetitionStatsQuery,
   useCompetitionStatsByLineupQueries,
-  useCompetitionStatsBySourceFileQueries,
-  useImportedCompetitionIdsQuery,
+  useCompetitionStatsByEventQueries,
+  useEjsCompetitionsQuery,
+  useCompetitionTeamMappingQuery,
+  useSetCompetitionTeamMappingMutation,
 } from "../../queries/competitions";
-import { EventType } from "../../components/inputs/consts";
+import { useIsSuperAdmin } from "../../hooks/useIsSuperAdmin";
+import { useAuthContext } from "../../hooks/useAuthContext";
 import { CompetitionDogStats } from "../../helpers/types";
-import { aggregateLineupRow, aggregateClubRow, aggregateStatsRow } from "../../helpers/competitionLineupStats";
+import { aggregateLineupRow, aggregateStatsRow } from "../../helpers/competitionLineupStats";
 import { competitionOptionLabel } from "../../helpers/competitionOptionLabel";
 import { ALL_COMPETITIONS } from "../../helpers/competitionsApi";
 import EjsImportWizard from "../../components/EjsImportWizard";
 import CompetitionStatsColumnCards from "../../components/CompetitionStatsColumnCards";
 import CompetitionDogTrendCard from "../../components/CompetitionDogTrendCard";
+import CompetitionPredecessorCard from "../../components/CompetitionPredecessorCard";
+import CompetitionRecordsCard from "../../components/CompetitionRecordsCard";
+import CompetitionNetVsGrossCard from "../../components/CompetitionNetVsGrossCard";
 import CompetitionMetricsLineChart, { MetricSeriesDef } from "../../components/CompetitionMetricsLineChart";
 import CompetitionOutcomePie from "../../components/CompetitionOutcomePie";
 import { OK_GREEN } from "../../helpers/statsColors";
 
-// Our own matched dogs only, or every club's dogs (ours included) keyed by parsed name.
-type ClubScope = "ours" | "all";
+// Our mapped team's dogs ("ours"), that set narrowed to the current user's own dogs ("mine"), or every club's dogs ("all").
+type ClubScope = "ours" | "mine" | "all";
 // Club: every matched dog. Team: one Team's (dog pool's) roster. Dog: one dog's trend. Clubs: one aggregated row per club (our Teams in "my club", every club in "all clubs").
 type ChartMode = "club" | "team" | "dog" | "clubs";
 // Dogs mode compares individual dogs; lineups mode (team tab only) compares whole 4-dog lineups against each other.
@@ -45,6 +50,8 @@ type ComparisonMode = "dog" | "lineup";
 
 const filterByDogIds = (dogs: CompetitionDogStats[], dogIds: string[]): CompetitionDogStats[] =>
   dogIds.length === 0 ? dogs : dogs.filter((dog) => dogIds.includes(dog.dogId));
+
+const EMPTY_RECORDS = { teamBests: [], dogBests: [] };
 
 const effectivenessOf = (row: CompetitionDogStats) => (row.totalPasses ? (row.totalPasses - row.faultCount) / row.totalPasses : null);
 
@@ -77,7 +84,10 @@ const buildPercentSeries = (t: (key: string) => string, colors: ThemeColors): Me
 const EjsStats = () => {
   const { t } = useTranslation();
   const theme = useTheme();
-  const { data: events = [] } = useEventsQuery();
+  const isSuperAdmin = useIsSuperAdmin();
+  const { user } = useAuthContext();
+
+  const { data: withDataEvents = [] } = useEjsCompetitionsQuery();
 
   const [eventId, setEventId] = useState("");
   const [wizardOpen, setWizardOpen] = useState(false);
@@ -88,44 +98,72 @@ const EjsStats = () => {
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const [comparisonMode, setComparisonMode] = useState<ComparisonMode>("dog");
 
-  const { data: importedIds = [] } = useImportedCompetitionIdsQuery();
+  const realEventId = eventId && eventId !== ALL_COMPETITIONS ? eventId : undefined;
+  const { data: teamMapping } = useCompetitionTeamMappingQuery(realEventId);
+  const setMappingMutation = useSetCompetitionTeamMappingMutation();
 
-  const isOurs = clubScope === "ours";
-  const importedIdSet = new Set(importedIds);
-  // The picker only offers competitions you can actually look at - ones with parsed rows.
-  const withDataEvents = events.filter((event) => event.type === EventType.COMPETITION && importedIdSet.has(event._id));
+  // "mine" and "ours" both read the club's mapped-team rows from the server; "mine" then narrows to the user's own dogs.
+  const isOurs = clubScope !== "all";
+  const serverScope = clubScope === "all" ? "all" : "ours";
+  const myDogNames = new Set((user?.dogs ?? []).map((dog) => dog.name.trim().toLowerCase()));
   const hasImportedData = withDataEvents.length > 0;
+  // The Team tab pins every query to the one picked team, so "all clubs" teams behave exactly like our own.
+  const teamNameParam = chartMode === "team" && selectedTeamId ? selectedTeamId : undefined;
   const { data: stats, isFetching: statsLoading } = useCompetitionStatsQuery(
     eventId || undefined,
     undefined,
     statsLineupKey || undefined,
-    clubScope
+    serverScope,
+    teamNameParam
   );
-  // Lineups come straight from the imported rows' own running orders - not from any registered Team.matchups.
-  const statsLineups = stats?.lineups ?? [];
-
   // Everything the user picks from is listed alphabetically - dog names, club/team names, squads alike.
   const byName = <T extends { name: string | null }>(a: T, b: T) => (a.name ?? "").localeCompare(b.name ?? "");
 
-  // Teams are the sheet team names the stats came back grouped by - same for our own club and for everyone else.
-  const teamOptions = (stats?.teamNames ?? []).map((name) => ({ id: name, name })).sort(byName);
+  // "My club" tab picks from our own mapped teams only; "all clubs" picks from every team in the competition.
+  const teamOptions = ((isOurs ? stats?.myTeamNames : stats?.teamNames) ?? [])
+    .map((name) => ({ id: name, name }))
+    .sort(byName);
   const oneTeamSelected = chartMode === "team" && !!selectedTeamId;
+
+  // Lineups come straight from the imported rows' own running orders; in team mode, only the picked team's.
+  const statsLineups = (stats?.lineups ?? []).filter(
+    (lineup) => !oneTeamSelected || !lineup.teamName || lineup.teamName === selectedTeamId
+  );
   // In "all clubs" the club name only helps on the mixed all-dogs list - a picked team or dog already pins it down.
   const showClubSubLabel = !isOurs && chartMode !== "team" && chartMode !== "dog";
   const decoratedDogs = (stats?.dogs ?? [])
+    .filter((dog) => clubScope !== "mine" || myDogNames.has((dog.name ?? "").trim().toLowerCase()))
     .map((dog) => (showClubSubLabel && dog.teamName ? { ...dog, nameSubLabel: dog.teamName } : dog))
     .sort(byName);
   // Team mode narrows to one team by its name; club and dog mode leave the full set untouched.
   const scopedDogs = oneTeamSelected ? decoratedDogs.filter((dog) => dog.teamName === selectedTeamId) : decoratedDogs;
   const visibleDogs = filterByDogIds(scopedDogs, statsDogIds);
 
-  // "Club" tab in "my club": a single summary row for the whole club. "Whole clubs" tab in "all clubs": one row per club.
+  // "Statystyki klubu" (my club): one summary row for the whole club. "Statystyki klubów" (all clubs): one row per club,
+  // a club being all of its mapped team names summed - falls back to the raw team name while a team is still unmapped.
   const inClubAggMode = chartMode === "clubs";
+  const clubGroups = new Map<string, string[]>();
+
+  if (inClubAggMode && !isOurs) {
+    (stats?.teamNames ?? []).forEach((teamName) => {
+      const club = stats?.clubByTeamName?.[teamName] ?? teamName;
+
+      clubGroups.set(club, [...(clubGroups.get(club) ?? []), teamName]);
+    });
+  }
+
   const clubRows = !inClubAggMode
     ? []
     : isOurs
       ? [aggregateStatsRow({ dogId: "club", name: t("pages.ejsStats.myClub") }, decoratedDogs)]
-      : (stats?.teamNames ?? []).map((teamName) => aggregateClubRow(teamName, decoratedDogs)).sort(byName);
+      : [...clubGroups.entries()]
+          .map(([club, names]) =>
+            aggregateStatsRow(
+              { dogId: club, name: club },
+              decoratedDogs.filter((dog) => !!dog.teamName && names.includes(dog.teamName))
+            )
+          )
+          .sort(byName);
 
   // Team mode always has exactly one team picked - default to the first as soon as the list (or the mode) is ready.
   useEffect(() => {
@@ -146,38 +184,42 @@ const EjsStats = () => {
   const chartRows = inClubAggMode ? clubRows : visibleDogs;
   const pieDogs = inClubAggMode ? clubRows : visibleDogs;
 
-  const inLineupMode = isOurs && chartMode === "team" && comparisonMode === "lineup";
+  const inLineupMode = chartMode === "team" && comparisonMode === "lineup";
   const lineupResults = useCompetitionStatsByLineupQueries(
     eventId || undefined,
-    inLineupMode ? statsLineups.map((lineup) => lineup.key) : []
+    inLineupMode ? statsLineups.map((lineup) => ({ key: lineup.key, teamName: lineup.teamName })) : []
   );
   const lineupRows = inLineupMode
     ? statsLineups.map((lineup, index) => aggregateLineupRow(lineup, lineupResults[index]?.data?.dogs ?? []))
     : [];
   const comparisonRows = comparisonMode === "lineup" ? lineupRows : chartRows;
 
-  // "All competitions together" + one dog or team picked: compare that subject file by file, file name on the X axis.
-  const perFileMode =
-    eventId === ALL_COMPETITIONS &&
-    (stats?.sourceFiles?.length ?? 0) > 1 &&
-    ((chartMode === "dog" && !!selectedDogId) || oneTeamSelected);
-  const perFileSourceFiles = perFileMode ? stats?.sourceFiles ?? [] : [];
-  const perFileResults = useCompetitionStatsBySourceFileQueries(
-    perFileMode ? ALL_COMPETITIONS : undefined,
-    perFileSourceFiles,
-    clubScope
-  );
-  const perFileRows: CompetitionDogStats[] = perFileMode
-    ? perFileSourceFiles.map((file, index) => {
-        const fileDogs = perFileResults[index]?.data?.dogs ?? [];
-        const subjectDogs =
-          chartMode === "dog"
-            ? fileDogs.filter((dog) => dog.dogId === selectedDogId)
-            : fileDogs.filter((dog) => dog.teamName === selectedTeamId);
+  // "All competitions together" + a single subject picked: chart that subject competition by competition (a trend).
+  // Only where one subject is in view - the whole club, a picked team, a picked lineup, or a picked dog - never the multi-club aggregate.
+  // A whole-team trend makes sense; a single lineup's does not (it rarely recurs across competitions), so a picked lineup suppresses it.
+  const acrossCompetitions = eventId === ALL_COMPETITIONS;
+  const trendMode: "club" | "team" | "dog" | null = !acrossCompetitions
+    ? null
+    : chartMode === "clubs" && isOurs
+      ? "club"
+      : chartMode === "team" && selectedTeamId && !statsLineupKey
+        ? "team"
+        : chartMode === "dog" && selectedDogId
+          ? "dog"
+          : null;
+  const trendResults = useCompetitionStatsByEventQueries(trendMode ? withDataEvents.map((event) => event._id) : [], {
+    scope: serverScope,
+    teamName: trendMode === "team" ? selectedTeamId : undefined,
+  });
+  const trendRows: CompetitionDogStats[] = trendMode
+    ? withDataEvents.map((event, index) => {
+        const eventDogs = trendResults[index]?.data?.dogs ?? [];
+        const subject = trendMode === "dog" ? eventDogs.filter((dog) => dog.dogId === selectedDogId) : eventDogs;
 
-        return aggregateStatsRow({ dogId: file, name: file.replace(/\.xlsx?$/i, "") }, subjectDogs);
+        return aggregateStatsRow({ dogId: event._id, name: event.name }, subject);
       })
     : [];
+  const trendVisible = trendRows.filter((row) => row.totalPasses > 0).length > 1;
 
   const colors: ThemeColors = {
     primary: theme.palette.primary.main,
@@ -192,6 +234,30 @@ const EjsStats = () => {
       : chartMode === "team" && !selectedTeamId
         ? t("pages.ejsStats.pickTeamHint")
         : t("pages.ejsStats.noChartData");
+
+  const outcomePie = (
+    <CompetitionOutcomePie dogs={pieDogs} title={t("pages.ejsStats.outcomeTitle")} noDataLabel={noChartDataLabel} />
+  );
+
+  // Competition-to-competition trend - sits under the outcome pie, and (in team mode) above the Dogs/Lineups toggle.
+  const trendCharts = trendVisible ? (
+    <>
+      <CompetitionMetricsLineChart
+        dogs={trendRows}
+        title={t("pages.ejsStats.betweenCompetitionsChartPercentTitle")}
+        noDataLabel={noChartDataLabel}
+        series={buildPercentSeries(t, colors)}
+        fixedMax={100}
+      />
+
+      <CompetitionMetricsLineChart
+        dogs={trendRows}
+        title={t("pages.ejsStats.betweenCompetitionsChartTitle")}
+        noDataLabel={noChartDataLabel}
+        series={buildCountSeries(t, colors)}
+      />
+    </>
+  ) : null;
 
   const resetStatsView = () => {
     setStatsLineupKey("");
@@ -271,17 +337,44 @@ const EjsStats = () => {
                 {t("pages.ejsStats.allCompetitions")}
               </Button>
 
-              <Typography variant="body2" color="text.secondary">
-                {t("pages.ejsStats.or")}
-              </Typography>
+              {isSuperAdmin && (
+                <Typography variant="body2" color="text.secondary">
+                  {t("pages.ejsStats.or")}
+                </Typography>
+              )}
             </>
           )}
 
-          <Button variant="outlined" startIcon={<UploadFileIcon />} onClick={() => setWizardOpen(true)}>
-            {t("pages.ejsStats.importData")}
-          </Button>
+          {/* Only a super-admin imports EJS files - the shared pool is global, every club just reads it. */}
+          {isSuperAdmin && (
+            <Button variant="outlined" startIcon={<UploadFileIcon />} onClick={() => setWizardOpen(true)}>
+              {t("pages.ejsStats.importData")}
+            </Button>
+          )}
         </Stack>
       </Card>
+
+      {/* Passive mapping prompt: a club claims which EJS team name is its own so "My club" / "My dogs" stats resolve. */}
+      {realEventId && teamMapping && teamMapping.myTeamNames.length === 0 && teamMapping.teamNames.length > 0 && (
+        <Card sx={{ padding: 2, display: "flex", flexDirection: "column", gap: 1 }}>
+          <Typography variant="subtitle2">{t("pages.ejsStats.mapPrompt")}</Typography>
+          <Typography variant="body2" color="text.secondary">
+            {t("pages.ejsStats.mapPromptHint")}
+          </Typography>
+
+          <Stack direction="row" sx={{ gap: 1, flexWrap: "wrap" }}>
+            {teamMapping.teamNames.map((name) => (
+              <Chip
+                key={name}
+                label={name}
+                variant="outlined"
+                disabled={!!teamMapping.mappings[name] || setMappingMutation.isPending}
+                onClick={() => setMappingMutation.mutate(name)}
+              />
+            ))}
+          </Stack>
+        </Card>
+      )}
 
       {eventId && (
         <Card sx={{ padding: 2, display: "flex", flexDirection: "column", gap: 2 }}>
@@ -293,9 +386,48 @@ const EjsStats = () => {
             sx={{ alignSelf: "flex-start" }}
           >
             <ToggleButton value="ours">{t("pages.ejsStats.myClub")}</ToggleButton>
+            <ToggleButton value="mine">{t("pages.ejsStats.myDogs")}</ToggleButton>
             <ToggleButton value="all">{t("pages.ejsStats.allClubs")}</ToggleButton>
           </ToggleButtonGroup>
 
+          {/* "My dogs": one row per own dog - its stats card and its outcome pie, side by side on desktop, stacked on mobile. */}
+          {clubScope === "mine" ? (
+            statsLoading && !stats ? (
+              <Skeleton variant="rounded" height={280} />
+            ) : decoratedDogs.length === 0 ? (
+              <Typography variant="body2" color="text.secondary">
+                {t("pages.ejsStats.myDogsNoData")}
+              </Typography>
+            ) : (
+              <Stack sx={{ gap: 2 }}>
+                {decoratedDogs.map((dog) => (
+                  <Stack
+                    key={dog.dogId}
+                    sx={{ gap: 1, bgcolor: "action.hover", borderRadius: 1, padding: { xs: 1, md: 1.5 } }}
+                  >
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexDirection: { xs: "column", md: "row" },
+                        alignItems: "stretch",
+                        gap: { xs: 1, md: 2 },
+                        "& > *": { flex: { xs: "0 1 auto", md: "1 1 0" }, minWidth: 0 },
+                      }}
+                    >
+                      <CompetitionDogTrendCard rows={[dog]} noDataLabel={t("pages.ejsStats.noChartData")} />
+                      <CompetitionOutcomePie
+                        dogs={[dog]}
+                        title={t("pages.ejsStats.outcomeTitle")}
+                        noDataLabel={t("pages.ejsStats.noChartData")}
+                      />
+                    </Box>
+                    <CompetitionPredecessorCard pairings={stats?.pairings ?? []} dogFilter={dog.name ?? undefined} />
+                  </Stack>
+                ))}
+              </Stack>
+            )
+          ) : (
+          <>
           <Stack direction="row" sx={{ gap: 2, alignItems: "center", justifyContent: "space-between", flexWrap: "wrap" }}>
             <Typography variant="h6">
               {chartMode === "clubs" && isOurs
@@ -309,9 +441,11 @@ const EjsStats = () => {
               value={chartMode}
               onChange={(event, mode: ChartMode | null) => mode && onChartModeChange(mode)}
             >
-              <ToggleButton value="clubs">{isOurs ? t("common.club") : t("pages.ejsStats.wholeClubs")}</ToggleButton>
+              <ToggleButton value="clubs">
+                {isOurs ? t("pages.ejsStats.statsTitleOurClub") : t("pages.ejsStats.wholeClubs")}
+              </ToggleButton>
               <ToggleButton value="club">{t("pages.ejsStats.allDogs")}</ToggleButton>
-              <ToggleButton value="team">{t("common.team")}</ToggleButton>
+              <ToggleButton value="team">{t("pages.ejsStats.teamsTab")}</ToggleButton>
               <ToggleButton value="dog">{t("pages.ejsStats.columns.dog")}</ToggleButton>
             </ToggleButtonGroup>
 
@@ -337,7 +471,7 @@ const EjsStats = () => {
                 </FormControl>
               )}
 
-              {isOurs && chartMode === "team" && statsLineups.length > 0 && (
+              {chartMode === "team" && statsLineups.length > 0 && (
                 <FormControl size="small" sx={{ width: "100%", maxWidth: 400 }}>
                   <InputLabel id="ejs-stats-lineup-label" shrink>{t("pages.ejsStats.lineup")}</InputLabel>
                   <Select
@@ -368,8 +502,8 @@ const EjsStats = () => {
                 {chartMode === "dog" ? t("pages.ejsStats.pickDog") : t("pages.ejsStats.filterByDog")}
               </Typography>
 
-              {!isOurs && chartMode === "dog" ? (
-                // Every opponent club's dogs at once is a long list - a picker beats a wall of chips.
+              {chartMode === "dog" ? (
+                // Dog tab is a single pick - a select, not a wall of chips (the team tab keeps chips for its multi-select filter).
                 <FormControl size="small" sx={{ width: "100%", maxWidth: 400 }}>
                   <InputLabel id="ejs-stats-dog-label">{t("pages.ejsStats.columns.dog")}</InputLabel>
                   <Select
@@ -380,7 +514,7 @@ const EjsStats = () => {
                   >
                     {scopedDogs.map((dog) => (
                       <MenuItem key={dog.dogId} value={dog.dogId}>
-                        {dog.teamName ? `${dog.name || dog.dogId} (${dog.teamName})` : dog.name || dog.dogId}
+                        {!isOurs && dog.teamName ? `${dog.name || dog.dogId} (${dog.teamName})` : dog.name || dog.dogId}
                       </MenuItem>
                     ))}
                   </Select>
@@ -410,12 +544,44 @@ const EjsStats = () => {
           ) : (
             <>
               {chartMode === "dog" || (chartMode === "clubs" && isOurs) ? (
-                <CompetitionDogTrendCard rows={chartRows} noDataLabel={noChartDataLabel} hideAverageTimes={inClubAggMode} />
+                <>
+                  {/* Stats card and the outcome pie: two equal halves on desktop (matched height via stretch), stacked full-width on mobile. */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: { xs: "column", md: "row" },
+                      alignItems: "stretch",
+                      gap: 2,
+                      "& > *": { flex: { xs: "0 1 auto", md: "1 1 0" }, minWidth: 0 },
+                    }}
+                  >
+                    <CompetitionDogTrendCard rows={chartRows} noDataLabel={noChartDataLabel} hideAverageTimes={inClubAggMode} />
+                    {outcomePie}
+                  </Box>
+                  {trendCharts}
+
+                  {chartMode === "clubs" ? (
+                    <>
+                      <CompetitionRecordsCard records={stats?.records ?? EMPTY_RECORDS} />
+                      <CompetitionNetVsGrossCard stats={stats?.netVsGross ?? []} />
+                    </>
+                  ) : (
+                    selectedDogId && (
+                      <>
+                        <CompetitionRecordsCard records={stats?.records ?? EMPTY_RECORDS} dogFilter={selectedDogId} />
+                        <CompetitionPredecessorCard pairings={stats?.pairings ?? []} dogFilter={selectedDogId} />
+                      </>
+                    )
+                  )}
+                </>
               ) : (
                 <>
                   <CompetitionStatsColumnCards rows={chartRows} noDataLabel={noChartDataLabel} hideAverageTimes={inClubAggMode} />
 
-                  {isOurs && chartMode === "team" && (
+                  {outcomePie}
+                  {trendCharts}
+
+                  {chartMode === "team" && (
                     <ToggleButtonGroup
                       size="small"
                       exclusive
@@ -430,42 +596,43 @@ const EjsStats = () => {
 
                   <CompetitionMetricsLineChart
                     dogs={comparisonRows}
-                    title={inClubAggMode ? t("pages.ejsStats.clubsChartTitle") : t("pages.ejsStats.metricsChartTitle")}
+                    title={
+                      inClubAggMode
+                        ? t("pages.ejsStats.clubsChartPercentTitle")
+                        : comparisonMode === "lineup"
+                          ? t("pages.ejsStats.lineupsChartPercentTitle")
+                          : t("pages.ejsStats.metricsChartPercentTitle")
+                    }
                     noDataLabel={noChartDataLabel}
-                    series={buildCountSeries(t, colors)}
+                    series={buildPercentSeries(t, colors)}
+                    fixedMax={100}
                   />
 
                   <CompetitionMetricsLineChart
                     dogs={comparisonRows}
-                    title={inClubAggMode ? t("pages.ejsStats.clubsChartPercentTitle") : t("pages.ejsStats.metricsChartPercentTitle")}
-                    noDataLabel={noChartDataLabel}
-                    series={buildPercentSeries(t, colors)}
-                    fixedMax={100}
-                  />
-                </>
-              )}
-
-              {perFileMode && (
-                <>
-                  <CompetitionMetricsLineChart
-                    dogs={perFileRows}
-                    title={t("pages.ejsStats.byFileChartTitle")}
+                    title={
+                      inClubAggMode
+                        ? t("pages.ejsStats.clubsChartTitle")
+                        : comparisonMode === "lineup"
+                          ? t("pages.ejsStats.lineupsChartTitle")
+                          : t("pages.ejsStats.metricsChartTitle")
+                    }
                     noDataLabel={noChartDataLabel}
                     series={buildCountSeries(t, colors)}
                   />
 
-                  <CompetitionMetricsLineChart
-                    dogs={perFileRows}
-                    title={t("pages.ejsStats.byFileChartPercentTitle")}
-                    noDataLabel={noChartDataLabel}
-                    series={buildPercentSeries(t, colors)}
-                    fixedMax={100}
-                  />
+                  {chartMode === "team" && selectedTeamId && (
+                    <>
+                      <CompetitionPredecessorCard pairings={stats?.pairings ?? []} />
+                      <CompetitionRecordsCard records={stats?.records ?? EMPTY_RECORDS} />
+                      <CompetitionNetVsGrossCard stats={stats?.netVsGross ?? []} />
+                    </>
+                  )}
                 </>
               )}
-
-              <CompetitionOutcomePie dogs={pieDogs} title={t("pages.ejsStats.outcomeTitle")} noDataLabel={noChartDataLabel} />
             </>
+          )}
+          </>
           )}
         </Card>
       )}
