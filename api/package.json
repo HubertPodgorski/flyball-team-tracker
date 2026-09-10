@@ -24,7 +24,7 @@
     "exceljs": "^4.4.0",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
-    "mongoose": "^9.9.4",
+    "mongoose": "^9.9.5",
     "multer": "2.3.0",
     "node-xlrd": "0.3.10",
     "patch-package": "^8.0.1",
