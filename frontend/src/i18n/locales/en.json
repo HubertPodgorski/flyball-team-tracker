@@ -399,7 +399,6 @@
       "title": "Clubs",
       "addClub": "Add a club",
       "codeLabel": "Signup code",
-      "teamLabel": "Club id (team)",
       "nameLabel": "Display name",
       "add": "Add club",
       "suspended": "Suspended (read-only)",

@@ -77,7 +77,6 @@ const Calendar = () => {
     if (targetIndex === -1) return;
 
     setPage(Math.floor(targetIndex / PAGE_SIZE) + 1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [targetEventId, activeEvents]);
 
   useEffect(() => {

@@ -134,17 +134,25 @@ export const seedLineupLinkedTask = async (
 
   try {
     await client.connect();
+    const db = client.db();
 
-    await client
-      .db()
-      .collection("tasks")
-      .insertOne({
-        team: club,
-        description,
-        dogs: dogs.map(({ _id, name }) => ({ _id: new ObjectId(_id), name })),
-        matchupRef: { squadId: new ObjectId(squadId), matchupId: new ObjectId(matchupId) },
-        position: { columnIndex: 0, rowIndex: 0, positionIndex: 0 },
-      });
+    // The task board is scoped to the club's next upcoming session - seed the task there so it actually shows,
+    // matching both the board's default selection and the one-time server-side migration.
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    const events = await db.collection("events").find({ team: club }).toArray();
+    const nextEvent = events
+      .filter((event) => new Date(event.endDate || event.date) >= startOfToday)
+      .sort((a, b) => +new Date(a.date) - +new Date(b.date))[0];
+
+    await db.collection("tasks").insertOne({
+      team: club,
+      eventId: nextEvent?._id ?? null,
+      description,
+      dogs: dogs.map(({ _id, name }) => ({ _id: new ObjectId(_id), name })),
+      matchupRef: { squadId: new ObjectId(squadId), matchupId: new ObjectId(matchupId) },
+      position: { columnIndex: 0, rowIndex: 0, positionIndex: 0 },
+    });
   } finally {
     await client.close();
   }
