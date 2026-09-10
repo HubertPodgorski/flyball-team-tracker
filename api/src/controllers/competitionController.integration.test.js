@@ -17,6 +17,8 @@ const {
   getAllCompetitionStats,
   getCompetitionTeamMapping,
   setCompetitionTeamMapping,
+  getAllTeamMappings,
+  setAdminTeamMapping,
   EJS_TEAM,
 } = competitionControllerModule;
 const { mockRes } = testHelpersModule;
@@ -214,6 +216,46 @@ describe("team mapping", () => {
   it("400s without a team name", async () => {
     const res = mockRes();
     await setCompetitionTeamMapping({ club: CLUB, body: {} }, res);
+    expect(res.statusCode).toBe(400);
+  });
+});
+
+describe("admin team mappings", () => {
+  let event;
+
+  beforeEach(async () => {
+    event = await makeCompetition();
+    await importInto(event, await uploadFixture());
+  });
+
+  it("lists every pool team name, the existing mappings, and the club list", async () => {
+    await claimTeam("Fixture Team A");
+
+    const res = mockRes();
+    await getAllTeamMappings({}, res);
+
+    expect(res.body.teamNames).toEqual(["Fixture Team A", "Fixture Team B"]);
+    expect(res.body.mappings["Fixture Team A"]).toBe(CLUB);
+    expect(res.body.clubs.some((club) => club.team === CLUB && club.name)).toBe(true);
+  });
+
+  it("assigns a team name to any club and clears it with an empty club", async () => {
+    const set = mockRes();
+    await setAdminTeamMapping({ body: { ejsTeamName: "Fixture Team B", club: "DZIKIE_GZIKI" } }, set);
+
+    expect(set.statusCode).toBe(200);
+    expect((await EjsTeamMappingModel.findOne({ ejsTeamName: "Fixture Team B" })).club).toBe("DZIKIE_GZIKI");
+
+    const clear = mockRes();
+    await setAdminTeamMapping({ body: { ejsTeamName: "Fixture Team B", club: "" } }, clear);
+
+    expect(await EjsTeamMappingModel.findOne({ ejsTeamName: "Fixture Team B" })).toBeNull();
+  });
+
+  it("400s on an unknown club", async () => {
+    const res = mockRes();
+    await setAdminTeamMapping({ body: { ejsTeamName: "Fixture Team A", club: "NOT_A_CLUB" } }, res);
+
     expect(res.statusCode).toBe(400);
   });
 });

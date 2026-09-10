@@ -51,6 +51,24 @@ export const setCompetitionTeamMapping = async (ejsTeamName: string): Promise<vo
   await axios.post(`${apiSuffix}/competitions/team-mapping`, { ejsTeamName }, authHeaders());
 };
 
+export interface AllTeamMappings {
+  teamNames: string[];
+  mappings: Record<string, string>;
+  clubs: { team: string; name: string }[];
+}
+
+// Super-admin: the whole pool's team names + every mapping + the club list to assign from.
+export const fetchAllTeamMappings = async (): Promise<AllTeamMappings> => {
+  const { data } = await axios.get(`${apiSuffix}/competitions/team-mappings`, authHeaders());
+
+  return data;
+};
+
+// Super-admin: assign an EJS team name to any club, or clear it (empty club).
+export const setAdminTeamMapping = async (ejsTeamName: string, club: string): Promise<void> => {
+  await axios.post(`${apiSuffix}/competitions/team-mappings`, { ejsTeamName, club }, authHeaders());
+};
+
 export const fetchCompetitionStats = async (
   eventId: string,
   sourceFile?: string,

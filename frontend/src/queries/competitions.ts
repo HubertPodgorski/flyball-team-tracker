@@ -1,10 +1,12 @@
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   confirmEjsImport,
+  fetchAllTeamMappings,
   fetchCompetitionStats,
   fetchCompetitionTeamMapping,
   fetchEjsCompetitions,
   previewEjsImport,
+  setAdminTeamMapping,
   setCompetitionTeamMapping,
 } from "../helpers/competitionsApi";
 
@@ -28,6 +30,23 @@ export const useCompetitionTeamMappingQuery = (eventId: string | undefined) =>
     queryFn: () => fetchCompetitionTeamMapping(eventId as string),
     enabled: !!eventId,
   });
+
+// Super-admin: the global team-name -> club mapping grid.
+export const useAllTeamMappingsQuery = (enabled: boolean) =>
+  useQuery({ queryKey: ["allTeamMappings"], queryFn: fetchAllTeamMappings, enabled });
+
+export const useSetAdminTeamMappingMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ ejsTeamName, club }: { ejsTeamName: string; club: string }) => setAdminTeamMapping(ejsTeamName, club),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["allTeamMappings"] });
+      queryClient.invalidateQueries({ queryKey: ["competitionStats"] });
+      queryClient.invalidateQueries({ queryKey: ["competitionTeamMapping"] });
+    },
+  });
+};
 
 export const useSetCompetitionTeamMappingMutation = () => {
   const queryClient = useQueryClient();

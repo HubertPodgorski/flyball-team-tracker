@@ -13,6 +13,8 @@ const {
   getAllCompetitionStats,
   getCompetitionTeamMapping,
   setCompetitionTeamMapping,
+  getAllTeamMappings,
+  setAdminTeamMapping,
 } = require("../controllers/competitionController");
 
 const router = express.Router();
@@ -48,7 +50,9 @@ router.get("/:eventId/team-mapping", getCompetitionTeamMapping);
 router.post("/team-mapping", setCompetitionTeamMapping);
 router.get("/:eventId/stats", getCompetitionStats);
 
-// Imports - super-admin only.
+// Imports and the global team-name -> club mapping grid - super-admin only.
+router.get("/team-mappings", requireSuperAdmin, getAllTeamMappings);
+router.post("/team-mappings", requireSuperAdmin, setAdminTeamMapping);
 router.post("/:eventId/ejs-preview", requireSuperAdmin, acceptFiles, previewEjsImport);
 router.post("/:eventId/ejs-confirm", requireSuperAdmin, acceptFiles, confirmEjsImport);
 

@@ -32,6 +32,7 @@ import { aggregateLineupRow, aggregateStatsRow } from "../../helpers/competition
 import { competitionOptionLabel } from "../../helpers/competitionOptionLabel";
 import { ALL_COMPETITIONS } from "../../helpers/competitionsApi";
 import EjsImportWizard from "../../components/EjsImportWizard";
+import EjsTeamMappingDialog from "../../components/EjsTeamMappingDialog";
 import CompetitionStatsColumnCards from "../../components/CompetitionStatsColumnCards";
 import CompetitionDogTrendCard from "../../components/CompetitionDogTrendCard";
 import CompetitionPredecessorCard from "../../components/CompetitionPredecessorCard";
@@ -91,6 +92,7 @@ const EjsStats = () => {
 
   const [eventId, setEventId] = useState("");
   const [wizardOpen, setWizardOpen] = useState(false);
+  const [mappingDialogOpen, setMappingDialogOpen] = useState(false);
   const [clubScope, setClubScope] = useState<ClubScope>("ours");
   const [statsLineupKey, setStatsLineupKey] = useState("");
   const [statsDogIds, setStatsDogIds] = useState<string[]>([]);
@@ -345,11 +347,16 @@ const EjsStats = () => {
             </>
           )}
 
-          {/* Only a super-admin imports EJS files - the shared pool is global, every club just reads it. */}
+          {/* Only a super-admin imports EJS files or maps team names to clubs - the shared pool is global, every club just reads it. */}
           {isSuperAdmin && (
-            <Button variant="outlined" startIcon={<UploadFileIcon />} onClick={() => setWizardOpen(true)}>
-              {t("pages.ejsStats.importData")}
-            </Button>
+            <>
+              <Button variant="outlined" startIcon={<UploadFileIcon />} onClick={() => setWizardOpen(true)}>
+                {t("pages.ejsStats.importData")}
+              </Button>
+              <Button variant="outlined" onClick={() => setMappingDialogOpen(true)}>
+                {t("pages.ejsStats.mapTeamsButton")}
+              </Button>
+            </>
           )}
         </Stack>
       </Card>
@@ -638,6 +645,7 @@ const EjsStats = () => {
       )}
 
       <EjsImportWizard open={wizardOpen} onClose={() => setWizardOpen(false)} onImported={onEventChange} />
+      <EjsTeamMappingDialog open={mappingDialogOpen} onClose={() => setMappingDialogOpen(false)} />
     </Box>
   );
 };

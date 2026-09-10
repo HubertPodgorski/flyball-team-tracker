@@ -282,6 +282,10 @@
       "filesChosen_other": "{{count}} files chosen",
       "mapPrompt": "Which team here is your club's?",
       "mapPromptHint": "Claim it so \"My club\" and \"My dogs\" stats know which rows are yours.",
+      "mapTeamsButton": "Map teams to clubs",
+      "mapTeamsTitle": "Map EJS teams to clubs",
+      "mapTeamsHint": "Assign every EJS team name to its club. \"Club stats\" then sums a club's teams into one row.",
+      "unassigned": "— unassigned —",
       "confirmReplacesAllWarning": "This replaces ALL of this competition's existing data - upload every day's file together if you have more than one.",
       "wizard": {
         "title": "Import EJS data",

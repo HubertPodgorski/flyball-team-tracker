@@ -41,6 +41,11 @@ const isValidClub = (team) => getCache().teams.includes(team);
 const isClubSuspended = (team) => getCache().suspendedTeams.has(team);
 // Display name for a club's `team` string - falls back to the string itself if it's not a known club.
 const clubNameForTeam = (team) => (getCache().list.find((club) => club.team === team) || {}).name || team;
+// { team, name } pairs for a picker, name-sorted.
+const clubsForSelect = () =>
+  getCache()
+    .list.map((club) => ({ team: club.team, name: club.name }))
+    .sort((a, b) => a.name.localeCompare(b.name));
 
 module.exports = {
   DEFAULT_CLUBS,
@@ -52,4 +57,5 @@ module.exports = {
   isValidClub,
   isClubSuspended,
   clubNameForTeam,
+  clubsForSelect,
 };

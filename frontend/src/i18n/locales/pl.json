@@ -290,6 +290,10 @@
       "filesChosen_other": "Wybrano {{count}} pliku",
       "mapPrompt": "Która drużyna tutaj należy do Twojego klubu?",
       "mapPromptHint": "Przypisz ją, aby statystyki „Mój klub” i „Moje psy” wiedziały, które wiersze są Twoje.",
+      "mapTeamsButton": "Przypisz drużyny do klubów",
+      "mapTeamsTitle": "Przypisanie drużyn EJS do klubów",
+      "mapTeamsHint": "Przypisz każdą nazwę drużyny z EJS do jej klubu. „Statystyki klubów” zsumują wtedy drużyny klubu w jeden wiersz.",
+      "unassigned": "— nieprzypisane —",
       "confirmReplacesAllWarning": "To zastąpi WSZYSTKIE dotychczasowe dane tych zawodów - jeśli masz więcej niż jeden dzień, wgraj wszystkie pliki naraz.",
       "wizard": {
         "title": "Wgrywanie danych EJS",

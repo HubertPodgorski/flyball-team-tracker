@@ -6,7 +6,7 @@ const { readEjsFile } = require("../helpers/readEjsFile");
 const { parseEjsRows } = require("../helpers/ejsParser");
 const { computeStatsForAllOpponentDogs } = require("../helpers/competitionStats");
 const { computePredecessorStats, computeRecords, computeNetVsGross } = require("../helpers/competitionAdvancedStats");
-const { clubNameForTeam } = require("../helpers/clubs");
+const { clubNameForTeam, clubsForSelect, isValidClub } = require("../helpers/clubs");
 const { logAppError } = require("../helpers/logAppError");
 
 // EJS data is one global pool - a super-admin imports it, every club reads it. The `team` field on these rows
@@ -206,6 +206,40 @@ const getCompetitionTeamMapping = async (req, res) => {
   });
 };
 
+// Super-admin: every EJS team name in the pool, the existing name->club mappings, and the club list to assign from.
+const getAllTeamMappings = async (_req, res) => {
+  const teamNames = (await CompetitionEntryModel.find({ team: EJS_TEAM }).distinct("teamName")).sort();
+  const mappings = await EjsTeamMappingModel.find();
+
+  res.status(200).json({
+    teamNames,
+    mappings: Object.fromEntries(mappings.map((row) => [row.ejsTeamName, row.club])),
+    clubs: clubsForSelect(),
+  });
+};
+
+// Super-admin: assign an EJS team name to any club, or clear it (empty club). No 409 - a super-admin can reassign freely.
+const setAdminTeamMapping = async (req, res) => {
+  const { ejsTeamName, club } = req.body;
+
+  if (!ejsTeamName) return res.status(400).json({ error: "MISSING_TEAM_NAME" });
+
+  if (!club) {
+    await EjsTeamMappingModel.deleteOne({ ejsTeamName });
+    return res.status(200).json({ ejsTeamName, club: null });
+  }
+
+  if (!isValidClub(club)) return res.status(400).json({ error: "INVALID_CLUB" });
+
+  const mapping = await EjsTeamMappingModel.findOneAndUpdate(
+    { ejsTeamName },
+    { ejsTeamName, club },
+    { upsert: true, returnDocument: "after" }
+  );
+
+  res.status(200).json(mapping);
+};
+
 // A club claims an EJS team name as its own. Can't take a name another club already owns.
 const setCompetitionTeamMapping = async (req, res) => {
   const { ejsTeamName } = req.body;
@@ -236,5 +270,7 @@ module.exports = {
   getAllCompetitionStats,
   getCompetitionTeamMapping,
   setCompetitionTeamMapping,
+  getAllTeamMappings,
+  setAdminTeamMapping,
   EJS_TEAM,
 };
