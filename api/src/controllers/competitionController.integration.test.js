@@ -12,6 +12,9 @@ const {
   previewEjsImport,
   confirmEjsImport,
   getEjsCompetitions,
+  getAllEjsEvents,
+  createEjsEvent,
+  updateEjsEvent,
   getImportedCompetitionIds,
   getCompetitionStats,
   getAllCompetitionStats,
@@ -39,7 +42,7 @@ const uploadFixture = async (originalname = "ejs-sample.xls") => {
 };
 
 const makeCompetition = (name = "Test Comp") =>
-  EventModel.create({ name, date: "2026-01-01", type: "COMPETITION", team: "SUPER_ADMIN_CLUB" });
+  EventModel.create({ name, date: "2026-01-01", type: "COMPETITION", team: EJS_TEAM });
 
 const importInto = (event, files) =>
   confirmEjsImport({ params: { eventId: event._id.toString() }, files }, mockRes());
@@ -162,9 +165,9 @@ describe("confirmEjsImport", () => {
 
 describe("getEjsCompetitions / getImportedCompetitionIds", () => {
   it("returns every competition with imported rows, newest first, for any caller", async () => {
-    const jan = await EventModel.create({ name: "Jan", date: "2026-01-10", type: "COMPETITION", team: "SUPER_ADMIN_CLUB" });
-    const mar = await EventModel.create({ name: "Mar", date: "2026-03-10", type: "COMPETITION", team: "SUPER_ADMIN_CLUB" });
-    await EventModel.create({ name: "Empty", date: "2026-02-10", type: "COMPETITION", team: "SUPER_ADMIN_CLUB" });
+    const jan = await EventModel.create({ name: "Jan", date: "2026-01-10", type: "COMPETITION", team: EJS_TEAM });
+    const mar = await EventModel.create({ name: "Mar", date: "2026-03-10", type: "COMPETITION", team: EJS_TEAM });
+    await EventModel.create({ name: "Empty", date: "2026-02-10", type: "COMPETITION", team: EJS_TEAM });
 
     await importInto(jan, await uploadFixture());
     await importInto(mar, await uploadFixture());
@@ -177,6 +180,21 @@ describe("getEjsCompetitions / getImportedCompetitionIds", () => {
     const idsRes = mockRes();
     await getImportedCompetitionIds({ club: "SOME_OTHER_CLUB" }, idsRes);
     expect(idsRes.body.eventIds.sort()).toEqual([jan._id.toString(), mar._id.toString()].sort());
+  });
+
+  it("never lists a real club's own event, even one that already holds EJS rows from before this pool existed", async () => {
+    const clubOwned = await EventModel.create({
+      name: "Ultra's own comp",
+      date: "2026-01-01",
+      type: "COMPETITION",
+      team: "ULTRA_FLYBALL_TEAM",
+    });
+    await importInto(clubOwned, await uploadFixture());
+
+    const res = mockRes();
+    await getEjsCompetitions({ club: "SOME_OTHER_CLUB" }, res);
+
+    expect(res.body.map((event) => event.name)).not.toContain("Ultra's own comp");
   });
 });
 
@@ -361,5 +379,75 @@ describe("getAllCompetitionStats", () => {
     expect(res.statusCode).toBe(200);
     expect(res.body.dogs.map((dog) => dog.name).sort()).toEqual(["Buddy", "Fido", "Max", "Rex"]);
     expect(res.body.dogs.every((dog) => dog.totalPasses === 2)).toBe(true);
+  });
+});
+
+describe("getAllEjsEvents", () => {
+  it("lists every EJS-pool event, including ones with no imported rows yet - unlike getEjsCompetitions", async () => {
+    const withData = await makeCompetition("Has Data");
+    await importInto(withData, await uploadFixture());
+    await makeCompetition("No Data Yet");
+
+    const res = mockRes();
+    await getAllEjsEvents({}, res);
+
+    expect(res.body.map((event) => event.name).sort()).toEqual(["Has Data", "No Data Yet"]);
+  });
+
+  it("never lists a real club's own event, even one that already holds EJS rows from before this pool existed", async () => {
+    const clubOwned = await EventModel.create({
+      name: "Ultra's own comp",
+      date: "2026-01-01",
+      type: "COMPETITION",
+      team: "ULTRA_FLYBALL_TEAM",
+    });
+    await importInto(clubOwned, await uploadFixture());
+
+    const res = mockRes();
+    await getAllEjsEvents({}, res);
+
+    expect(res.body.map((event) => event.name)).not.toContain("Ultra's own comp");
+  });
+});
+
+describe("createEjsEvent / updateEjsEvent", () => {
+  it("creates a COMPETITION event owned by the EJS sentinel club, not any real club", async () => {
+    const res = mockRes();
+    await createEjsEvent({ body: { name: "KOZERKI 2026", date: "2026-09-05", endDate: "2026-09-06" } }, res);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toMatchObject({ name: "KOZERKI 2026", type: "COMPETITION", team: EJS_TEAM });
+
+    const stored = await EventModel.findById(res.body._id);
+    expect(stored.team).toBe(EJS_TEAM);
+  });
+
+  it("400s without a name or date", async () => {
+    const res = mockRes();
+    await createEjsEvent({ body: { name: "", date: "" } }, res);
+    expect(res.statusCode).toBe(400);
+  });
+
+  it("renames and reschedules an existing EJS event", async () => {
+    const event = await makeCompetition("Old Name");
+
+    const res = mockRes();
+    await updateEjsEvent({ params: { eventId: event._id.toString() }, body: { name: "New Name", date: "2026-10-01" } }, res);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.name).toBe("New Name");
+
+    const stored = await EventModel.findById(event._id);
+    expect(stored.name).toBe("New Name");
+  });
+
+  it("404s for an event that isn't the EJS pool's own (a real club's competition)", async () => {
+    const clubEvent = await EventModel.create({ name: "Ultra's own comp", date: "2026-01-01", type: "COMPETITION", team: "ULTRA_FLYBALL_TEAM" });
+
+    const res = mockRes();
+    await updateEjsEvent({ params: { eventId: clubEvent._id.toString() }, body: { name: "Hijacked" } }, res);
+
+    expect(res.statusCode).toBe(404);
+    expect((await EventModel.findById(clubEvent._id)).name).toBe("Ultra's own comp");
   });
 });

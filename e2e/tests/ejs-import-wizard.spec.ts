@@ -21,13 +21,13 @@ test("a super-admin imports an EJS file into the global pool, then a club claims
 
   const dialog = page.getByRole("dialog").filter({ hasText: "Import EJS data" });
 
-  // Step 1 - create a fresh competition via the full event form.
+  // Step 1 - create a fresh, club-less competition (just a name and dates - no club/type picker, it belongs to no club).
   const competitionName = `E2E Wizard Comp ${Date.now()}`;
   await dialog.getByRole("button", { name: "Create competition" }).click();
 
-  const eventForm = page.getByRole("dialog").filter({ hasText: "Adding an event" });
-  await eventForm.getByRole("textbox", { name: "Name", exact: true }).fill(competitionName);
-  await eventForm.getByRole("button", { name: "Submit" }).click();
+  const newEventDialog = page.getByRole("dialog").filter({ hasText: "New competition" });
+  await newEventDialog.getByRole("textbox", { name: "Name", exact: true }).fill(competitionName);
+  await newEventDialog.getByRole("button", { name: "Save" }).click();
 
   // Back in the wizard - the new competition is auto-selected.
   await expect(dialog.getByRole("combobox")).toContainText(competitionName);
@@ -47,6 +47,15 @@ test("a super-admin imports an EJS file into the global pool, then a club claims
 
   // The just-imported competition is auto-selected and now in the shared picker.
   await expect(page.getByRole("combobox", { name: "Choose competition" })).toContainText(competitionName);
+
+  // It has no calendar page of its own - a super-admin renames it right from here.
+  const renamedCompetitionName = `${competitionName} (renamed)`;
+  await page.getByRole("button", { name: "Edit competition" }).click();
+  const editEventDialog = page.getByRole("dialog").filter({ hasText: "Edit competition" });
+  await editEventDialog.getByRole("textbox", { name: "Name", exact: true }).fill(renamedCompetitionName);
+  await editEventDialog.getByRole("button", { name: "Save" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("combobox", { name: "Choose competition" })).toContainText(renamedCompetitionName);
 
   // Super-admin isn't auto-prompted (that's for a regular club) - they open the mapping modal explicitly and can
   // assign any club (a text field with suggestions, not just their own).

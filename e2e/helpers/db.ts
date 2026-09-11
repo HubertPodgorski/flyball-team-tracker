@@ -4,6 +4,9 @@ import path from "path";
 
 const RUNTIME_FILE = path.join(__dirname, "../.e2e-runtime.json");
 
+// Mirrors EJS_TEAM in api/src/controllers/competitionController.js - the sentinel club-less EJS pool events/rows live under.
+const EJS_TEAM = "__EJS__";
+
 const getMongoUrl = (): string => {
   const { mongoUrl } = JSON.parse(readFileSync(RUNTIME_FILE, "utf-8"));
 
@@ -186,13 +189,14 @@ export const seedCompetitionWithLineups = async (
 
     await db.collection("squads").insertOne({ _id: teamId, name: teamName, team: club, dogs: [dogA, dogB], matchups: [] });
 
-    // EJS data is one global pool now - a super-admin owns the event, the club claims its team name via an EjsTeamMapping.
+    // EJS data is one global pool now - a super-admin owns the event (club-less, team=EJS_TEAM), the club claims its
+    // team name via an EjsTeamMapping.
     await db.collection("events").insertOne({
       _id: eventId,
       name: eventName,
       date: new Date().toISOString().slice(0, 10),
       type: "COMPETITION",
-      team: "SUPER_ADMIN_CLUB",
+      team: EJS_TEAM,
     });
 
     await db.collection("ejsteammappings").insertOne({ ejsTeamName: teamName, club });

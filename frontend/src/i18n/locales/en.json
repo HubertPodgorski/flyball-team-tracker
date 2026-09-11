@@ -269,6 +269,7 @@
     "ejsStats": {
       "title": "EJS Stats",
       "chooseTeamsHint": "If you don't see your own data or teams, pick them from the settings button on the right.",
+      "renameCompetition": "Edit competition",
       "competition": "Competition",
       "pickWithData": "Choose competition",
       "pickWithDataHint": "Pick a competition, or pick all competitions together, to see stats.",
@@ -301,6 +302,8 @@
         "stepImport": "Import",
         "orCreate": "…or create a new competition:",
         "newCompetition": "Create competition",
+        "newCompetitionTitle": "New competition",
+        "editCompetitionTitle": "Edit competition",
         "analyzeFiles": "Analyze files",
         "rowsFound": "Found {{count}} rows",
         "teamsFound": "Teams: {{teams}}",

@@ -198,7 +198,7 @@ export interface EjsPreviewResult {
   rowCount: number;
 }
 
-// A competition (any club's event) that has imported EJS data - the shared list every user picks from.
+// A shared, club-less competition Event (the EJS sentinel club) that has imported EJS data - the list every user picks from.
 export interface EjsCompetition {
   _id: string;
   name: string;

@@ -106,4 +106,53 @@ const migrateEjsToGlobalPool = async (db, { dryRun = true, log = () => {}, keepC
   return report;
 };
 
-module.exports = { migrateEjsToGlobalPool, lineupKeyFor, EJS_TEAM, DEFAULT_KEEP_CLUBS };
+// Run AFTER migrateEjsToGlobalPool (needs entries already flipped to team=EJS_TEAM). EJS data must never attach to
+// a real club's own Event - only to one owned by the EJS sentinel. Any eventId an EJS row points at that ISN'T
+// EJS_TEAM's own (legacy: imported before this pool model existed, so it landed on the importing club's own event)
+// gets a fresh EJS_TEAM twin (same name/date/endDate) created, and every row for it repointed onto that twin's id.
+// The original event is left completely untouched - it's still that club's own calendar record, just with no EJS
+// rows pointing at it afterward.
+const repointLegacyEjsEvents = async (db, { dryRun = true, log = () => {} } = {}) => {
+  const entries = db.collection("competitionentries");
+  const events = db.collection("events");
+
+  const eventIds = await entries.distinct("eventId", { team: EJS_TEAM });
+  const eventDocs = await events.find({ _id: { $in: eventIds } }).toArray();
+  const legacy = eventDocs.filter((event) => event.team !== EJS_TEAM);
+
+  log(dryRun ? "DRY RUN - no writes" : "APPLYING");
+  log(`${legacy.length} legacy event(s) whose EJS rows point at a real club's own event`);
+
+  const repointed = [];
+
+  for (const event of legacy) {
+    const rowCount = await entries.countDocuments({ eventId: event._id, team: EJS_TEAM });
+
+    log(`  "${event.name}" (currently ${event.team}, ${rowCount} rows)`);
+
+    if (dryRun) continue;
+
+    const now = new Date();
+    const { insertedId } = await events.insertOne({
+      name: event.name,
+      date: event.date,
+      endDate: event.endDate,
+      type: "COMPETITION",
+      team: EJS_TEAM,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    await entries.updateMany({ eventId: event._id, team: EJS_TEAM }, { $set: { eventId: insertedId } });
+
+    repointed.push({ from: String(event._id), to: String(insertedId), name: event.name, rowCount });
+  }
+
+  const report = { dryRun, legacyCount: legacy.length, repointed };
+
+  log(JSON.stringify(report, null, 2));
+
+  return report;
+};
+
+module.exports = { migrateEjsToGlobalPool, repointLegacyEjsEvents, lineupKeyFor, EJS_TEAM, DEFAULT_KEEP_CLUBS };

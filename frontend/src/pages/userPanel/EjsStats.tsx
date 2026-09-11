@@ -20,6 +20,7 @@ import { useTheme } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import SettingsIcon from "@mui/icons-material/Settings";
+import EditIcon from "@mui/icons-material/Edit";
 import {
   useCompetitionStatsQuery,
   useCompetitionStatsByLineupQueries,
@@ -36,6 +37,7 @@ import { competitionOptionLabel } from "../../helpers/competitionOptionLabel";
 import { ALL_COMPETITIONS } from "../../helpers/competitionsApi";
 import EjsImportWizard from "../../components/EjsImportWizard";
 import EjsTeamMappingModal from "../../components/EjsTeamMappingModal";
+import EjsCompetitionEventDialog from "../../components/EjsCompetitionEventDialog";
 import CompetitionStatsColumnCards from "../../components/CompetitionStatsColumnCards";
 import CompetitionDogTrendCard from "../../components/CompetitionDogTrendCard";
 import CompetitionPredecessorCard from "../../components/CompetitionPredecessorCard";
@@ -98,6 +100,10 @@ const EjsStats = () => {
   const [eventId, setEventId] = useState(ALL_COMPETITIONS);
   const [wizardOpen, setWizardOpen] = useState(false);
   const [mappingDialogOpen, setMappingDialogOpen] = useState(false);
+  const [renameEventOpen, setRenameEventOpen] = useState(false);
+  // The picked competition's own row - a super-admin edits its name/date/club straight from here (it has no club
+  // calendar page of its own; it's whichever club created it, per the wizard's "Create competition" step).
+  const selectedCompetition = withDataEvents.find((event) => event._id === eventId);
   const [clubScope, setClubScope] = useState<ClubScope>("ours");
   const [statsLineupKey, setStatsLineupKey] = useState("");
   const [statsDogIds, setStatsDogIds] = useState<string[]>([]);
@@ -342,6 +348,15 @@ const EjsStats = () => {
               ))}
             </Select>
           </FormControl>
+
+          {/* Super-admin renames/reschedules the picked competition - it has no calendar page of its own to do this from. */}
+          {isSuperAdmin && selectedCompetition && (
+            <Tooltip title={t("pages.ejsStats.renameCompetition")}>
+              <IconButton aria-label={t("pages.ejsStats.renameCompetition")} onClick={() => setRenameEventOpen(true)}>
+                <EditIcon />
+              </IconButton>
+            </Tooltip>
+          )}
 
           {/* Only a super-admin imports EJS files - the shared pool is global, every club just reads it. */}
           {isSuperAdmin && (
@@ -630,6 +645,14 @@ const EjsStats = () => {
       <EjsImportWizard open={wizardOpen} onClose={() => setWizardOpen(false)} onImported={onEventChange} />
       {isTrainer && (
         <EjsTeamMappingModal open={mappingDialogOpen} onClose={() => setMappingDialogOpen(false)} isSuperAdmin={isSuperAdmin} />
+      )}
+      {isSuperAdmin && (
+        <EjsCompetitionEventDialog
+          open={renameEventOpen}
+          onClose={() => setRenameEventOpen(false)}
+          competition={selectedCompetition}
+          onSaved={() => {}}
+        />
       )}
     </Box>
   );
