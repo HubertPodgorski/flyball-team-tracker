@@ -100,25 +100,23 @@ const confirmEjsImport = async (req, res) => {
   }
 };
 
-// Every competition (any club's event) that has imported EJS rows - the shared list every user picks from.
+// Every EJS-pool competition that has imported rows - the shared list every user picks from. Strictly the
+// club-less EJS_TEAM event - a row whose eventId still points at some real club's own event (legacy data, from
+// before this pool model existed) needs that event repointed onto an EJS_TEAM twin before it shows up here.
 const getEjsCompetitions = async (_req, res) => {
   const eventIds = await CompetitionEntryModel.find({ team: EJS_TEAM }).distinct("eventId");
-  const events = await EventModel.find({ _id: { $in: eventIds } })
+  const events = await EventModel.find({ _id: { $in: eventIds }, team: EJS_TEAM })
     .select("_id name date endDate")
     .sort({ date: -1 });
 
   res.status(200).json(events);
 };
 
-// Super-admin: every event the import wizard can usefully offer - a fresh club-less placeholder (no rows yet), or
-// ANY event (any club, e.g. one from before this pool existed) that already has EJS rows and could take another day's
-// file. getEjsCompetitions only covers the second half; a brand-new placeholder has no rows yet to be found by that.
+// Super-admin: every EJS-pool event, whether or not it has any imported rows yet - the import wizard's own picker
+// (getEjsCompetitions only lists ones a file has already landed in). Strictly team=EJS_TEAM - EJS data never
+// attaches to a real club's own event, even one that already holds EJS rows from before this pool model existed.
 const getAllEjsEvents = async (_req, res) => {
-  const eventIdsWithData = await CompetitionEntryModel.find({ team: EJS_TEAM }).distinct("eventId");
-  const events = await EventModel.find({
-    type: "COMPETITION",
-    $or: [{ team: EJS_TEAM }, { _id: { $in: eventIdsWithData } }],
-  })
+  const events = await EventModel.find({ team: EJS_TEAM, type: "COMPETITION" })
     .select("_id name date endDate")
     .sort({ date: -1 });
 
