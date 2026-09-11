@@ -14,6 +14,12 @@ const ENTITY_QUERY_KEYS = [
   "events",
   "tasks",
   "dogs",
+  // EJS stats/mapping queries are keyed without the caller's club, so a stale cache would otherwise leak
+  // one club's data into whoever logs in next in the same tab.
+  "ejsCompetitions",
+  "competitionStats",
+  "globalTeamMapping",
+  "allTeamMappings",
 ];
 
 export const AuthContext = createContext<AuthContextType | undefined>(

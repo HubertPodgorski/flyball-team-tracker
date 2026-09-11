@@ -320,7 +320,7 @@ const EjsStats = () => {
         </Typography>
 
         <Stack direction="row" sx={{ gap: 2, alignItems: "center", flexWrap: "wrap" }}>
-          <FormControl sx={{ minWidth: 260 }}>
+          <FormControl sx={{ flexGrow: 1, minWidth: 200, maxWidth: 400 }}>
             <InputLabel id="ejs-stats-event-label">{t("pages.ejsStats.pickWithData")}</InputLabel>
             <Select
               labelId="ejs-stats-event-label"
