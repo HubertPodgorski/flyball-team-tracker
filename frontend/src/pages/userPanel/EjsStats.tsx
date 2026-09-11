@@ -28,6 +28,7 @@ import {
   useGlobalTeamMappingQuery,
 } from "../../queries/competitions";
 import { useIsSuperAdmin } from "../../hooks/useIsSuperAdmin";
+import { useIsTrainer } from "../../hooks/useIsTrainer";
 import { useAuthContext } from "../../hooks/useAuthContext";
 import { CompetitionDogStats } from "../../helpers/types";
 import { aggregateLineupRow, aggregateStatsRow } from "../../helpers/competitionLineupStats";
@@ -88,6 +89,8 @@ const EjsStats = () => {
   const { t } = useTranslation();
   const theme = useTheme();
   const isSuperAdmin = useIsSuperAdmin();
+  // Only a trainer maps teams (useIsTrainer already covers super-admin too) - a plain club member never sees this.
+  const isTrainer = useIsTrainer();
   const { user } = useAuthContext();
 
   const { data: withDataEvents = [] } = useEjsCompetitionsQuery();
@@ -102,17 +105,17 @@ const EjsStats = () => {
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const [comparisonMode, setComparisonMode] = useState<ComparisonMode>("dog");
 
-  // Auto-opens the mapping modal once for a (non-super-admin) club that owns no EJS team name anywhere yet.
-  const { data: globalMapping } = useGlobalTeamMappingQuery(!isSuperAdmin);
+  // Auto-opens the mapping modal once for a trainer (not super-admin) whose club owns no EJS team name anywhere yet.
+  const { data: globalMapping } = useGlobalTeamMappingQuery(isTrainer && !isSuperAdmin);
   const [autoOpenedMapping, setAutoOpenedMapping] = useState(false);
 
   useEffect(() => {
-    if (autoOpenedMapping || isSuperAdmin || !globalMapping) return;
+    if (autoOpenedMapping || !isTrainer || isSuperAdmin || !globalMapping) return;
     if (globalMapping.teamNames.length > 0 && globalMapping.myTeamNames.length === 0) {
       setMappingDialogOpen(true);
       setAutoOpenedMapping(true);
     }
-  }, [autoOpenedMapping, isSuperAdmin, globalMapping]);
+  }, [autoOpenedMapping, isTrainer, isSuperAdmin, globalMapping]);
 
   // "mine" and "ours" both read the club's mapped-team rows from the server; "mine" then narrows to the user's own dogs.
   const isOurs = clubScope !== "all";
@@ -347,6 +350,8 @@ const EjsStats = () => {
             </Button>
           )}
 
+          {/* Only a trainer maps teams to clubs (isTrainer already covers super-admin too). */}
+          {isTrainer && (
           <Tooltip title={isSuperAdmin ? t("pages.ejsStats.mapTeamsButton") : t("pages.ejsStats.chooseClubTeamsButton")}>
             <IconButton
               aria-label={isSuperAdmin ? t("pages.ejsStats.mapTeamsButton") : t("pages.ejsStats.chooseClubTeamsButton")}
@@ -356,6 +361,7 @@ const EjsStats = () => {
               <SettingsIcon />
             </IconButton>
           </Tooltip>
+          )}
         </Stack>
       </Card>
 
@@ -622,7 +628,9 @@ const EjsStats = () => {
       )}
 
       <EjsImportWizard open={wizardOpen} onClose={() => setWizardOpen(false)} onImported={onEventChange} />
-      <EjsTeamMappingModal open={mappingDialogOpen} onClose={() => setMappingDialogOpen(false)} isSuperAdmin={isSuperAdmin} />
+      {isTrainer && (
+        <EjsTeamMappingModal open={mappingDialogOpen} onClose={() => setMappingDialogOpen(false)} isSuperAdmin={isSuperAdmin} />
+      )}
     </Box>
   );
 };

@@ -1,7 +1,7 @@
 import path from "path";
 import { test, expect } from "../helpers/fixtures";
 import { uniqueEmail } from "../helpers/testData";
-import { promoteToSuperAdmin } from "../helpers/db";
+import { promoteToSuperAdmin, promoteToTrainer } from "../helpers/db";
 import { signupAndLoginAsTrainer, login, logout } from "../helpers/auth";
 
 const FIXTURE = path.join(__dirname, "..", "..", "api", "src", "controllers", "fixtures", "ejs-sample.xls");
@@ -11,6 +11,9 @@ const FIXTURE = path.join(__dirname, "..", "..", "api", "src", "controllers", "f
 test("a trainer's team-mapping modal has no club field and cancels cleanly", async ({ page }) => {
   const email = uniqueEmail("user");
   await signupAndLoginAsTrainer(page, { email, name: "E2E Mapping User", clubCode: "TEST" });
+  await promoteToTrainer(email);
+  await logout(page);
+  await login(page, email);
 
   await page.goto("/user-panel/ejs-stats");
   await page.getByRole("button", { name: "Choose club's teams" }).click();
@@ -56,6 +59,9 @@ test("a club with no mapped teams gets the mapping modal automatically, and can 
   // A brand-new SANDBOX club has never claimed anything - the mapping modal should open on its own, unprompted.
   const trainerEmail = uniqueEmail("sandbox-user");
   await signupAndLoginAsTrainer(page, { email: trainerEmail, name: "E2E Sandbox User", clubCode: "SANDBOX" });
+  await promoteToTrainer(trainerEmail);
+  await logout(page);
+  await login(page, trainerEmail);
   await page.goto("/user-panel/ejs-stats");
 
   const mappingDialog = page.getByRole("dialog").filter({ hasText: "Choose club's EJS teams" });
