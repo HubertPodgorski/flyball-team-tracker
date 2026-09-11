@@ -313,6 +313,9 @@ const EjsStats = () => {
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
       <Typography variant="h5">{t("pages.ejsStats.title")}</Typography>
+      <Typography variant="body2" color="text.secondary">
+        {t("pages.ejsStats.chooseTeamsHint")}
+      </Typography>
 
       <Card sx={{ padding: 2, display: "flex", flexDirection: "column", gap: 2 }}>
         <Typography variant="body2" color="text.secondary">

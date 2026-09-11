@@ -274,6 +274,7 @@
     },
     "ejsStats": {
       "title": "Statystyki EJS",
+      "chooseTeamsHint": "Jeśli nie widzisz swoich danych ani drużyn, wybierz je przyciskiem ustawień po prawej.",
       "competition": "Zawody",
       "pickWithData": "Wybierz zawody",
       "pickWithDataHint": "Wybierz zawody lub wybierz wszystkie zawody razem, żeby zobaczyć statystyki.",
