@@ -18,8 +18,10 @@ import {
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
+import { useQueryClient } from "@tanstack/react-query";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import SettingsIcon from "@mui/icons-material/Settings";
+import EditIcon from "@mui/icons-material/Edit";
 import {
   useCompetitionStatsQuery,
   useCompetitionStatsByLineupQueries,
@@ -34,6 +36,9 @@ import { CompetitionDogStats } from "../../helpers/types";
 import { aggregateLineupRow, aggregateStatsRow } from "../../helpers/competitionLineupStats";
 import { competitionOptionLabel } from "../../helpers/competitionOptionLabel";
 import { ALL_COMPETITIONS } from "../../helpers/competitionsApi";
+import { updateSuperAdminItem } from "../../helpers/superAdminApi";
+import { EventType } from "../../components/inputs/consts";
+import EventForm from "../forms/EventForm";
 import EjsImportWizard from "../../components/EjsImportWizard";
 import EjsTeamMappingModal from "../../components/EjsTeamMappingModal";
 import CompetitionStatsColumnCards from "../../components/CompetitionStatsColumnCards";
@@ -92,12 +97,17 @@ const EjsStats = () => {
   // Only a trainer maps teams (useIsTrainer already covers super-admin too) - a plain club member never sees this.
   const isTrainer = useIsTrainer();
   const { user } = useAuthContext();
+  const queryClient = useQueryClient();
 
   const { data: withDataEvents = [] } = useEjsCompetitionsQuery();
 
   const [eventId, setEventId] = useState(ALL_COMPETITIONS);
   const [wizardOpen, setWizardOpen] = useState(false);
   const [mappingDialogOpen, setMappingDialogOpen] = useState(false);
+  const [renameEventOpen, setRenameEventOpen] = useState(false);
+  // The picked competition's own row - a super-admin edits its name/date/club straight from here (it has no club
+  // calendar page of its own; it's whichever club created it, per the wizard's "Create competition" step).
+  const selectedCompetition = withDataEvents.find((event) => event._id === eventId);
   const [clubScope, setClubScope] = useState<ClubScope>("ours");
   const [statsLineupKey, setStatsLineupKey] = useState("");
   const [statsDogIds, setStatsDogIds] = useState<string[]>([]);
@@ -342,6 +352,15 @@ const EjsStats = () => {
               ))}
             </Select>
           </FormControl>
+
+          {/* Super-admin renames/reschedules the picked competition - it has no calendar page of its own to do this from. */}
+          {isSuperAdmin && selectedCompetition && (
+            <Tooltip title={t("pages.ejsStats.renameCompetition")}>
+              <IconButton aria-label={t("pages.ejsStats.renameCompetition")} onClick={() => setRenameEventOpen(true)}>
+                <EditIcon />
+              </IconButton>
+            </Tooltip>
+          )}
 
           {/* Only a super-admin imports EJS files - the shared pool is global, every club just reads it. */}
           {isSuperAdmin && (
@@ -630,6 +649,25 @@ const EjsStats = () => {
       <EjsImportWizard open={wizardOpen} onClose={() => setWizardOpen(false)} onImported={onEventChange} />
       {isTrainer && (
         <EjsTeamMappingModal open={mappingDialogOpen} onClose={() => setMappingDialogOpen(false)} isSuperAdmin={isSuperAdmin} />
+      )}
+      {isSuperAdmin && selectedCompetition && (
+        <EventForm
+          open={renameEventOpen}
+          onClose={() => setRenameEventOpen(false)}
+          editingId={selectedCompetition._id}
+          initialData={{
+            name: selectedCompetition.name,
+            date: selectedCompetition.date,
+            endDate: selectedCompetition.endDate,
+            type: EventType.COMPETITION,
+            team: selectedCompetition.team,
+          }}
+          onSubmitOverride={async (data, submittedEditingId) => {
+            await updateSuperAdminItem("events", { ...data, _id: submittedEditingId });
+            queryClient.invalidateQueries({ queryKey: ["ejsCompetitions"] });
+            setRenameEventOpen(false);
+          }}
+        />
       )}
     </Box>
   );

@@ -104,7 +104,7 @@ const confirmEjsImport = async (req, res) => {
 const getEjsCompetitions = async (_req, res) => {
   const eventIds = await CompetitionEntryModel.find({ team: EJS_TEAM }).distinct("eventId");
   const events = await EventModel.find({ _id: { $in: eventIds } })
-    .select("_id name date endDate")
+    .select("_id name date endDate team")
     .sort({ date: -1 });
 
   res.status(200).json(events);

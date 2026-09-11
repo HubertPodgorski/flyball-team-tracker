@@ -173,6 +173,8 @@ describe("getEjsCompetitions / getImportedCompetitionIds", () => {
     await getEjsCompetitions({ club: "SOME_OTHER_CLUB" }, res);
 
     expect(res.body.map((event) => event.name)).toEqual(["Mar", "Jan"]);
+    // Carries its owning club too - a super-admin needs it to rename the event via /super-admin/events.
+    expect(res.body.every((event) => event.team === "SUPER_ADMIN_CLUB")).toBe(true);
 
     const idsRes = mockRes();
     await getImportedCompetitionIds({ club: "SOME_OTHER_CLUB" }, idsRes);

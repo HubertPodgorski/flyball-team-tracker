@@ -48,6 +48,15 @@ test("a super-admin imports an EJS file into the global pool, then a club claims
   // The just-imported competition is auto-selected and now in the shared picker.
   await expect(page.getByRole("combobox", { name: "Choose competition" })).toContainText(competitionName);
 
+  // It has no calendar page of its own - a super-admin renames it right from here.
+  const renamedCompetitionName = `${competitionName} (renamed)`;
+  await page.getByRole("button", { name: "Edit competition" }).click();
+  const editEventForm = page.getByRole("dialog").filter({ hasText: "Editing event" });
+  await editEventForm.getByRole("textbox", { name: "Name", exact: true }).fill(renamedCompetitionName);
+  await editEventForm.getByRole("button", { name: "Submit" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("combobox", { name: "Choose competition" })).toContainText(renamedCompetitionName);
+
   // Super-admin isn't auto-prompted (that's for a regular club) - they open the mapping modal explicitly and can
   // assign any club (a text field with suggestions, not just their own).
   await page.getByRole("button", { name: "Map teams to clubs" }).click();

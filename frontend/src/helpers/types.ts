@@ -204,6 +204,8 @@ export interface EjsCompetition {
   name: string;
   date: string;
   endDate?: string;
+  // Its owning club - a super-admin needs this to rename it via /super-admin/events, whatever club it belongs to.
+  team: string;
 }
 
 export interface GlobalTeamMapping {
