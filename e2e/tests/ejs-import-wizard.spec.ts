@@ -48,13 +48,27 @@ test("a super-admin imports an EJS file into the global pool, then a club claims
   // The just-imported competition is auto-selected and now in the shared picker.
   await expect(page.getByRole("combobox", { name: "Choose competition" })).toContainText(competitionName);
 
-  // Passive mapping prompt: this club owns no team here yet, so it's offered the sheet's team names.
-  await expect(page.getByText("Which team here is your club's?")).toBeVisible();
-  await page.getByRole("button", { name: "Fixture Team A", exact: true }).click();
+  // Super-admin isn't auto-prompted (that's for a regular club) - they open the mapping modal explicitly and can
+  // assign any club (a text field with suggestions, not just their own).
+  await page.getByRole("button", { name: "Map teams to clubs" }).click();
 
-  // Claim resolves - the prompt clears and "My club" stats now render.
-  await expect(page.getByText("Which team here is your club's?")).toHaveCount(0);
+  const mappingDialog = page.getByRole("dialog").filter({ hasText: "Choose club's EJS teams" });
+  await mappingDialog.getByRole("combobox", { name: "Club" }).click();
+  await page.getByRole("option", { name: "Test", exact: true }).click();
+  await expect(mappingDialog.getByRole("combobox", { name: "Club" })).toHaveValue("Test");
+  await mappingDialog.getByRole("combobox", { name: "Team names" }).click();
+  await page.getByRole("option", { name: "Fixture Team A", exact: true }).click();
+  await expect(mappingDialog.getByText("Fixture Team A", { exact: true })).toBeVisible();
+  // Escape only dismisses the team-names dropdown, not the whole dialog (regression: it used to close everything).
+  await page.keyboard.press("Escape");
+  await expect(mappingDialog).toBeVisible();
+  await mappingDialog.getByRole("button", { name: "Save" }).click();
+
+  // Saved - the modal closes and "My club" stats now render Fixture Team A's own dogs for TEST_TEAM.
+  await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Club stats" })).toBeVisible();
+  await page.getByRole("button", { name: "All dogs", exact: true }).click();
+  await expect(page.getByText("Rex").first()).toBeVisible();
 
   // "All clubs" still surfaces every team from the sheet, ours included.
   await page.getByRole("button", { name: "All clubs" }).click();

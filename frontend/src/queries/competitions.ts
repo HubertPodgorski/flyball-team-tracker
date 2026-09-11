@@ -3,7 +3,7 @@ import {
   confirmEjsImport,
   fetchAllTeamMappings,
   fetchCompetitionStats,
-  fetchCompetitionTeamMapping,
+  fetchGlobalTeamMapping,
   fetchEjsCompetitions,
   previewEjsImport,
   setAdminTeamMapping,
@@ -24,14 +24,11 @@ export const useConfirmEjsImportMutation = () =>
     mutationFn: ({ eventId, files }: { eventId: string; files: File[] }) => confirmEjsImport(eventId, files),
   });
 
-export const useCompetitionTeamMappingQuery = (eventId: string | undefined) =>
-  useQuery({
-    queryKey: ["competitionTeamMapping", eventId],
-    queryFn: () => fetchCompetitionTeamMapping(eventId as string),
-    enabled: !!eventId,
-  });
+// Every EJS team name + mapping + which are the caller's own club's - read side for both mapping modals.
+export const useGlobalTeamMappingQuery = (enabled = true) =>
+  useQuery({ queryKey: ["globalTeamMapping"], queryFn: fetchGlobalTeamMapping, enabled });
 
-// Super-admin: the global team-name -> club mapping grid.
+// Super-admin: same, plus the known-club list to suggest in the club picker.
 export const useAllTeamMappingsQuery = (enabled: boolean) =>
   useQuery({ queryKey: ["allTeamMappings"], queryFn: fetchAllTeamMappings, enabled });
 
@@ -39,11 +36,11 @@ export const useSetAdminTeamMappingMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ ejsTeamName, club }: { ejsTeamName: string; club: string }) => setAdminTeamMapping(ejsTeamName, club),
+    mutationFn: ({ club, ejsTeamNames }: { club: string; ejsTeamNames: string[] }) => setAdminTeamMapping(club, ejsTeamNames),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["allTeamMappings"] });
+      queryClient.invalidateQueries({ queryKey: ["globalTeamMapping"] });
       queryClient.invalidateQueries({ queryKey: ["competitionStats"] });
-      queryClient.invalidateQueries({ queryKey: ["competitionTeamMapping"] });
     },
   });
 };
@@ -52,9 +49,10 @@ export const useSetCompetitionTeamMappingMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: setCompetitionTeamMapping,
+    mutationFn: (ejsTeamNames: string[]) => setCompetitionTeamMapping(ejsTeamNames),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["competitionTeamMapping"] });
+      queryClient.invalidateQueries({ queryKey: ["globalTeamMapping"] });
+      queryClient.invalidateQueries({ queryKey: ["allTeamMappings"] });
       queryClient.invalidateQueries({ queryKey: ["competitionStats"] });
     },
   });

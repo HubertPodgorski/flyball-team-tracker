@@ -206,13 +206,20 @@ export interface EjsCompetition {
   endDate?: string;
 }
 
-export interface CompetitionTeamMapping {
-  // Every EJS team name in this competition.
+export interface GlobalTeamMapping {
+  // Every EJS team name in the whole pool.
   teamNames: string[];
   // ejsTeamName -> owning club, for the names that are claimed.
   mappings: Record<string, string>;
   // The subset of teamNames the current club owns.
   myTeamNames: string[];
+}
+
+// Super-admin: same team names + mappings, plus the known-club list to suggest in the club picker.
+export interface AllTeamMappings {
+  teamNames: string[];
+  mappings: Record<string, string>;
+  clubs: { team: string; name: string }[];
 }
 
 export interface CompetitionDogStats {

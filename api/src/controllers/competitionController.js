@@ -6,7 +6,7 @@ const { readEjsFile } = require("../helpers/readEjsFile");
 const { parseEjsRows } = require("../helpers/ejsParser");
 const { computeStatsForAllOpponentDogs } = require("../helpers/competitionStats");
 const { computePredecessorStats, computeRecords, computeNetVsGross } = require("../helpers/competitionAdvancedStats");
-const { clubNameForTeam, clubsForSelect, isValidClub } = require("../helpers/clubs");
+const { clubNameForTeam, clubsForSelect } = require("../helpers/clubs");
 const { logAppError } = require("../helpers/logAppError");
 
 // EJS data is one global pool - a super-admin imports it, every club reads it. The `team` field on these rows
@@ -193,10 +193,11 @@ const getCompetitionStats = async (req, res) => {
 
 const getAllCompetitionStats = (req, res) => respondWithStats({}, req, res);
 
-// For the passive mapping prompt: the team names in one competition, plus which (if any) already belong to the caller's club.
-const getCompetitionTeamMapping = async (req, res) => {
-  const teamNames = (await CompetitionEntryModel.find({ eventId: req.params.eventId, team: EJS_TEAM }).distinct("teamName")).sort();
-  const mappings = await EjsTeamMappingModel.find({ ejsTeamName: { $in: teamNames } });
+// Every EJS team name in the pool, every existing mapping, and which of them belong to the caller's own club.
+// Any authenticated user - this is what both the trainer's and (read side of) the super-admin's mapping modal read from.
+const getGlobalTeamMapping = async (req, res) => {
+  const teamNames = (await CompetitionEntryModel.find({ team: EJS_TEAM }).distinct("teamName")).sort();
+  const mappings = await EjsTeamMappingModel.find();
   const byName = Object.fromEntries(mappings.map((row) => [row.ejsTeamName, row.club]));
 
   res.status(200).json({
@@ -206,7 +207,7 @@ const getCompetitionTeamMapping = async (req, res) => {
   });
 };
 
-// Super-admin: every EJS team name in the pool, the existing name->club mappings, and the club list to assign from.
+// Super-admin: same team names + mappings as above, plus the known-club list to suggest in the club picker.
 const getAllTeamMappings = async (_req, res) => {
   const teamNames = (await CompetitionEntryModel.find({ team: EJS_TEAM }).distinct("teamName")).sort();
   const mappings = await EjsTeamMappingModel.find();
@@ -218,47 +219,44 @@ const getAllTeamMappings = async (_req, res) => {
   });
 };
 
-// Super-admin: assign an EJS team name to any club, or clear it (empty club). No 409 - a super-admin can reassign freely.
-const setAdminTeamMapping = async (req, res) => {
-  const { ejsTeamName, club } = req.body;
+// Upserts `club` as the owner of exactly `ejsTeamNames`, dropping any of its other claims - a full replace, not a diff.
+const replaceClubTeamNames = async (club, ejsTeamNames) => {
+  await EjsTeamMappingModel.deleteMany({ club, ejsTeamName: { $nin: ejsTeamNames } });
 
-  if (!ejsTeamName) return res.status(400).json({ error: "MISSING_TEAM_NAME" });
-
-  if (!club) {
-    await EjsTeamMappingModel.deleteOne({ ejsTeamName });
-    return res.status(200).json({ ejsTeamName, club: null });
+  for (const ejsTeamName of ejsTeamNames) {
+    await EjsTeamMappingModel.updateOne(
+      { ejsTeamName },
+      { $set: { club }, $setOnInsert: { ejsTeamName } },
+      { upsert: true }
+    );
   }
-
-  if (!isValidClub(club)) return res.status(400).json({ error: "INVALID_CLUB" });
-
-  const mapping = await EjsTeamMappingModel.findOneAndUpdate(
-    { ejsTeamName },
-    { ejsTeamName, club },
-    { upsert: true, returnDocument: "after" }
-  );
-
-  res.status(200).json(mapping);
 };
 
-// A club claims an EJS team name as its own. Can't take a name another club already owns.
+// A club picks exactly which EJS team names are its own, in one go. Can't take a name another club already owns.
 const setCompetitionTeamMapping = async (req, res) => {
-  const { ejsTeamName } = req.body;
+  const { ejsTeamNames } = req.body;
 
-  if (!ejsTeamName) return res.status(400).json({ error: "MISSING_TEAM_NAME" });
+  if (!Array.isArray(ejsTeamNames)) return res.status(400).json({ error: "MISSING_TEAM_NAMES" });
 
-  const existing = await EjsTeamMappingModel.findOne({ ejsTeamName });
+  const taken = await EjsTeamMappingModel.find({ ejsTeamName: { $in: ejsTeamNames }, club: { $ne: req.club } });
 
-  if (existing && existing.club !== req.club) {
-    return res.status(409).json({ error: "TEAM_NAME_TAKEN" });
-  }
+  if (taken.length) return res.status(409).json({ error: "TEAM_NAME_TAKEN", teamNames: taken.map((row) => row.ejsTeamName) });
 
-  const mapping = await EjsTeamMappingModel.findOneAndUpdate(
-    { ejsTeamName },
-    { ejsTeamName, club: req.club },
-    { upsert: true, returnDocument: "after" }
-  );
+  await replaceClubTeamNames(req.club, ejsTeamNames);
 
-  res.status(200).json(mapping);
+  res.status(200).json({ ejsTeamNames });
+};
+
+// Super-admin: same, but for any club (free text allowed - it only has to line up with what the club itself uses, if
+// it is a real club account) and without the ownership check, so opponents can be grouped without a fight over names.
+const setAdminTeamMapping = async (req, res) => {
+  const { club, ejsTeamNames } = req.body;
+
+  if (!club || !Array.isArray(ejsTeamNames)) return res.status(400).json({ error: "MISSING_CLUB_OR_TEAM_NAMES" });
+
+  await replaceClubTeamNames(club, ejsTeamNames);
+
+  res.status(200).json({ club, ejsTeamNames });
 };
 
 module.exports = {
@@ -268,7 +266,7 @@ module.exports = {
   getImportedCompetitionIds,
   getCompetitionStats,
   getAllCompetitionStats,
-  getCompetitionTeamMapping,
+  getGlobalTeamMapping,
   setCompetitionTeamMapping,
   getAllTeamMappings,
   setAdminTeamMapping,

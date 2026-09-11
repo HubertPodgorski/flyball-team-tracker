@@ -22,8 +22,7 @@ import {
   useCompetitionStatsByLineupQueries,
   useCompetitionStatsByEventQueries,
   useEjsCompetitionsQuery,
-  useCompetitionTeamMappingQuery,
-  useSetCompetitionTeamMappingMutation,
+  useGlobalTeamMappingQuery,
 } from "../../queries/competitions";
 import { useIsSuperAdmin } from "../../hooks/useIsSuperAdmin";
 import { useAuthContext } from "../../hooks/useAuthContext";
@@ -32,7 +31,7 @@ import { aggregateLineupRow, aggregateStatsRow } from "../../helpers/competition
 import { competitionOptionLabel } from "../../helpers/competitionOptionLabel";
 import { ALL_COMPETITIONS } from "../../helpers/competitionsApi";
 import EjsImportWizard from "../../components/EjsImportWizard";
-import EjsTeamMappingDialog from "../../components/EjsTeamMappingDialog";
+import EjsTeamMappingModal from "../../components/EjsTeamMappingModal";
 import CompetitionStatsColumnCards from "../../components/CompetitionStatsColumnCards";
 import CompetitionDogTrendCard from "../../components/CompetitionDogTrendCard";
 import CompetitionPredecessorCard from "../../components/CompetitionPredecessorCard";
@@ -90,7 +89,7 @@ const EjsStats = () => {
 
   const { data: withDataEvents = [] } = useEjsCompetitionsQuery();
 
-  const [eventId, setEventId] = useState("");
+  const [eventId, setEventId] = useState(ALL_COMPETITIONS);
   const [wizardOpen, setWizardOpen] = useState(false);
   const [mappingDialogOpen, setMappingDialogOpen] = useState(false);
   const [clubScope, setClubScope] = useState<ClubScope>("ours");
@@ -100,9 +99,17 @@ const EjsStats = () => {
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const [comparisonMode, setComparisonMode] = useState<ComparisonMode>("dog");
 
-  const realEventId = eventId && eventId !== ALL_COMPETITIONS ? eventId : undefined;
-  const { data: teamMapping } = useCompetitionTeamMappingQuery(realEventId);
-  const setMappingMutation = useSetCompetitionTeamMappingMutation();
+  // Auto-opens the mapping modal once for a (non-super-admin) club that owns no EJS team name anywhere yet.
+  const { data: globalMapping } = useGlobalTeamMappingQuery(!isSuperAdmin);
+  const [autoOpenedMapping, setAutoOpenedMapping] = useState(false);
+
+  useEffect(() => {
+    if (autoOpenedMapping || isSuperAdmin || !globalMapping) return;
+    if (globalMapping.teamNames.length > 0 && globalMapping.myTeamNames.length === 0) {
+      setMappingDialogOpen(true);
+      setAutoOpenedMapping(true);
+    }
+  }, [autoOpenedMapping, isSuperAdmin, globalMapping]);
 
   // "mine" and "ours" both read the club's mapped-team rows from the server; "mine" then narrows to the user's own dogs.
   const isOurs = clubScope !== "all";
@@ -310,78 +317,36 @@ const EjsStats = () => {
         </Typography>
 
         <Stack direction="row" sx={{ gap: 2, alignItems: "center", flexWrap: "wrap" }}>
-          {hasImportedData && (
-            <>
-              <FormControl sx={{ minWidth: 260 }}>
-                <InputLabel id="ejs-stats-event-label">{t("pages.ejsStats.pickWithData")}</InputLabel>
-                <Select
-                  labelId="ejs-stats-event-label"
-                  label={t("pages.ejsStats.pickWithData")}
-                  value={withDataEvents.some((event) => event._id === eventId) ? eventId : ""}
-                  onChange={(event) => onEventChange(event.target.value)}
-                >
-                  {withDataEvents.map((event) => (
-                    <MenuItem key={event._id} value={event._id}>
-                      {competitionOptionLabel(event)}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+          <FormControl sx={{ minWidth: 260 }}>
+            <InputLabel id="ejs-stats-event-label">{t("pages.ejsStats.pickWithData")}</InputLabel>
+            <Select
+              labelId="ejs-stats-event-label"
+              label={t("pages.ejsStats.pickWithData")}
+              value={eventId}
+              onChange={(event) => onEventChange(event.target.value)}
+            >
+              <MenuItem value={ALL_COMPETITIONS}>{t("pages.ejsStats.allCompetitions")}</MenuItem>
+              {withDataEvents.map((event) => (
+                <MenuItem key={event._id} value={event._id}>
+                  {competitionOptionLabel(event)}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
 
-              <Typography variant="body2" color="text.secondary">
-                {t("pages.ejsStats.or")}
-              </Typography>
+          <Button variant="outlined" onClick={() => setMappingDialogOpen(true)}>
+            {isSuperAdmin ? t("pages.ejsStats.mapTeamsButton") : t("pages.ejsStats.chooseClubTeamsButton")}
+          </Button>
 
-              <Button
-                variant={eventId === ALL_COMPETITIONS ? "contained" : "outlined"}
-                onClick={() => onEventChange(ALL_COMPETITIONS)}
-              >
-                {t("pages.ejsStats.allCompetitions")}
-              </Button>
-
-              {isSuperAdmin && (
-                <Typography variant="body2" color="text.secondary">
-                  {t("pages.ejsStats.or")}
-                </Typography>
-              )}
-            </>
-          )}
-
-          {/* Only a super-admin imports EJS files or maps team names to clubs - the shared pool is global, every club just reads it. */}
+          {/* Only a super-admin imports EJS files - the shared pool is global, every club just reads it. */}
           {isSuperAdmin && (
-            <>
-              <Button variant="outlined" startIcon={<UploadFileIcon />} onClick={() => setWizardOpen(true)}>
-                {t("pages.ejsStats.importData")}
-              </Button>
-              <Button variant="outlined" onClick={() => setMappingDialogOpen(true)}>
-                {t("pages.ejsStats.mapTeamsButton")}
-              </Button>
-            </>
+            <Button variant="outlined" startIcon={<UploadFileIcon />} onClick={() => setWizardOpen(true)}>
+              {t("pages.ejsStats.importData")}
+            </Button>
           )}
         </Stack>
       </Card>
 
-      {/* Passive mapping prompt: a club claims which EJS team name is its own so "My club" / "My dogs" stats resolve. */}
-      {realEventId && teamMapping && teamMapping.myTeamNames.length === 0 && teamMapping.teamNames.length > 0 && (
-        <Card sx={{ padding: 2, display: "flex", flexDirection: "column", gap: 1 }}>
-          <Typography variant="subtitle2">{t("pages.ejsStats.mapPrompt")}</Typography>
-          <Typography variant="body2" color="text.secondary">
-            {t("pages.ejsStats.mapPromptHint")}
-          </Typography>
-
-          <Stack direction="row" sx={{ gap: 1, flexWrap: "wrap" }}>
-            {teamMapping.teamNames.map((name) => (
-              <Chip
-                key={name}
-                label={name}
-                variant="outlined"
-                disabled={!!teamMapping.mappings[name] || setMappingMutation.isPending}
-                onClick={() => setMappingMutation.mutate(name)}
-              />
-            ))}
-          </Stack>
-        </Card>
-      )}
 
       {eventId && (
         <Card sx={{ padding: 2, display: "flex", flexDirection: "column", gap: 2 }}>
@@ -645,7 +610,7 @@ const EjsStats = () => {
       )}
 
       <EjsImportWizard open={wizardOpen} onClose={() => setWizardOpen(false)} onImported={onEventChange} />
-      <EjsTeamMappingDialog open={mappingDialogOpen} onClose={() => setMappingDialogOpen(false)} />
+      <EjsTeamMappingModal open={mappingDialogOpen} onClose={() => setMappingDialogOpen(false)} isSuperAdmin={isSuperAdmin} />
     </Box>
   );
 };

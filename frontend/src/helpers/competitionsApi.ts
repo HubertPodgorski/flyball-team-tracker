@@ -2,8 +2,9 @@ import axios from "axios";
 import { apiSuffix } from "./apiCall";
 import { authHeaders } from "./authToken";
 import {
+  AllTeamMappings,
   CompetitionStatsResult,
-  CompetitionTeamMapping,
+  GlobalTeamMapping,
   EjsCompetition,
   EjsPreviewResult,
 } from "./types";
@@ -40,33 +41,28 @@ export const fetchEjsCompetitions = async (): Promise<EjsCompetition[]> => {
   return data;
 };
 
-export const fetchCompetitionTeamMapping = async (eventId: string): Promise<CompetitionTeamMapping> => {
-  const { data } = await axios.get(`${apiSuffix}/competitions/${eventId}/team-mapping`, authHeaders());
+// Every EJS team name in the pool, every mapping, and which of them are already the caller's own club's.
+export const fetchGlobalTeamMapping = async (): Promise<GlobalTeamMapping> => {
+  const { data } = await axios.get(`${apiSuffix}/competitions/team-mapping`, authHeaders());
 
   return data;
 };
 
-// The caller's club claims an EJS team name as its own.
-export const setCompetitionTeamMapping = async (ejsTeamName: string): Promise<void> => {
-  await axios.post(`${apiSuffix}/competitions/team-mapping`, { ejsTeamName }, authHeaders());
+// The caller's club picks exactly which EJS team names are its own, in one go (replaces its whole set).
+export const setCompetitionTeamMapping = async (ejsTeamNames: string[]): Promise<void> => {
+  await axios.post(`${apiSuffix}/competitions/team-mapping`, { ejsTeamNames }, authHeaders());
 };
 
-export interface AllTeamMappings {
-  teamNames: string[];
-  mappings: Record<string, string>;
-  clubs: { team: string; name: string }[];
-}
-
-// Super-admin: the whole pool's team names + every mapping + the club list to assign from.
+// Super-admin: the whole pool's team names + every mapping + the club list to suggest in the club picker.
 export const fetchAllTeamMappings = async (): Promise<AllTeamMappings> => {
   const { data } = await axios.get(`${apiSuffix}/competitions/team-mappings`, authHeaders());
 
   return data;
 };
 
-// Super-admin: assign an EJS team name to any club, or clear it (empty club).
-export const setAdminTeamMapping = async (ejsTeamName: string, club: string): Promise<void> => {
-  await axios.post(`${apiSuffix}/competitions/team-mappings`, { ejsTeamName, club }, authHeaders());
+// Super-admin: assign exactly `ejsTeamNames` to `club` (free text allowed - it's just a grouping label for opponents).
+export const setAdminTeamMapping = async (club: string, ejsTeamNames: string[]): Promise<void> => {
+  await axios.post(`${apiSuffix}/competitions/team-mappings`, { club, ejsTeamNames }, authHeaders());
 };
 
 export const fetchCompetitionStats = async (

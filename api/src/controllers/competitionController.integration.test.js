@@ -15,7 +15,7 @@ const {
   getImportedCompetitionIds,
   getCompetitionStats,
   getAllCompetitionStats,
-  getCompetitionTeamMapping,
+  getGlobalTeamMapping,
   setCompetitionTeamMapping,
   getAllTeamMappings,
   setAdminTeamMapping,
@@ -45,7 +45,7 @@ const importInto = (event, files) =>
   confirmEjsImport({ params: { eventId: event._id.toString() }, files }, mockRes());
 
 const claimTeam = (ejsTeamName, club = CLUB) =>
-  setCompetitionTeamMapping({ club, body: { ejsTeamName } }, mockRes());
+  setCompetitionTeamMapping({ club, body: { ejsTeamNames: [ejsTeamName] } }, mockRes());
 
 describe("previewEjsImport", () => {
   let event;
@@ -188,9 +188,9 @@ describe("team mapping", () => {
     await importInto(event, await uploadFixture());
   });
 
-  it("reports which of a competition's team names the caller's club already owns", async () => {
+  it("reports every pool team name and which ones the caller's club already owns", async () => {
     const before = mockRes();
-    await getCompetitionTeamMapping({ club: CLUB, params: { eventId: event._id.toString() } }, before);
+    await getGlobalTeamMapping({ club: CLUB }, before);
 
     expect(before.body.teamNames).toEqual(["Fixture Team A", "Fixture Team B"]);
     expect(before.body.myTeamNames).toEqual([]);
@@ -198,22 +198,32 @@ describe("team mapping", () => {
     await claimTeam("Fixture Team A");
 
     const after = mockRes();
-    await getCompetitionTeamMapping({ club: CLUB, params: { eventId: event._id.toString() } }, after);
+    await getGlobalTeamMapping({ club: CLUB }, after);
 
     expect(after.body.myTeamNames).toEqual(["Fixture Team A"]);
     expect(after.body.mappings["Fixture Team A"]).toBe(CLUB);
+  });
+
+  it("replaces the whole set on every call - a second call drops names no longer listed", async () => {
+    await setCompetitionTeamMapping({ club: CLUB, body: { ejsTeamNames: ["Fixture Team A", "Fixture Team B"] } }, mockRes());
+    await setCompetitionTeamMapping({ club: CLUB, body: { ejsTeamNames: ["Fixture Team B"] } }, mockRes());
+
+    const res = mockRes();
+    await getGlobalTeamMapping({ club: CLUB }, res);
+
+    expect(res.body.myTeamNames).toEqual(["Fixture Team B"]);
   });
 
   it("won't let a club claim a name another club already owns", async () => {
     await claimTeam("Fixture Team A", "CLUB_ONE");
 
     const res = mockRes();
-    await setCompetitionTeamMapping({ club: "CLUB_TWO", body: { ejsTeamName: "Fixture Team A" } }, res);
+    await setCompetitionTeamMapping({ club: "CLUB_TWO", body: { ejsTeamNames: ["Fixture Team A"] } }, res);
 
     expect(res.statusCode).toBe(409);
   });
 
-  it("400s without a team name", async () => {
+  it("400s without a team name array", async () => {
     const res = mockRes();
     await setCompetitionTeamMapping({ club: CLUB, body: {} }, res);
     expect(res.statusCode).toBe(400);
@@ -239,22 +249,31 @@ describe("admin team mappings", () => {
     expect(res.body.clubs.some((club) => club.team === CLUB && club.name)).toBe(true);
   });
 
-  it("assigns a team name to any club and clears it with an empty club", async () => {
+  it("assigns team names to any club - free text included, no ownership check", async () => {
     const set = mockRes();
-    await setAdminTeamMapping({ body: { ejsTeamName: "Fixture Team B", club: "DZIKIE_GZIKI" } }, set);
+    await setAdminTeamMapping({ body: { club: "DZIKIE_GZIKI", ejsTeamNames: ["Fixture Team A", "Fixture Team B"] } }, set);
 
     expect(set.statusCode).toBe(200);
-    expect((await EjsTeamMappingModel.findOne({ ejsTeamName: "Fixture Team B" })).club).toBe("DZIKIE_GZIKI");
+    expect((await EjsTeamMappingModel.find({ club: "DZIKIE_GZIKI" })).map((row) => row.ejsTeamName).sort()).toEqual([
+      "Fixture Team A",
+      "Fixture Team B",
+    ]);
 
-    const clear = mockRes();
-    await setAdminTeamMapping({ body: { ejsTeamName: "Fixture Team B", club: "" } }, clear);
-
-    expect(await EjsTeamMappingModel.findOne({ ejsTeamName: "Fixture Team B" })).toBeNull();
+    // Not a real club team code - accepted anyway, it's just a display grouping.
+    await setAdminTeamMapping({ body: { club: "Whatever Federation", ejsTeamNames: ["Fixture Team A"] } }, mockRes());
+    expect((await EjsTeamMappingModel.findOne({ ejsTeamName: "Fixture Team A" })).club).toBe("Whatever Federation");
   });
 
-  it("400s on an unknown club", async () => {
+  it("a second call for the same club drops names no longer listed", async () => {
+    await setAdminTeamMapping({ body: { club: "DZIKIE_GZIKI", ejsTeamNames: ["Fixture Team A", "Fixture Team B"] } }, mockRes());
+    await setAdminTeamMapping({ body: { club: "DZIKIE_GZIKI", ejsTeamNames: ["Fixture Team A"] } }, mockRes());
+
+    expect((await EjsTeamMappingModel.find({ club: "DZIKIE_GZIKI" })).map((row) => row.ejsTeamName)).toEqual(["Fixture Team A"]);
+  });
+
+  it("400s without a club", async () => {
     const res = mockRes();
-    await setAdminTeamMapping({ body: { ejsTeamName: "Fixture Team A", club: "NOT_A_CLUB" } }, res);
+    await setAdminTeamMapping({ body: { ejsTeamNames: ["Fixture Team A"] } }, res);
 
     expect(res.statusCode).toBe(400);
   });

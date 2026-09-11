@@ -11,7 +11,7 @@ const {
   getImportedCompetitionIds,
   getCompetitionStats,
   getAllCompetitionStats,
-  getCompetitionTeamMapping,
+  getGlobalTeamMapping,
   setCompetitionTeamMapping,
   getAllTeamMappings,
   setAdminTeamMapping,
@@ -46,7 +46,7 @@ router.use(decodeToken);
 router.get("/imported", getImportedCompetitionIds);
 router.get("/ejs-competitions", getEjsCompetitions);
 router.get("/all-stats", getAllCompetitionStats);
-router.get("/:eventId/team-mapping", getCompetitionTeamMapping);
+router.get("/team-mapping", getGlobalTeamMapping);
 router.post("/team-mapping", setCompetitionTeamMapping);
 router.get("/:eventId/stats", getCompetitionStats);
 
