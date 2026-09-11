@@ -110,10 +110,15 @@ const getEjsCompetitions = async (_req, res) => {
   res.status(200).json(events);
 };
 
-// Super-admin: every EJS-pool event, whether or not it has any imported rows yet - the import wizard's own picker
-// (getEjsCompetitions only lists ones a file has already landed in).
+// Super-admin: every event the import wizard can usefully offer - a fresh club-less placeholder (no rows yet), or
+// ANY event (any club, e.g. one from before this pool existed) that already has EJS rows and could take another day's
+// file. getEjsCompetitions only covers the second half; a brand-new placeholder has no rows yet to be found by that.
 const getAllEjsEvents = async (_req, res) => {
-  const events = await EventModel.find({ team: EJS_TEAM, type: "COMPETITION" })
+  const eventIdsWithData = await CompetitionEntryModel.find({ team: EJS_TEAM }).distinct("eventId");
+  const events = await EventModel.find({
+    type: "COMPETITION",
+    $or: [{ team: EJS_TEAM }, { _id: { $in: eventIdsWithData } }],
+  })
     .select("_id name date endDate")
     .sort({ date: -1 });
 

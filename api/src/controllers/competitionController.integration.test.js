@@ -368,20 +368,30 @@ describe("getAllCompetitionStats", () => {
 });
 
 describe("getAllEjsEvents", () => {
-  it("lists every EJS-pool event, including ones with no imported rows yet - unlike getEjsCompetitions", async () => {
-    const withData = await makeCompetition("Has Data");
-    await importInto(withData, await uploadFixture());
-    await makeCompetition("No Data Yet");
-    await EventModel.create({ name: "Ultra's own comp", date: "2026-01-01", type: "COMPETITION", team: "ULTRA_FLYBALL_TEAM" });
+  it("lists a fresh club-less placeholder with no rows yet, alongside any club's event that already has EJS rows", async () => {
+    await makeCompetition("No Data Yet"); // team=EJS_TEAM, nothing imported
+
+    const clubOwnedWithData = await EventModel.create({
+      name: "Ultra's own comp",
+      date: "2026-01-01",
+      type: "COMPETITION",
+      team: "ULTRA_FLYBALL_TEAM",
+    });
+    await importInto(clubOwnedWithData, await uploadFixture());
+
+    await EventModel.create({
+      name: "Ultra's other event",
+      date: "2026-02-01",
+      type: "COMPETITION",
+      team: "ULTRA_FLYBALL_TEAM",
+    });
 
     const res = mockRes();
     await getAllEjsEvents({}, res);
 
-    expect(res.body.map((event) => event.name).sort()).toEqual(["Has Data", "No Data Yet"]);
-
-    const dataOnly = mockRes();
-    await getEjsCompetitions({}, dataOnly);
-    expect(dataOnly.body.map((event) => event.name)).toEqual(["Has Data"]);
+    // The placeholder shows even with zero rows; Ultra's competition shows because it already has rows, regardless
+    // of its own club; Ultra's other, data-less event does not - it's not part of the EJS pool at all.
+    expect(res.body.map((event) => event.name).sort()).toEqual(["No Data Yet", "Ultra's own comp"]);
   });
 });
 
