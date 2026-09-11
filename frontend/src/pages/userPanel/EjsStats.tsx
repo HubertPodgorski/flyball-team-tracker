@@ -18,7 +18,6 @@ import {
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
-import { useQueryClient } from "@tanstack/react-query";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import SettingsIcon from "@mui/icons-material/Settings";
 import EditIcon from "@mui/icons-material/Edit";
@@ -36,11 +35,9 @@ import { CompetitionDogStats } from "../../helpers/types";
 import { aggregateLineupRow, aggregateStatsRow } from "../../helpers/competitionLineupStats";
 import { competitionOptionLabel } from "../../helpers/competitionOptionLabel";
 import { ALL_COMPETITIONS } from "../../helpers/competitionsApi";
-import { updateSuperAdminItem } from "../../helpers/superAdminApi";
-import { EventType } from "../../components/inputs/consts";
-import EventForm from "../forms/EventForm";
 import EjsImportWizard from "../../components/EjsImportWizard";
 import EjsTeamMappingModal from "../../components/EjsTeamMappingModal";
+import EjsCompetitionEventDialog from "../../components/EjsCompetitionEventDialog";
 import CompetitionStatsColumnCards from "../../components/CompetitionStatsColumnCards";
 import CompetitionDogTrendCard from "../../components/CompetitionDogTrendCard";
 import CompetitionPredecessorCard from "../../components/CompetitionPredecessorCard";
@@ -97,7 +94,6 @@ const EjsStats = () => {
   // Only a trainer maps teams (useIsTrainer already covers super-admin too) - a plain club member never sees this.
   const isTrainer = useIsTrainer();
   const { user } = useAuthContext();
-  const queryClient = useQueryClient();
 
   const { data: withDataEvents = [] } = useEjsCompetitionsQuery();
 
@@ -650,23 +646,12 @@ const EjsStats = () => {
       {isTrainer && (
         <EjsTeamMappingModal open={mappingDialogOpen} onClose={() => setMappingDialogOpen(false)} isSuperAdmin={isSuperAdmin} />
       )}
-      {isSuperAdmin && selectedCompetition && (
-        <EventForm
+      {isSuperAdmin && (
+        <EjsCompetitionEventDialog
           open={renameEventOpen}
           onClose={() => setRenameEventOpen(false)}
-          editingId={selectedCompetition._id}
-          initialData={{
-            name: selectedCompetition.name,
-            date: selectedCompetition.date,
-            endDate: selectedCompetition.endDate,
-            type: EventType.COMPETITION,
-            team: selectedCompetition.team,
-          }}
-          onSubmitOverride={async (data, submittedEditingId) => {
-            await updateSuperAdminItem("events", { ...data, _id: submittedEditingId });
-            queryClient.invalidateQueries({ queryKey: ["ejsCompetitions"] });
-            setRenameEventOpen(false);
-          }}
+          competition={selectedCompetition}
+          onSaved={() => {}}
         />
       )}
     </Box>

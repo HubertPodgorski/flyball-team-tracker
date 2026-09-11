@@ -1,6 +1,9 @@
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   confirmEjsImport,
+  createEjsEvent,
+  EjsEventInput,
+  fetchAllEjsEvents,
   fetchAllTeamMappings,
   fetchCompetitionStats,
   fetchGlobalTeamMapping,
@@ -8,11 +11,40 @@ import {
   previewEjsImport,
   setAdminTeamMapping,
   setCompetitionTeamMapping,
+  updateEjsEvent,
 } from "../helpers/competitionsApi";
 
 // Every competition with imported EJS data - the same list for every user.
 export const useEjsCompetitionsQuery = () =>
   useQuery({ queryKey: ["ejsCompetitions"], queryFn: fetchEjsCompetitions });
+
+// Super-admin: every EJS-pool event regardless of whether it has data yet - the import wizard's own picker.
+export const useAllEjsEventsQuery = () =>
+  useQuery({ queryKey: ["allEjsEvents"], queryFn: fetchAllEjsEvents });
+
+export const useCreateEjsEventMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: createEjsEvent,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ejsCompetitions"] });
+      queryClient.invalidateQueries({ queryKey: ["allEjsEvents"] });
+    },
+  });
+};
+
+export const useUpdateEjsEventMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ eventId, input }: { eventId: string; input: Partial<EjsEventInput> }) => updateEjsEvent(eventId, input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ejsCompetitions"] });
+      queryClient.invalidateQueries({ queryKey: ["allEjsEvents"] });
+    },
+  });
+};
 
 export const usePreviewEjsImportMutation = () =>
   useMutation({

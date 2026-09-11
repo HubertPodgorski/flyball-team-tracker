@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 import {
   Box,
   Button,
@@ -18,13 +18,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useSnackbar } from "notistack";
 import { useTranslation } from "react-i18next";
 import Modal from "./modals/Modal";
-import { EventType } from "./inputs/consts";
-import EventForm from "../pages/forms/EventForm";
-import { EjsPreviewResult, Event } from "../helpers/types";
+import EjsCompetitionEventDialog from "./EjsCompetitionEventDialog";
+import { EjsPreviewResult } from "../helpers/types";
 import { competitionOptionLabel } from "../helpers/competitionOptionLabel";
-import { useEventsQuery } from "../queries/events";
-import { getCurrentClub } from "../helpers/authToken";
-import { usePreviewEjsImportMutation, useConfirmEjsImportMutation } from "../queries/competitions";
+import { useAllEjsEventsQuery, usePreviewEjsImportMutation, useConfirmEjsImportMutation } from "../queries/competitions";
 
 interface Props {
   open: boolean;
@@ -38,18 +35,15 @@ const EjsImportWizard = ({ open, onClose, onImported }: Props) => {
   const { enqueueSnackbar } = useSnackbar();
   const queryClient = useQueryClient();
 
-  const { data: events = [] } = useEventsQuery();
+  const { data: competitionEvents = [] } = useAllEjsEventsQuery();
   const previewMutation = usePreviewEjsImportMutation();
   const confirmMutation = useConfirmEjsImportMutation();
 
   const [activeStep, setActiveStep] = useState(0);
   const [eventId, setEventId] = useState("");
-  const [eventFormOpen, setEventFormOpen] = useState(false);
-  const knownCompetitionIds = useRef<Set<string>>(new Set());
+  const [eventDialogOpen, setEventDialogOpen] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
   const [preview, setPreview] = useState<EjsPreviewResult | null>(null);
-
-  const competitionEvents = events.filter((event) => event.type === EventType.COMPETITION);
 
   const reset = () => {
     setActiveStep(0);
@@ -61,24 +55,6 @@ const EjsImportWizard = ({ open, onClose, onImported }: Props) => {
   const close = () => {
     reset();
     onClose();
-  };
-
-  const openEventForm = () => {
-    knownCompetitionIds.current = new Set(competitionEvents.map((event) => event._id));
-    setEventFormOpen(true);
-  };
-
-  // EventForm creates via its own mutation and just closes - pick up whichever COMPETITION event is new (nothing new = it was cancelled).
-  const onEventFormClose = async () => {
-    setEventFormOpen(false);
-    await queryClient.refetchQueries({ queryKey: ["events"] });
-
-    const fresh = (queryClient.getQueryData(["events", getCurrentClub()]) ?? []) as Event[];
-    const created = fresh.find(
-      (event) => event.type === EventType.COMPETITION && !knownCompetitionIds.current.has(event._id)
-    );
-
-    if (created) setEventId(created._id);
   };
 
   const onAnalyzeFiles = () => {
@@ -99,7 +75,6 @@ const EjsImportWizard = ({ open, onClose, onImported }: Props) => {
           enqueueSnackbar(t("pages.ejsStats.importSuccess", { count }), { variant: "success" });
           queryClient.invalidateQueries({ queryKey: ["ejsCompetitions"] });
           queryClient.invalidateQueries({ queryKey: ["competitionStats", eventId] });
-          queryClient.invalidateQueries({ queryKey: ["competitionTeamMapping", eventId] });
           onImported?.(eventId);
           close();
         },
@@ -150,7 +125,7 @@ const EjsImportWizard = ({ open, onClose, onImported }: Props) => {
               {t("pages.ejsStats.wizard.orCreate")}
             </Typography>
 
-            <Button variant="outlined" sx={{ alignSelf: "flex-start" }} onClick={openEventForm}>
+            <Button variant="outlined" sx={{ alignSelf: "flex-start" }} onClick={() => setEventDialogOpen(true)}>
               {t("pages.ejsStats.wizard.newCompetition")}
             </Button>
           </Stack>
@@ -227,10 +202,10 @@ const EjsImportWizard = ({ open, onClose, onImported }: Props) => {
         )}
       </DialogActions>
 
-      <EventForm
-        open={eventFormOpen}
-        onClose={onEventFormClose}
-        initialData={{ name: "", date: new Date(), type: EventType.COMPETITION }}
+      <EjsCompetitionEventDialog
+        open={eventDialogOpen}
+        onClose={() => setEventDialogOpen(false)}
+        onSaved={(createdId) => setEventId(createdId)}
       />
     </Modal>
   );

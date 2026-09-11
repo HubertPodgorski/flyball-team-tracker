@@ -43,9 +43,9 @@ test("a club with no mapped teams gets the mapping modal automatically, and can 
   const competitionName = `E2E Auto-open Comp ${Date.now()}`;
   await importDialog.getByRole("button", { name: "Create competition" }).click();
 
-  const eventForm = page.getByRole("dialog").filter({ hasText: "Adding an event" });
-  await eventForm.getByRole("textbox", { name: "Name", exact: true }).fill(competitionName);
-  await eventForm.getByRole("button", { name: "Submit" }).click();
+  const newEventDialog = page.getByRole("dialog").filter({ hasText: "New competition" });
+  await newEventDialog.getByRole("textbox", { name: "Name", exact: true }).fill(competitionName);
+  await newEventDialog.getByRole("button", { name: "Save" }).click();
   await importDialog.getByRole("button", { name: "Next" }).click();
 
   await importDialog.locator('input[type="file"]').setInputFiles(FIXTURE);

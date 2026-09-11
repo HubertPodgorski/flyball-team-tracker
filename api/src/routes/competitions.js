@@ -8,6 +8,9 @@ const {
   previewEjsImport,
   confirmEjsImport,
   getEjsCompetitions,
+  getAllEjsEvents,
+  createEjsEvent,
+  updateEjsEvent,
   getImportedCompetitionIds,
   getCompetitionStats,
   getAllCompetitionStats,
@@ -50,7 +53,10 @@ router.get("/team-mapping", getGlobalTeamMapping);
 router.post("/team-mapping", setCompetitionTeamMapping);
 router.get("/:eventId/stats", getCompetitionStats);
 
-// Imports and the global team-name -> club mapping grid - super-admin only.
+// Imports, the shared EJS event itself, and the global team-name -> club mapping grid - super-admin only.
+router.get("/events", requireSuperAdmin, getAllEjsEvents);
+router.post("/events", requireSuperAdmin, createEjsEvent);
+router.patch("/:eventId", requireSuperAdmin, updateEjsEvent);
 router.get("/team-mappings", requireSuperAdmin, getAllTeamMappings);
 router.post("/team-mappings", requireSuperAdmin, setAdminTeamMapping);
 router.post("/:eventId/ejs-preview", requireSuperAdmin, acceptFiles, previewEjsImport);

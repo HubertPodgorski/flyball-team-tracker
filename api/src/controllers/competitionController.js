@@ -104,10 +104,48 @@ const confirmEjsImport = async (req, res) => {
 const getEjsCompetitions = async (_req, res) => {
   const eventIds = await CompetitionEntryModel.find({ team: EJS_TEAM }).distinct("eventId");
   const events = await EventModel.find({ _id: { $in: eventIds } })
-    .select("_id name date endDate team")
+    .select("_id name date endDate")
     .sort({ date: -1 });
 
   res.status(200).json(events);
+};
+
+// Super-admin: every EJS-pool event, whether or not it has any imported rows yet - the import wizard's own picker
+// (getEjsCompetitions only lists ones a file has already landed in).
+const getAllEjsEvents = async (_req, res) => {
+  const events = await EventModel.find({ team: EJS_TEAM, type: "COMPETITION" })
+    .select("_id name date endDate")
+    .sort({ date: -1 });
+
+  res.status(200).json(events);
+};
+
+// Super-admin: a shared Event purely to hold EJS imports - the EJS sentinel club, not any real club's own calendar.
+const createEjsEvent = async (req, res) => {
+  const { name, date, endDate } = req.body;
+
+  if (!name || !date) return res.status(400).json({ error: "MISSING_NAME_OR_DATE" });
+
+  const event = await EventModel.create({ name, date, endDate: endDate || undefined, type: "COMPETITION", team: EJS_TEAM });
+
+  res.status(200).json(event);
+};
+
+// Super-admin: rename/reschedule one - only ever a row this pool actually owns, never a real club's own competition.
+const updateEjsEvent = async (req, res) => {
+  const event = await EventModel.findOne({ _id: req.params.eventId, team: EJS_TEAM });
+
+  if (!event) return res.status(404).json({ error: "EJS_EVENT_NOT_FOUND" });
+
+  const { name, date, endDate } = req.body;
+
+  if (name !== undefined) event.name = name;
+  if (date !== undefined) event.date = date;
+  if (endDate !== undefined) event.endDate = endDate || null;
+
+  await event.save();
+
+  res.status(200).json(event);
 };
 
 // Kept for the frontend's existing "which events have data" check.
@@ -263,6 +301,9 @@ module.exports = {
   previewEjsImport,
   confirmEjsImport,
   getEjsCompetitions,
+  getAllEjsEvents,
+  createEjsEvent,
+  updateEjsEvent,
   getImportedCompetitionIds,
   getCompetitionStats,
   getAllCompetitionStats,

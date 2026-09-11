@@ -310,6 +310,8 @@
         "stepImport": "Import",
         "orCreate": "…albo utwórz nowe zawody:",
         "newCompetition": "Utwórz zawody",
+        "newCompetitionTitle": "Nowe zawody",
+        "editCompetitionTitle": "Edytuj zawody",
         "analyzeFiles": "Analizuj pliki",
         "rowsFound": "Znaleziono {{count}} wierszy",
         "teamsFound": "Drużyny: {{teams}}",

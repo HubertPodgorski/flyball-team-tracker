@@ -302,6 +302,8 @@
         "stepImport": "Import",
         "orCreate": "…or create a new competition:",
         "newCompetition": "Create competition",
+        "newCompetitionTitle": "New competition",
+        "editCompetitionTitle": "Edit competition",
         "analyzeFiles": "Analyze files",
         "rowsFound": "Found {{count}} rows",
         "teamsFound": "Teams: {{teams}}",

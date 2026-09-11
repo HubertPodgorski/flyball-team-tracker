@@ -41,6 +41,33 @@ export const fetchEjsCompetitions = async (): Promise<EjsCompetition[]> => {
   return data;
 };
 
+// Super-admin: every EJS-pool event, whether or not a file has landed in it yet - the import wizard's own picker.
+export const fetchAllEjsEvents = async (): Promise<EjsCompetition[]> => {
+  const { data } = await axios.get(`${apiSuffix}/competitions/events`, authHeaders());
+
+  return data;
+};
+
+export interface EjsEventInput {
+  name: string;
+  date: Date;
+  endDate?: Date | null;
+}
+
+// Super-admin: a shared, club-less Event purely to hold EJS imports - not any real club's own calendar.
+export const createEjsEvent = async (input: EjsEventInput): Promise<EjsCompetition> => {
+  const { data } = await axios.post(`${apiSuffix}/competitions/events`, input, authHeaders());
+
+  return data;
+};
+
+// Super-admin: rename/reschedule one - only ever an event the EJS pool actually owns.
+export const updateEjsEvent = async (eventId: string, input: Partial<EjsEventInput>): Promise<EjsCompetition> => {
+  const { data } = await axios.patch(`${apiSuffix}/competitions/${eventId}`, input, authHeaders());
+
+  return data;
+};
+
 // Every EJS team name in the pool, every mapping, and which of them are already the caller's own club's.
 export const fetchGlobalTeamMapping = async (): Promise<GlobalTeamMapping> => {
   const { data } = await axios.get(`${apiSuffix}/competitions/team-mapping`, authHeaders());
