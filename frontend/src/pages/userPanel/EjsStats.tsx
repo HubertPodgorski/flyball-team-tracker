@@ -5,6 +5,7 @@ import {
   Card,
   Chip,
   FormControl,
+  IconButton,
   InputLabel,
   MenuItem,
   Select,
@@ -12,11 +13,13 @@ import {
   Stack,
   ToggleButton,
   ToggleButtonGroup,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
+import SettingsIcon from "@mui/icons-material/Settings";
 import {
   useCompetitionStatsQuery,
   useCompetitionStatsByLineupQueries,
@@ -334,16 +337,22 @@ const EjsStats = () => {
             </Select>
           </FormControl>
 
-          <Button variant="outlined" onClick={() => setMappingDialogOpen(true)}>
-            {isSuperAdmin ? t("pages.ejsStats.mapTeamsButton") : t("pages.ejsStats.chooseClubTeamsButton")}
-          </Button>
-
           {/* Only a super-admin imports EJS files - the shared pool is global, every club just reads it. */}
           {isSuperAdmin && (
             <Button variant="outlined" startIcon={<UploadFileIcon />} onClick={() => setWizardOpen(true)}>
               {t("pages.ejsStats.importData")}
             </Button>
           )}
+
+          <Tooltip title={isSuperAdmin ? t("pages.ejsStats.mapTeamsButton") : t("pages.ejsStats.chooseClubTeamsButton")}>
+            <IconButton
+              aria-label={isSuperAdmin ? t("pages.ejsStats.mapTeamsButton") : t("pages.ejsStats.chooseClubTeamsButton")}
+              onClick={() => setMappingDialogOpen(true)}
+              sx={{ ml: "auto" }}
+            >
+              <SettingsIcon />
+            </IconButton>
+          </Tooltip>
         </Stack>
       </Card>
 
